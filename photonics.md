@@ -749,7 +749,7 @@ To sample light contributions see [sampers](#samplers).
 
 # Programs
 
-Photonics supports a special kind of rendering (referred to here as voxelized blocks) for blocks that utilizes its Volume Rendering techniques that are used for all other graphical effects in Photonics. .
+Photonics supports a special kind of rendering (referred to here as voxelized blocks) for blocks that utilizes its Volume Rendering techniques that are used for all other graphical effects in Photonics.
 Under the hood, voxelized blocks have the same mesh as a normal solid block (e.g. Stone Block). 
 The only difference, is that they use 2 custom programs: gbuffers_voxels and shadow_voxels.
 
