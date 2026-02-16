@@ -449,7 +449,7 @@ Patches are loaded from 3 places:
 
 This will mostly focus on the 1st option as it's the most accessible.
 
-Patches in `.minecraft/shader_patches` can either be
+Patches in `.minecraft/shader-patches` can either be
 1. A folder
 2. A zipped (.zip) archive.
 
