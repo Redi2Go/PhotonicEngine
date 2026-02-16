@@ -796,7 +796,7 @@ scene_pos = ray.result_position + world_offset - cameraPosition;
 
 // These functions are placeholders for however you do these conversions
 view_pos = scene_to_view_space(scene_pos);
-scene_pos = view_to_screen_space(view_pos);
+screen_pos = view_to_screen_space(view_pos);
 
 // Also update the depth!
 gl_FragDepth = screen_pos.z;
