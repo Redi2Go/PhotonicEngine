@@ -261,6 +261,9 @@ An overload of `trace_ray(RayJob, bool)` where transparency is set to `false`. U
 These files are used by photonics to interface with a shader, in a way this is the true 'api' of photonics. 
 These files are expected to be created by a shader (or patched by a [patch](#patching)) with the following implementations.
 
+Photonics provides default versions for patches to replace, however creating them in your shader will replace the versions provided by Photonics. 
+(Note: this applies to most files in photonics, the only exception to this is `/photonics/photonics.glsl`).
+
 For more information see [How to adapt your Shaderpack](#how-to-adapt-your-shaderpack).
 
 
