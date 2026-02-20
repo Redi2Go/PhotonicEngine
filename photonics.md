@@ -201,7 +201,7 @@ struct RayJob {
     vec3 origin; // The origin of the ray in rt space. (E.g real_origin - world_offset)
     vec3 direction; // The direction of the ray.
 
-    vec3 result_position; // The position of the hit voxel in world space.
+    vec3 result_position; // The position of the hit voxel in rt space.
     vec3 result_normal; // The surface normal of the voxel that was hit
     vec3 result_color; // The color of the voxel that was hit
     bool result_hit; // true if the ray hit a voxel
