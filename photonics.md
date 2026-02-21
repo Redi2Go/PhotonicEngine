@@ -13,6 +13,13 @@ Defaults to `false`.
 
 <br></br>
 ```
+photonics.useDeferredPass = <true | false>
+```
+Enable/disable the use of Photonics's deferred lighting pass. 
+Defaults to `true`
+
+<br></br>
+```
 photoncs.supported = <true | false>
 ```
 Used by patches to indicate whether Photonics is supported. 
@@ -122,6 +129,23 @@ Defined in shaders under the `/photonics` directory when in [the nether](https:/
 ### `END`
 Defined in shaders under the `/photonics` directory when in [the end](https://minecraft.wiki/w/The_End).
 
+### `#PH_USE_CUSTOM_ALPHA`
+Used to enable the use of a custom alpha func in `trace_ray`. By default `trace_ray` uses absorption.
+
+### `#PH_ALPHA_FUNC`
+Sets the alpha func used by `trace_ray`. 
+
+An example for regular glass rendering would be
+
+```glsl
+#PH_USE_CUSTOM_ALPHA
+#PH_ALPHA_FUNC(color) apply_tint_impl(color)
+
+vec3 apply_tint_impl(vec4 color) {
+  return color.xyz * (1f - color.a);
+}
+```
+
 <br></br>
 # Uniforms
 
@@ -138,9 +162,9 @@ The camera position in world space.
 
 <br></br>
 ```glsl
-uniform vec3 camera_position;
+uniform vec3 rt_camera_position;
 ```
-The camera position in the rt coordinate space. (E.g `camera_position = world_camera_position - world_offset`)
+The camera position in the rt coordinate space. (E.g `rt_camera_position = world_camera_position - world_offset`)
 
 <br></br>
 ```glsl
@@ -195,6 +219,10 @@ This file `#includes`:
     `photonics/ph_core.glsl`
     `photonics/ph_raytracing.glsl`
 
+If you plan to use this outside of the `/photonics/` directory, 
+you should add an empty `shaders/photonics/photonics.glsl` in your shader, 
+otherwise your shaderpack will not load without photonics.
+
 <br></br>
 ```glsl
 struct RayJob {
@@ -221,6 +249,7 @@ struct Light {
 Represents a block light. Instances of this struct can be obtained by `load_light` in `/photonics/ph_core.glsl`. 
 
 ## /photonics/ph_core.glsl
+Should not be included directly, instead include only `photonics/photonics.glsl`
 
 ```glsl
 Light load_light(int index);
@@ -228,6 +257,7 @@ Light load_light(int index);
 Returns the light at (index), where index is an integer from 0 to PH_MAX_LIGHTS. Usable in every pass/program.
 
 ## /photonics/ph_raytracing.glsl
+Should not be included directly, instead include only `photonics/photonics.glsl`
 
 ```glsl
 ivec3 ray_constraint;
@@ -238,7 +268,22 @@ When set limits raytracing to a single block in rt space at `ray_constraint`. To
 ```glsl
 vec3 result_tint_color;
 ```
-The cumulative tint color applied to lighting after a call to trace_ray. This is always `vec3(1f)` when `photonics.alphaMode` is set to `none`.  Usable in every pass/program.
+The cumulative tint color applied to lighting after a call to trace_ray.
+This is always `vec3(1f)` when `photonics.alphaMode` is set to `none`.  Usable in every pass/program.
+
+This defaults to absorption, but can be changed with [#PH_USE_CUSTOM_ALPHA](#ph_use_custom_alpha) and [#PH_ALPHA_FUNC](#ph_alpha_func)
+
+<br></br>
+```glsl
+vec3 result_block_id;
+```
+The [block id](https://shaders.properties/current/reference/miscellaneous/block_properties/) of the block that was hit.
+
+<br></br>
+```glsl
+int get_result_sky_light(vec3 normal);
+```
+The skylight level of the hit block, where normal is one of the faces of the block. Ranges from 0 to 15.
 
 <br></br>
 ```glsl
@@ -634,10 +679,16 @@ Everything after `#create` becomes the file content. This is useful for adding e
 
 # How to adapt your Shaderpack
 
-This section **will not** cover adding photonics settings to your shaderpack, and expects you have read the [documentation](#DOCUMENTATION). 
-
+This section **will not** cover adding photonics settings to your shaderpack, and expects you have read the [documentation](#DOCUMENTATION).
 To understand what options Photonics gives you access to see [properties](#properties).
 
+
+
+There are two ways to add Photonics to your shaderpack
+1) Use the provided photonics pass (in deferred) that accepts gbuffer data and populates a lighting buffer; this is the easy route where photonics does everything for you
+2) Use the tracing API directly, works in gbuffers, you are responsible for usage and optimization.
+
+This section will only cover option 1.
 An example implementation of Photonics for Photon can be found at https://github.com/Essentuan/photon/tree/photonics-example
 
 
