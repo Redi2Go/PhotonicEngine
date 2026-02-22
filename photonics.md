@@ -197,7 +197,7 @@ Written to by Photonics during the lighting pass. Stores the accumulated soft li
 Can be sampled using
 ```glsl
 vec4 ph_direct_soft = texture2D(radiosity_direct_soft, gl_FragCoord);
-vec3 color = ph_direct_hand.rgb / max(ph_direct_soft.a, 1.0f);
+vec3 color = ph_direct_soft.rgb / max(ph_direct_soft.a, 1.0f);
 ```
 
 Where the alpha stores the number of samples.
@@ -254,7 +254,8 @@ Should not be included directly, instead include only `photonics/photonics.glsl`
 ```glsl
 Light load_light(int index);
 ```
-Returns the light at (index), where index is an integer from 0 to PH_MAX_LIGHTS. Usable in every pass/program.
+Returns the light at (index), where index is an integer from 0 to PH_MAX_LIGHTS. 
+Usable in every pass/program. This method will return garbage when `photonics.enableBlockLight` is `false.
 
 ## /photonics/ph_raytracing.glsl
 Should not be included directly, instead include only `photonics/photonics.glsl`
