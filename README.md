@@ -240,7 +240,7 @@ Represents a ray, used by trace_ray.
 <br></br>
 ```glsl
 struct Light {
-    vec3 position; // Position of the light in world space.
+    vec3 position; // Position of the light rt space.
     vec3 color; // The color of the light. The result of of (color * intensity) in ph_lights.json.
     vec2 attenuation; 
     float falloff; // How fast the light fallsoff over distances. Used like (distance_squared * falloff).
