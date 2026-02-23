@@ -276,7 +276,7 @@ This defaults to absorption, but can be changed with [#PH_USE_CUSTOM_ALPHA](#ph_
 
 <br></br>
 ```glsl
-vec3 result_block_id;
+int result_block_id;
 ```
 The [block id](https://shaders.properties/current/reference/miscellaneous/block_properties/) of the block that was hit.
 
