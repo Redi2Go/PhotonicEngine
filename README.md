@@ -822,7 +822,7 @@ This implementation requires `block_normal` from the vertex shader, which is equ
 vec3 screen_pos = get_screen_pos();
 
 // These functions are placeholders for however you do these conversions
-vec3 view_pos = screen_to_view_space(screen_pos); // If you use TAA this should account for jitter
+vec3 view_pos = screen_to_view_space(screen_pos); // You should not account for TAA jitter
 vec3 scene_pos = view_to_scene_space(view_pos);
 
 vec3 world_pos = scene_pos + cameraPosition;
