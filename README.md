@@ -138,8 +138,8 @@ Sets the alpha func used by `trace_ray`.
 An example for regular glass rendering would be
 
 ```glsl
-#PH_USE_CUSTOM_ALPHA
-#PH_ALPHA_FUNC(color) apply_tint_impl(color)
+#define PH_USE_CUSTOM_ALPHA
+#define PH_ALPHA_FUNC(color) apply_tint_impl(color)
 
 vec3 apply_tint_impl(vec4 color) {
   return color.xyz * (1f - color.a);
