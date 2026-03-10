@@ -1,4 +1,4 @@
-# DOCUMENTATION
+# DOCUMENTATION (for v0.3.1)
 This section documents all properties, macros, uniforms, samplers, and provided functions.
 
 # Properties
