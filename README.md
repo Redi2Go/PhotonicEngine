@@ -13,13 +13,6 @@ Defaults to `false`.
 
 <br></br>
 ```
-photonics.useDeferredPass = <true | false>
-```
-Enable/disable the use of Photonics's deferred lighting pass. 
-Defaults to `true`
-
-<br></br>
-```
 photoncs.supported = <true | false>
 ```
 Used by patches to indicate whether Photonics is supported. 
@@ -38,16 +31,7 @@ Defaults to `1`.
 photonics.maxLights = <unsigned int>
 ```
 Sets the maximum number of lights that can be loaded by Photonics. Must be a positive integer greater than 0. 
-Defaults to `1000`.
-
-<br></br>
-```
-photonics.maxSamples = <unsigned int>
-```
-Sets the maximum number of lights that can be sampled per fragment. Must be a positive integer greater than 0.
-Defaults to `20`.
-
-This setting is analogous to 'Max Light Samples' in [rethinking voxels](https://modrinth.com/shader/rethinking-voxels).
+Defaults to `1000`
 
 <br></br>
 ```
@@ -82,6 +66,76 @@ photonics.enableHandheldLight = <true | false>
 Enable/disable handheld tracing during the lighting pass.
 Defaults to `true`.
 
+```
+photonics.enableLightBinning = <true | false>
+```
+Whether Photonics should do light binning.
+Defaults to `true` when `photonics.lightingMode` is `BASIC`, otherwise `false`.
+
+<br></br>
+```
+photonics.voxelizeLava = <true | false>
+```
+Whether lava should be represented in the voxel structure.
+Defaults to `false`
+
+<br></br>
+```
+photonics.lightingMode = <OFF | BASIC | RESTIR>
+```
+The lighting mode to use; case-insensitive. Off will still do voxelization.
+Defaults to `BASIC`
+
+<br></br>
+```
+photonics.maxSamples = <unsigned int>
+```
+Sets the maximum number of lights that can be sampled per fragment with basic lighting. Must be a positive integer greater than 0.
+Defaults to `20`.
+
+This setting is analogous to 'Max Light Samples' in [rethinking voxels](https://modrinth.com/shader/rethinking-voxels).
+
+<br></br>
+```
+photonics.restirInitialSamples = <unsigned int>
+```
+The number of lights ReSTIR will initially consider.
+Defaults to `32`
+
+<br></br>
+```
+photonics.restirSpatialReuseSamples = <unsigned int>
+```
+The number of samples ReSTIR uses for spatial reuse.
+Defaults to `5`
+
+<br></br>
+```
+photonics.restirSpatialReuseRadius = <float>
+```
+The radius of spatial reuse.
+Defaults to `10`
+
+<br></br>
+```
+photonics.restirAccumulationFrames = <unsigned int>
+```
+The number of frames ReSTIR uses for accumulation.
+Defaults to `15`
+
+<br></br>
+```
+photonics.restirDenoiserPasses = <unsigned int>
+```
+The number of denoiser passes for ReSTIR. A value of `0` disables denoising. Values past 5 can have visual artifacts.
+Defaults to `5`
+
+<br></br>
+```
+photonics.restirSoftShadows = <true | false>
+```
+Whether ReSTIR should use soft shadows.
+Defaults to `true`
 
 <br></br>
 <br></br>
@@ -108,7 +162,7 @@ The current value for `photonics.renderScale`. Defined in shaders at all times.
 ### `PH_MAX_LIGHTS`
 The current value for `photonics.maxLights`. Defined in shaders at all times.
 
-### `PH_MAX_LIGHTS`
+### `PH_MAX_SAMPLES`
 The current value for `photonics.maxSamples`. Defined in shaders at all times.
 
 ### `PH_ENABLE_GI`
@@ -129,10 +183,10 @@ Defined in shaders under the `/photonics` directory when in [the nether](https:/
 ### `END`
 Defined in shaders under the `/photonics` directory when in [the end](https://minecraft.wiki/w/The_End).
 
-### `#PH_USE_CUSTOM_ALPHA`
+### `PH_USE_CUSTOM_ALPHA`
 Used to enable the use of a custom alpha func in `trace_ray`. By default `trace_ray` uses absorption.
 
-### `#PH_ALPHA_FUNC`
+### `PH_ALPHA_FUNC`
 Sets the alpha func used by `trace_ray`. 
 
 An example for regular glass rendering would be
@@ -145,6 +199,12 @@ vec3 apply_tint_impl(vec4 color) {
   return color.xyz * (1f - color.a);
 }
 ```
+
+### `PH_USE_CUSTOM_AIR_ID`
+Used to enable the use of a custom air return id with `get_block_id`.
+
+### `PH_AIR_ID`
+Sets the id to return for air with `get_block_id`
 
 <br></br>
 # Uniforms
@@ -177,40 +237,6 @@ The color of the current held items. Will be `vec3(0f)` when no light is being h
 uniform bool light_reload;
 ```
 `true` for a single frame after loaded lights have changed.
-
-### Samplers
-
-```glsl
-uniform sampler2D radiosity_direct;
-```
-Written to by Photonics during the lighting pass. Stores the light contribution by blocks.
-Can be sampled using
-```glsl
-vec3 ph_direct = texture2D(radiosity_direct, gl_FragCoord).rgb;
-```
-
-<br></br>
-```glsl
-uniform sampler2D radiosity_direct_soft;
-```
-Written to by Photonics during the lighting pass. Stores the accumulated soft light contribution by blocks.
-Can be sampled using
-```glsl
-vec4 ph_direct_soft = texture2D(radiosity_direct_soft, gl_FragCoord);
-vec3 color = ph_direct_soft.rgb / max(ph_direct_soft.a, 1.0f);
-```
-
-Where the alpha stores the number of samples.
-
-<br></br>
-```glsl
-uniform sampler2D radiosity_handheld;
-```
-Written to by Photonics during the lighting pass. Stores the light contribution by handheld lighting.
-Can be sampled using
-```glsl
-vec3 ph_handheld = texture2D(radiosity_handheld, gl_FragCoord).rgb;
-```
 
 ### Provided functions/structs
 
@@ -257,6 +283,19 @@ Light load_light(int index);
 Returns the light at (index), where index is an integer from 0 to PH_MAX_LIGHTS. 
 Usable in every pass/program. This method will return garbage when `photonics.enableBlockLight` is `false.
 
+# /photonics/ph_sampling.glsl
+Can be included directly, but is also included by `photonics/photonics.glsl`. These functions are **always** available.
+
+```glsl
+vec3 sample_photonics_direct(vec2 texCoord);
+```
+Returns the current direct light contribution for `texCoord`
+
+```glsl
+vec3 sample_photonics_handheld(vec2 texCoord);
+```
+Returns the current direct handheld contribution for `texCoord`
+
 ## /photonics/ph_raytracing.glsl
 Should not be included directly, instead include only `photonics/photonics.glsl`
 
@@ -302,6 +341,12 @@ void trace_ray(
 );
 ```
 An overload of `trace_ray(RayJob, bool)` where transparency is set to `false`. Usable in every pass/program.
+
+<br></br>
+```glsl
+int get_block_id(vec3 rt_pos);
+```
+Returns the block at id at `rt_pos`, or `PH_AIR_ID` if `PH_USE_CUSTOM_AIR_ID` is defined and the block is air.
 
 # SPECIAL FILES
 These files are used by photonics to interface with a shader, in a way this is the true 'api' of photonics. 
@@ -352,7 +397,7 @@ For more information see [How to adapt your Shaderpack](#how-to-adapt-your-shade
 ```glsl
 vec3 sun_direction;
 ```
-The current sun direction.
+The current sun OR moon direction.
 
 <br></br>
 ```glsl
@@ -800,7 +845,7 @@ Photonics doesn't store GI in an accessible way for you, you instead must store 
 
 ## Sampling
 
-To sample light contributions see [sampers](#samplers). 
+To sample light contributions see [samplers](#provided-functionsstructs).
 
 # Programs
 
