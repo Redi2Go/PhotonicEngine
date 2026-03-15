@@ -446,7 +446,7 @@ A color uses a string and supports 2 formats:
 2. Rgb color, where each component is a float from 0 to 1 (E.g. `rgb(1.0, 1.0, 1.0)`)
 
 ### Intensity
-Sets how bright the light is, where 1 is the normal brightness.
+Sets how bright the light is, where 100 is the normal brightness.
 
 Pulls variables from `defines.intensities` in `ph_lights.json`
 Uses a number
