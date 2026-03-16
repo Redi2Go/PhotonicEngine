@@ -286,6 +286,9 @@ Usable in every pass/program. This method will return garbage when `photonics.en
 # /photonics/ph_sampling.glsl
 Can be included directly, but is also included by `photonics/photonics.glsl`. These functions are **always** available.
 
+If you plan to use this outside of the `/photonics/` directory, 
+you should add an empty `shaders/photonics/photonics.glsl` in your shader (similar to `photonics/photonics.glsl`).
+
 ```glsl
 vec3 sample_photonics_direct(vec2 texCoord);
 ```
