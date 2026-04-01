@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -50,23 +51,27 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
     }
 
     @Override
-    @SuppressWarnings("resource")
     public void upload() {
         ICommandEncoder encoder = IRenderSystem.getDevice().createCommandEncoder();
+
+        var regions = new ArrayList<Region>();
 
         while (!uploadQueue.isEmpty()) {
             @Nullable Region region = uploadQueue.poll();
             if (region == null) break;
 
+            regions.add(region);
+        }
+
+        final var mergedRegions = MemorySlice.mergeNeighbors(regions);
+        for (var region : mergedRegions) {
             long offset = region.begin();
             long length = region.end() - offset;
 
-            synchronized (region) {
-                encoder.writeToBuffer(
-                        gpuBuffer.slice(offset, length),
-                        buffer.slice(Math.toIntExact(offset), Math.toIntExact(length))
-                );
-            }
+            encoder.writeToBuffer(
+                    gpuBuffer.slice(offset, length),
+                    buffer.slice(Math.toIntExact(offset), Math.toIntExact(length))
+            );
         }
     }
 
