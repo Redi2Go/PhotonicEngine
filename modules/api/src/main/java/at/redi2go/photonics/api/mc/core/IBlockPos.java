@@ -1,6 +1,5 @@
 package at.redi2go.photonics.api.mc.core;
 
-import at.redi2go.photonics.api.mc.world.level.IBlock;
 import org.joml.Vector3fc;
 
 public interface IBlockPos {

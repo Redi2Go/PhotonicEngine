@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
-
 val mainLibs = libs12111
 
 dependencies {

@@ -2,13 +2,11 @@ package at.redi2go.photonics.core.config;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 

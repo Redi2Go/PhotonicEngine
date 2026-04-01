@@ -4,7 +4,6 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
 import at.redi2go.photonics.api.mc.world.level.ILevelReader;
 import at.redi2go.photonics.core.config.Variable;
-import at.redi2go.photonics.core.config.adapter.BlockAdapter;
 import at.redi2go.photonics.core.config.lights.block.LightBlock;
 import at.redi2go.photonics.core.config.lights.color.LightColor;
 import at.redi2go.photonics.core.config.lights.falloff.LightFalloff;

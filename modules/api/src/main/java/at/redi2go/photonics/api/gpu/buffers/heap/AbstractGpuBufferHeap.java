@@ -1,7 +1,6 @@
 package at.redi2go.photonics.api.gpu.buffers.heap;
 
 import at.redi2go.photonics.api.Disposable;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
