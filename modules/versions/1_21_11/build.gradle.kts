@@ -1,12 +1,12 @@
+import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
+
 val mainLibs = libs12111
 
 architectury {
-    minecraft = mainLibs.versions.minecraft.version.get()
+    minecraft = mainLibs.versions.minecraft.get()
 
     dependencies {
         mappings(loom.officialMojangMappings())
-
-        include(implementation(projects.modules.api))
-        include(implementation(projects.modules.core))
+        shadow(sharedLibs.semver)
     }
 }

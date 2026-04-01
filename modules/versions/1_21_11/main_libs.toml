@@ -1,2 +1,7 @@
 [versions]
-minecraft-version = "1.21.11"
+minecraft = "1.21.11"
+
+fabric-loader = "0.18.4"
+
+[libraries]
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }

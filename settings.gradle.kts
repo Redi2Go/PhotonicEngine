@@ -78,7 +78,7 @@ fun includeMcVersion(version: String) {
     val project = project(projectPath)
     project.projectDir = file("modules/versions/$underscoreVersion")
 
-    val sources = arrayOf("common")
+    val sources = arrayOf("common", "fabric")
     for (source in sources) {
         val sourcePath = "$projectPath:$source"
 

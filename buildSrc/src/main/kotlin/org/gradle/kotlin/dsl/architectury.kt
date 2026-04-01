@@ -1,24 +1,19 @@
 package org.gradle.kotlin.dsl
 
 import dev.architectury.plugin.ArchitectPluginExtension
-import gradle.kotlin.dsl.accessors._6be35cdb3f46f0834efa6727df9adfd0.ext
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.api
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.compileOnly
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.implementation
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.include
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.loom
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.mappings
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.modApi
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.modCompileOnly
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.modImplementation
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.modRuntimeOnly
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.runtimeOnly
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.testCompileOnly
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.testImplementation
-import gradle.kotlin.dsl.accessors._7048eba8028ec3d3412229f1a745078f.testRuntimeOnly
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ExternalDependency
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.accessors.runtime.addConfiguredDependencyTo
+import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
+import org.gradle.language.jvm.tasks.ProcessResources
+import java.io.File
 
 @JvmInline
 value class ArchitecturyCommonDependenciesScope(
@@ -30,25 +25,55 @@ value class ArchitecturyCommonDependenciesScope(
     val loom: LoomGradleExtensionAPI
         get() = project.loom
 
+    private fun add(configuration: String, dependencyNotation: Any?, action: Action<ExternalModuleDependency>) {
+        if (dependencyNotation is Provider<*>) {
+            addConfiguredDependencyTo(backing.dependencies, configuration, dependencyNotation, action)
+        } else {
+            addDependencyTo(backing.dependencies, configuration, dependencyNotation!!, action)
+        }
+    }
+
     // workaround for these being internal in version build file
-    fun mappings(dependencyNotation: Any) = backing.mappings(dependencyNotation)!!
+    fun mappings(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("mappings", dependencyNotation, configureAction)
 
-    fun api(dependencyNotation: Any) = backing.api(dependencyNotation)!!
-    fun compileOnly(dependencyNotation: Any) = backing.compileOnly(dependencyNotation)!!
-    fun implementation(dependencyNotation: Any) = backing.implementation(dependencyNotation)!!
-    fun include(dependencyNotation: Any) = backing.include(dependencyNotation)!!
-    fun runtimeOnly(dependencyNotation: Any) = backing.runtimeOnly(dependencyNotation)!!
+    fun shadow(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("shadow", dependencyNotation!!, configureAction)
 
-    fun modApi(dependencyNotation: Any) = backing.modApi(dependencyNotation)!!
-    fun modCompileOnly(dependencyNotation: Any) = backing.modCompileOnly(dependencyNotation)!!
-    fun modImplementation(dependencyNotation: Any) = backing.modImplementation(dependencyNotation)!!
-    fun modRuntimeOnly(dependencyNotation: Any) = backing.modRuntimeOnly(dependencyNotation)!!
 
-    fun testCompileOnly(dependencyNotation: Any) = backing.testCompileOnly(dependencyNotation)!!
-    fun testImplementation(dependencyNotation: Any) = backing.testImplementation(dependencyNotation)!!
-    fun testRuntimeOnly(dependencyNotation: Any) = backing.testRuntimeOnly(dependencyNotation)!!
+    fun api(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("api", dependencyNotation!!, configureAction)
+    fun compileOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("compileOnly", dependencyNotation!!, configureAction)
+    fun implementation(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("implementation", dependencyNotation!!, configureAction)
+    fun include(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("include", dependencyNotation!!, configureAction)
+    fun runtimeOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("runtimeOnly", dependencyNotation!!, configureAction)
+
+
+    fun modApi(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("modApi", dependencyNotation!!, configureAction)
+    fun modCompileOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("modCompileOnly", dependencyNotation!!, configureAction)
+    fun modImplementation(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("modImplementation", dependencyNotation!!, configureAction)
+    fun modRuntimeOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("modRuntimeOnly", dependencyNotation!!, configureAction)
+
+
+    fun testCompileOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("testCompileOnly", dependencyNotation!!, configureAction)
+    fun testImplementation(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("testImplementation", dependencyNotation!!, configureAction)
+    fun testRuntimeOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
+        add("testRuntimeOnly", dependencyNotation!!, configureAction)
 }
 
+var ArchitectPluginExtension._dependencyBlock: Action<ArchitecturyCommonDependenciesScope>? by Extensions
+var ArchitectPluginExtension._resourceBlock: Action<ProcessResources>? by Extensions
+
 fun ArchitectPluginExtension.dependencies(action: Action<ArchitecturyCommonDependenciesScope>) {
-    ext.set("dependencies", action)
+    _dependencyBlock = action
 }

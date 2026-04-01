@@ -1,21 +1,25 @@
 [versions]
 # Build
 idea-gradle = "1.2"
+shadow = "9.4.1"
 
 # Common
 joml = "1.10.8"
 gson = "2.13.2"
+semver = "3.1.0"
 
 dataFixerUpper = "1.0.19"
 brigadier = "1.0.18"
 
 [plugins]
 idea-gradle = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "idea-gradle" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 
 [libraries]
 
 joml = { module = "org.joml:joml", version.ref = "joml" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+semver = { module = "com.vdurmont:semver4j", version.ref = "semver" }
 
 dataFixerUpper = { module = "com.mojang:datafixerupper", version.ref = "dataFixerUpper" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
