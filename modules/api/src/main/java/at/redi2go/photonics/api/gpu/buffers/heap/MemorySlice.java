@@ -11,11 +11,9 @@ public interface MemorySlice {
 
     static List<? extends MemorySlice> mergeNeighbors(Iterable<? extends MemorySlice> slices) {
         List<MemorySlice> sortedSlices = new ArrayList<>();
-        for (var slice: slices) sortedSlices.add(slice);
-
+        for (var slice : slices) sortedSlices.add(slice);
 
         if (sortedSlices.isEmpty()) return sortedSlices;
-
         sortedSlices.sort(Comparator.comparingLong(MemorySlice::begin));
 
         List<MutableSlice> result = new ArrayList<>();
