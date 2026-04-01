@@ -58,6 +58,7 @@ subprojects {
             mojang()
         }
 
+        // Some of this is unnesscary and no I don't care
         dependencies {
             @Suppress("UNCHECKED_CAST")
             add("minecraft", "com.mojang:minecraft:${architecturyConfig.minecraft}")

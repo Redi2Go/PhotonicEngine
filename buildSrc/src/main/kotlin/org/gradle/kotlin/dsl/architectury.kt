@@ -4,16 +4,11 @@ import dev.architectury.plugin.ArchitectPluginExtension
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.ExternalDependency
 import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.accessors.runtime.addConfiguredDependencyTo
 import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 import org.gradle.language.jvm.tasks.ProcessResources
-import java.io.File
 
 @JvmInline
 value class ArchitecturyCommonDependenciesScope(
@@ -74,6 +69,6 @@ value class ArchitecturyCommonDependenciesScope(
 var ArchitectPluginExtension._dependencyBlock: Action<ArchitecturyCommonDependenciesScope>? by Extensions
 var ArchitectPluginExtension._resourceBlock: Action<ProcessResources>? by Extensions
 
-fun ArchitectPluginExtension.dependencies(action: Action<ArchitecturyCommonDependenciesScope>) {
+fun ArchitectPluginExtension.commonDependencies(action: Action<ArchitecturyCommonDependenciesScope>) {
     _dependencyBlock = action
 }
