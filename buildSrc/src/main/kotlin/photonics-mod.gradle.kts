@@ -55,7 +55,7 @@ subprojects {
             mojang()
         }
 
-        // Some of this is unnesscary and no I don't care
+        // Some of this is unnecessary and no I don't care
         dependencies {
             add("minecraft", "com.mojang:minecraft:${architecturyConfig.minecraft}")
 
