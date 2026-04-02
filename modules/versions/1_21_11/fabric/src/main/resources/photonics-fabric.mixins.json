@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "at.redi2go.photonics.mixins",
+  "package": "at.redi2go.photonics.fabric.mixins",
   "compatibilityLevel": "JAVA_16",
   "minVersion": "0.8",
   "client": [
