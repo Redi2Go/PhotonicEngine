@@ -1,4 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
+import gradle.kotlin.dsl.accessors._6be35cdb3f46f0834efa6727df9adfd0.architectury
+import net.fabricmc.loom.task.RemapJarTask
+import net.fabricmc.loom.task.RemapSourcesJarTask
 
 plugins {
     id("architectury-plugin")
@@ -50,6 +53,8 @@ subprojects {
         val corePath = ":modules:core"
 
         val commonPath = "${parent!!.path}:common"
+
+        val jarName = "photonics-${project.version}-${project.name}+MC-${architecturyConfig.minecraft}"
 
         architectury {
             if (project.name != "common") platformSetupLoomIde()
@@ -126,10 +131,20 @@ subprojects {
                 addSources(project(corePath))
             }
 
-            shadowJar {
-                from(impl.output)
+            named<RemapJarTask>("remapJar") {
+                archiveFileName = "$jarName-unshaded.jar"
+            }
 
+            named<RemapSourcesJarTask>("remapSourcesJar") {
+                archiveFileName = "$jarName-sources.jar"
+            }
+
+            shadowJar {
+                archiveFileName = "$jarName.jar"
                 configurations = listOf(project.configurations.getByName("shadow"))
+
+
+                from(impl.output)
             }
         }
     }
