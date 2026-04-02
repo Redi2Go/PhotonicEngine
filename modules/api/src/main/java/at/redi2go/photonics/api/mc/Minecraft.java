@@ -4,6 +4,9 @@ import at.redi2go.photonics.api.mc.world.level.ILevel;
 import org.jetbrains.annotations.Nullable;
 
 public interface Minecraft {
+    /**
+     * Schedules {@code runnable} to be executed on the render thread during the next frame.
+     */
     static void schedule(Runnable runnable) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }
