@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "photonics",
-  "version": "{photonics_version}+${minecraft_version}",
+  "version": "${photonics_version}+${minecraft_version}",
   "name": "Photonics",
   "description": "An Iris raytracing extension",
   "authors": [
@@ -24,7 +24,7 @@
     "photonics-fabric-impl.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">={fabric_loader_version}",
+    "fabricloader": ">=${fabric_loader_version}",
     "minecraft": "~${minecraft_version}",
     "java": ">=17"
   }
