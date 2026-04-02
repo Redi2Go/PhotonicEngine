@@ -10,6 +10,8 @@ import org.gradle.kotlin.dsl.accessors.runtime.addConfiguredDependencyTo
 import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 import org.gradle.language.jvm.tasks.ProcessResources
 
+var DependencyHandlerScope._fabricLoader: Any? by Extensions
+
 @JvmInline
 value class ArchitecturyCommonDependenciesScope(
     private val backing: DependencyHandlerScope
@@ -35,6 +37,9 @@ value class ArchitecturyCommonDependenciesScope(
     fun shadow(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
         add("shadow", dependencyNotation!!, configureAction)
 
+    fun fabricLoader(dependencyNotation: Any?) {
+        backing._fabricLoader = dependencyNotation
+    }
 
     fun api(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
         add("api", dependencyNotation!!, configureAction)

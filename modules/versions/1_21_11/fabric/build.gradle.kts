@@ -1,9 +1,5 @@
 val mainLibs = libs12111
 
-dependencies {
-    modImplementation(mainLibs.fabric.loader)
-}
-
 tasks {
     processResources {
         inputs.property("version", project.version)

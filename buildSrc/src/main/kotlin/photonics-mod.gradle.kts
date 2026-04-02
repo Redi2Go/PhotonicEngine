@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
+import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 
 plugins {
     id("architectury-plugin")
@@ -81,6 +82,14 @@ subprojects {
 
             ext.set("proj", this@subprojects)
             dependencyBlock?.execute(ArchitecturyCommonDependenciesScope(this))
+
+            val fabricLoader = _fabricLoader
+
+            // Fabric loader is needed on common for mixin dependency.
+            // Why not just include the mixin dependency raw? I have no clue, ask architectury.
+            if (fabricLoader != null && (project.name == "common" || project.name == "fabric")) {
+                add("modImplementation", fabricLoader)
+            }
         }
 
         tasks {
