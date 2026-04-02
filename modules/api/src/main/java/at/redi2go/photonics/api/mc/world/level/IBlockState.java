@@ -14,6 +14,4 @@ public interface IBlockState {
     boolean hasProperty(IProperty<?> property);
 
     <T extends Comparable<T>> T getValue(IProperty<T> property);
-
-    Map<IProperty<?>, Comparable<?>> properties();
 }
