@@ -15,7 +15,7 @@ public class Lazy<T> {
     @SuppressWarnings("unchecked")
     public T get() {
         if (value != NOT_PRESENT)
-            return (T) NOT_PRESENT;
+            return (T) value;
 
         var result = supplier.get();
         supplier = null;
