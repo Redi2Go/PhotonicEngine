@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
-import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 
 plugins {
     id("architectury-plugin")
@@ -22,18 +21,16 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    sourceSets {
-        val main by getting
-        val impl by creating {
-            compileClasspath += main.compileClasspath
-            runtimeClasspath += main.runtimeClasspath
-        }
+    val main by sourceSets.getting
+    val impl by sourceSets.creating {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
 
+    sourceSets {
         main {
             compileClasspath += impl.output
             runtimeClasspath += impl.output
-
-            resources.srcDirs(impl.resources.srcDirs)
         }
 
         configureEach {
@@ -97,7 +94,13 @@ subprojects {
         }
 
         tasks {
+            named<Jar>("jar") {
+                from(impl.output)
+            }
+
             shadowJar {
+                from(impl.output)
+
                 configurations = listOf(project.configurations.getByName("shadow"))
             }
         }
