@@ -19,6 +19,8 @@ subprojects {
     java {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+
+        withSourcesJar()
     }
 
     val main by sourceSets.getting
@@ -44,6 +46,11 @@ subprojects {
         version = parent!!.version
         group = parent!!.group
 
+        val apiPath = ":modules:api"
+        val corePath = ":modules:core"
+
+        val commonPath = "${parent!!.path}:common"
+
         architectury {
             if (project.name != "common") platformSetupLoomIde()
 
@@ -66,7 +73,7 @@ subprojects {
                     "shadow",
                     add(
                         "implementation",
-                        project("${parent!!.path}:common")
+                        project(commonPath)
                     ) {
                         isTransitive = false
                     }
@@ -74,11 +81,11 @@ subprojects {
                     isTransitive = false
                 }
 
-                add("shadow", project(":modules:api")) { isTransitive = false }
-                add("shadow", project(":modules:core")) { isTransitive = false }
+                add("shadow", project(apiPath)) { isTransitive = false }
+                add("shadow", project(corePath)) { isTransitive = false }
             } else {
-                add("implementation", project(":modules:api"))
-                add("implementation", project(":modules:core"))
+                add("implementation", project(apiPath))
+                add("implementation", project(corePath))
             }
 
             ext.set("proj", this@subprojects)
@@ -96,6 +103,27 @@ subprojects {
         tasks {
             named<Jar>("jar") {
                 from(impl.output)
+            }
+
+            named<Jar>("sourcesJar") {
+                fun addSources(sourceSet: SourceSet) {
+                    from(sourceSet.java.srcDirs)
+                    from(sourceSet.resources.srcDirs)
+                }
+
+                fun addSources(project: Project) {
+                    addSources(project.sourceSets["main"])
+                    addSources(project.sourceSets.findByName("impl") ?: return)
+                }
+
+
+                addSources(impl)
+
+                if (project.name != "common")
+                    addSources(project(commonPath))
+
+                addSources(project(apiPath))
+                addSources(project(corePath))
             }
 
             shadowJar {
