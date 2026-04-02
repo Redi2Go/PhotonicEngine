@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "at.redi2go.photonics.impl.mixin",
+  "package": "at.redi2go.photonics.impl.mixins",
   "compatibilityLevel": "JAVA_16",
   "minVersion": "0.8",
   "client": [
