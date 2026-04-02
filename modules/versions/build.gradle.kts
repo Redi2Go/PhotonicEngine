@@ -5,8 +5,8 @@ plugins {
     `photonics-mod` apply false
 }
 
-version = constants.versions.photonics
-group = constants.versions.mavenGroup
+version = constants.versions.photonics.get()
+group = constants.versions.mavenGroup.get()
 
 subprojects {
     apply(plugin = "photonics-mod")

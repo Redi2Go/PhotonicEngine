@@ -2,8 +2,8 @@ plugins {
     id("java")
 }
 
-version = constants.versions.photonics
-group = constants.versions.mavenGroup
+version = constants.versions.photonics.get()
+group = constants.versions.mavenGroup.get()
 
 base.archivesName = "photonics-core"
 
