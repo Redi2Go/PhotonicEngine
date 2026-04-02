@@ -16,6 +16,6 @@ public class BlockAdapter extends TypeAdapter<IBlock> {
 
     @Override
     public IBlock read(JsonReader in) throws IOException {
-        return IBlock.fromId(Id.parse(in.nextString()));
+        return IBlock.fromIdOrThrow(Id.parse(in.nextString()));
     }
 }
