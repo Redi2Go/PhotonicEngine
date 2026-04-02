@@ -23,7 +23,7 @@ fun Project.java(configure: Action<JavaPluginExtension>) {
 }
 
 inline val Project.sourceSets: SourceSetContainer
-    get() = extensions.getByName<SourceSetContainer>("soureSets")
+    get() = extensions.getByName<SourceSetContainer>("sourceSets")
 
 fun Project.sourceSets(configure: Action<SourceSetContainer>) {
     extensions.configure("sourceSets", configure)
