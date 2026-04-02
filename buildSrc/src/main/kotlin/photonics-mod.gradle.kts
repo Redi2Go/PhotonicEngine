@@ -93,6 +93,9 @@ subprojects {
                 add("implementation", project(corePath))
             }
 
+            add("runtimeOnly", project(apiPath))
+            add("runtimeOnly", project(corePath))
+
             ext.set("proj", this@subprojects)
             dependencyBlock?.execute(ArchitecturyCommonDependenciesScope(this))
 
