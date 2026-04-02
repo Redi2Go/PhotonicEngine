@@ -23,6 +23,7 @@ dependencies {
     implementation(sharedLibs.joml)
     implementation(sharedLibs.dataFixerUpper)
     implementation(sharedLibs.brigadier)
+    implementation(sharedLibs.fastutil)
 }
 
 

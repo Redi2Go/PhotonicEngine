@@ -7,6 +7,7 @@ shadow = "9.4.1"
 joml = "1.10.8"
 gson = "2.13.2"
 semver = "3.1.0"
+fastutil = "8.5.18"
 
 dataFixerUpper = "1.0.19"
 brigadier = "1.0.18"
@@ -20,6 +21,7 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 joml = { module = "org.joml:joml", version.ref = "joml" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 semver = { module = "com.vdurmont:semver4j", version.ref = "semver" }
+fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
 
 dataFixerUpper = { module = "com.mojang:datafixerupper", version.ref = "dataFixerUpper" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
