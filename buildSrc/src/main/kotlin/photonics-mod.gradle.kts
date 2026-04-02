@@ -23,7 +23,11 @@ subprojects {
     }
 
     sourceSets {
-        val impl by creating
+        val main by getting
+        val impl by creating {
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.runtimeClasspath
+        }
 
         main {
             compileClasspath += impl.output
