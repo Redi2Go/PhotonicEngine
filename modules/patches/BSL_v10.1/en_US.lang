@@ -1,0 +1,61 @@
+#file "/lang/en_US.lang"
+
+#replace "value.ABOUT.0=by Capt Tatsu"
+value.ABOUT.0=by Capt Tatsu
+
+option.PHOTONICS_ENABLED = §e♦ §rUse Photonics
+option.PHOTONICS_ENABLED.comment       = Should Photonics be used in this shaderpack?
+
+screen.photonics = §e♦ §rPhotonics Options
+
+option.ALPHA_MODE = §e♦ §rTransparency Mode
+option.ALPHA_MODE.comment = Sets how Photonics handles transparent blocks.\n\nNone - Transparent blocks are treated as opaque\nBlock - Transparency is applied per block (§aMinimal performance impact§r)\nVoxel - Transparency is applied per voxel (§cHIGH PERFORMANCE IMPACT§r)
+value.ALPHA_MODE.NONE = None
+value.ALPHA_MODE.BLOCK = Block
+value.ALPHA_MODE.VOXEL = Voxel
+
+option.ENCHANTMENT_GLINT_STRENGTH = §e♦ §rEnchantment Glint Strength
+option.ENCHANTMENT_GLINT_STRENGTH.comment = How much enchanted items contribute to handheld lighting
+value.ENCHANTMENT_GLINT_STRENGTH.0 = Off
+
+option.SEPARATE_HANDHELD_RAYS = §e♦ §rSeparate Handheld Rays
+option.SEPARATE_HANDHELD_RAYS.comment = Whether both handheld lights should cast shadows. When disabled only one shadow will be cast\n\n§aMinimal performance impact
+value.SEPARATE_HANDHELD_RAYS.false = §fOff
+value.SEPARATE_HANDHELD_RAYS.true = §aOn
+
+option.LIGHTING_MODE = §e♦ §rLighting Mode
+option.LIGHTING_MODE.comment = Changes the lighting algorithm Photonics uses for lighting.\n\nSimple - A very simple lighting algorithm with no noise, but a limited number of lights (Max Samples)\nReSTIR - Uses ReSTIR for lighting, supports an unlimited (Max Lights) number of lights, but may be noisy in certain areas.
+value.LIGHTING_MODE.BASIC = Simple
+value.LIGHTING_MODE.RESTIR = ReSTIR
+
+option.RESTIR_INITIAL_SAMPLES = ReSTIR Initial Samples
+option.RESTIR_INITIAL_SAMPLES.comment = How many lights ReSTIR should initially consider \n\n§eMedium performance impact
+
+option.RESTIR_SOFT_SHADOWS = ReSTIR Soft Shadows
+option.RESTIR_SOFT_SHADOWS.comment = Whether ReSTIR should have soft shadows \n\nNo performance impact
+
+option.RESTIR_COMBINED_GI = ReSTIR Combined Gi
+option.RESTIR_COMBINED_GI.comment = Whether Gi should be ran through ReSTIR's denoiser instead of its usual path. \nResults in much sharper Gi, at the cost of performance\n\n§cHIGH PERFORMANCE IMPACT
+value.RESTIR_COMBINED_GI.false = §fOff
+value.RESTIR_COMBINED_GI.true = §aOn
+
+option.RESTIR_SPATIAL_REUSE_SAMPLES = ReSTIR Spatial Reuse Samples
+option.RESTIR_SPATIAL_REUSE_SAMPLES.comment = How many samples ReSTIR uses for spatial reuse \n\n§eMedium performance impact
+
+option.RESTIR_SPATIAL_REUSE_RADIUS = ReSTIR Spatial Reuse Radius
+
+option.RESTIR_ACCUMULATION_FRAMES = ReSTIR Accumulation Frames
+option.RESTIR_ACCUMULATION_FRAMES.comment = The max number of frames ReSTIR uses for accumulation. Lower values will cause lighting to be more responsive, at the cost of more noise. \n\nNo performance impact
+
+option.RESTIR_DENOISER_PASSES = ReSTIR Denoiser Passes
+option.RESTIR_DENOISER_PASSES.comment = The number of passes the denoiser for ReSTIR uses\n\n§eMedium performance impact
+
+value.RESTIR_DENOISER_PASSES.0 = Off
+
+option.MAX_LIGHTS = §e♦ §rMax Lights
+option.MAX_LIGHTS.comment = The max number of traced lights that can be loaded\n\n§eMedium performance impact
+
+option.MAX_SAMPLES = §e♦ §rMax Basic Sample Count
+option.MAX_SAMPLES.comment = The amount of nearby lights that can cast light on an object\n\n§cHIGH PERFORMANCE IMPACT
+
+#endreplace
