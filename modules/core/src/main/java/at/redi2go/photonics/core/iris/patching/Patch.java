@@ -1,10 +1,9 @@
 package at.redi2go.photonics.core.iris.patching;
 
+import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.core.Photonics;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.Multimaps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.Strictness;
@@ -14,14 +13,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,6 +34,8 @@ public class Patch {
             .excludeFieldsWithoutExposeAnnotation()
             .setStrictness(Strictness.LENIENT)
             .create();
+
+    private String name;
 
     @Expose private int formatVersion;
     @Expose private List<String> shaderPackNames;
@@ -89,6 +88,19 @@ public class Patch {
         }
 
         return patch;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public boolean canBeApplied(IShaderPack shaderPack) {
+        for (var name : shaderPackNames) {
+            if (name.contains(shaderPack.name()))
+                return true;
+        }
+
+        return false;
     }
 
     public String applyPatches(

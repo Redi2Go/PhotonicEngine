@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.iris.patching;
 
 import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.core.Photonics;
 import it.unimi.dsi.fastutil.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -39,7 +40,7 @@ public class PatchList implements Disposable {
                             try {
                                 final var fs = FileSystems.newFileSystem(p);
                                 return Triple.of(p, name, fs);
-                            } catch(IOException e) {
+                            } catch (IOException e) {
                                 Photonics.LOGGER.error("An exception was thrown creating file system for {}", name, e);
 
                                 return Triple.<Path, String, FileSystem>of(p, name, null);
@@ -60,12 +61,21 @@ public class PatchList implements Disposable {
         }
     }
 
+    public Optional<Patch> loadPatch(IShaderPack shaderPack) {
+        for (var patch : patches) {
+            if (patch.canBeApplied(shaderPack))
+                return Optional.of(patch);
+        }
+
+        return Optional.empty();
+    }
+
     @Override
     public void close() {
         for (var fs : fileSystems) {
             try {
                 fs.close();
-            } catch(IOException e) {
+            } catch (IOException e) {
                 Photonics.LOGGER.error("An exception was thrown while closing a patch file system");
             }
         }
