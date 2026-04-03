@@ -88,6 +88,7 @@ public class Patch {
             throw new RuntimeException(e);
         }
 
+        patch.get().name = patchName;
         return patch;
     }
 
