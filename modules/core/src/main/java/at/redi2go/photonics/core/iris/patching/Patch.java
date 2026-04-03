@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.iris.patching;
 
+import at.redi2go.photonics.api.shaders.IPackPath;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.core.Photonics;
 import com.google.common.collect.Multimap;
@@ -41,9 +42,9 @@ public class Patch {
     @Expose private List<String> shaderPackNames;
     @Expose private List<String> supportedVersions;
     @Expose private boolean debug;
-    @Expose private Set<String> alwaysPatched;
+    @Expose private Set<IPackPath> alwaysPatched;
 
-    private final Multimap<String, Path> patches =
+    private final Multimap<IPackPath, Path> patches =
             MultimapBuilder.hashKeys()
                     .arrayListValues()
                     .build();
@@ -77,7 +78,7 @@ public class Patch {
                 if (Files.isDirectory(pathFile)) continue;
                 if (pathFile.equals(patchJson)) continue;
 
-                Optional<String[]> files = readFileMacro(pathFile, patchName);
+                Optional<IPackPath[]> files = readFileMacro(pathFile, patchName);
                 if (files.isEmpty()) return Optional.empty();
 
                 for (var file : files.get())
@@ -104,15 +105,15 @@ public class Patch {
     }
 
     public String applyPatches(
-            String path,
-            Function<String, @Nullable String> shaderSourceSupplier,
+            IPackPath path,
+            Function<IPackPath, @Nullable String> shaderSourceSupplier,
             boolean photonicsEnabled
     ) {
         String source = shaderSourceSupplier.apply(path);
-        var patchFiles = patches.get("/" + path);
+        var patchFiles = patches.get(path);
         if (patchFiles.isEmpty()) return source;
 
-        if (!photonicsEnabled && !alwaysPatched.contains("/" + path)) return source;
+        if (!photonicsEnabled && !alwaysPatched.contains(path)) return source;
 
         for (var patch : patchFiles) try {
             source = applySinglePatch(source, path, shaderSourceSupplier, patch);
@@ -125,8 +126,8 @@ public class Patch {
 
     private String applySinglePatch(
             @Nullable String source,
-            String path,
-            Function<String, String> shaderSourceSupplier,
+            IPackPath path,
+            Function<IPackPath, String> shaderSourceSupplier,
             Path patchFile
     ) throws IOException {
         Queue<String> lines = new ArrayDeque<>();
@@ -140,8 +141,8 @@ public class Patch {
             }
         }
 
-        String[] fileLocations = null;
-        String[] templateLocations = null;
+        IPackPath[] fileLocations = null;
+        IPackPath[] templateLocations = null;
 
         List<Pair<String, String>> replacements = new ArrayList<>();
 
@@ -206,17 +207,17 @@ public class Patch {
         if (templateLocations == null) {
             templateLocations = fileLocations;
         } else if (templateLocations.length == 1) {
-            String templateLocation = templateLocations[0];
-            templateLocations = new String[fileLocations.length];
+            IPackPath templateLocation = templateLocations[0];
+            templateLocations = new IPackPath[fileLocations.length];
 
             Arrays.fill(templateLocations, templateLocation);
         } else if (templateLocations.length != fileLocations.length) {
             throw new PatchLoadException("The amount of template files must either be 1, or equal to the amount of 'file' locations");
         }
 
-        var index = List.of(fileLocations).indexOf("/" + path);
+        var index = List.of(fileLocations).indexOf(path);
 
-        String templateLocation = templateLocations[index].substring(1);
+        IPackPath templateLocation = templateLocations[index];
         if (!templateLocation.equals(path))
             source = shaderSourceSupplier.apply(templateLocation);
 
@@ -242,7 +243,7 @@ public class Patch {
         }
     }
 
-    private static Optional<String[]> readFileMacro(Path path, String patchName) {
+    private static Optional<IPackPath[]> readFileMacro(Path path, String patchName) {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             var line = reader.readLine();
             if (!line.startsWith("#file")) {
@@ -257,17 +258,17 @@ public class Patch {
         }
     }
 
-    private static String[] readLocations(String[] lineTokens) throws PatchLoadException {
+    private static IPackPath[] readLocations(String[] lineTokens) throws PatchLoadException {
         if (lineTokens.length == 1)
             throw new PatchLoadException("You must provide location directives");
 
-        String[] locations = new String[lineTokens.length - 1];
+        IPackPath[] locations = new IPackPath[lineTokens.length - 1];
         for (int i = 1; i < lineTokens.length; i++) {
             String location = lineTokens[i].substring(1, lineTokens[i].length() - 1);
             if (!location.startsWith("/"))
                 throw new PatchLoadException("Location file must start with a '/'");
 
-            locations[i - 1] = "/shaders" + location;
+            locations[i - 1] = IPackPath.fromAbsolutePath(location);
         }
 
         return locations;

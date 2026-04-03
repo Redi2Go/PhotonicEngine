@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.iris;
 
+import at.redi2go.photonics.api.shaders.IPackPath;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.Photonics;
@@ -31,8 +32,8 @@ public abstract class PhotonicsExtension implements AutoCloseable {
      * Reads a potentially patched shader file, also responsible for loading Photonics' built in shader files.
      */
     public String readShaderFile(
-            String path,
-            Function<String, @Nullable String> shaderSourceSupplier
+            IPackPath path,
+            Function<IPackPath, @Nullable String> shaderSourceSupplier
     ) {
         throw new UnsupportedOperationException("TODO");
     }
