@@ -120,7 +120,8 @@ subprojects {
                     }
 
                     from(shadersPath) {
-                        into("/assets/photonics/shaders/")
+                        // This is under /shaders/photonics to make it easier to access with IPackPath
+                        into("/assets/photonics/shaders/photonics/")
                     }
                 }
             }
