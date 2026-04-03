@@ -8,11 +8,12 @@ import java.util.stream.Stream;
 public class DevEnvSource implements PatchSource {
     @Override
     public Stream<Path> streamPatches() {
-        throw new UnsupportedOperationException("TODO");
+        //TODO
+        return Stream.empty();
     }
 
     @Override
     public void onChanged(Runnable listener) {
-        throw new UnsupportedOperationException("TODO");
+        //TODO
     }
 }

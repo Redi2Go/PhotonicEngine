@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -103,6 +104,10 @@ public class Patch {
         }
 
         return false;
+    }
+
+    public Collection<IPackPath> getFiles() {
+        return patches.keySet();
     }
 
     public String applyPatches(

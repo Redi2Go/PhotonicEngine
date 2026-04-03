@@ -10,6 +10,12 @@ public interface IPackPath {
 
     Path resolved(Path root);
 
+    boolean startsWith(IPackPath path);
+
+    default boolean startsWith(String absolutePath) {
+        return startsWith(fromAbsolutePath(absolutePath));
+    }
+
     static IPackPath fromAbsolutePath(String absolutePath) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }

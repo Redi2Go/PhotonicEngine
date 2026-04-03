@@ -6,18 +6,23 @@ import com.vdurmont.semver4j.Semver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+
 public class Photonics {
     public static final Logger LOGGER = LoggerFactory.getLogger("Photonics");
 
     private static Semver version;
     private static boolean isDevEnvironment;
+    private static Path assets;
 
     public static void init(
            Semver modVersion,
            boolean isDevelopmentEnvironment
-    ) {
+    ) throws URISyntaxException{
         version = modVersion;
         isDevEnvironment = isDevelopmentEnvironment;
+        assets = Path.of(Photonics.class.getResource("/assets").toURI());
 
         PhConfig.reloadConfig();
         PhConfigWatchThread.INSTANCE.start();
@@ -29,5 +34,9 @@ public class Photonics {
 
     public static boolean isDevEnvironment() {
         return isDevEnvironment;
+    }
+
+    public static Path getAssetsPath() {
+        return assets;
     }
 }

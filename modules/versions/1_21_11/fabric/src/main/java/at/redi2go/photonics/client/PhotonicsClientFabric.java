@@ -6,6 +6,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 public class PhotonicsClientFabric implements ClientModInitializer {
@@ -14,9 +15,13 @@ public class PhotonicsClientFabric implements ClientModInitializer {
         Optional<ModContainer> photonics = FabricLoader.getInstance().getModContainer("photonics");
         if (photonics.isEmpty()) throw new IllegalStateException("Where is photonics? :(");
 
-        Photonics.init(
-                new Semver(photonics.get().getMetadata().getVersion().getFriendlyString()),
-                FabricLoader.getInstance().isDevelopmentEnvironment()
-        );
+        try {
+            Photonics.init(
+                    new Semver(photonics.get().getMetadata().getVersion().getFriendlyString()),
+                    FabricLoader.getInstance().isDevelopmentEnvironment()
+            );
+        } catch(URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
