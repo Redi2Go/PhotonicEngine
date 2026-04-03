@@ -64,6 +64,10 @@ subprojects {
 
         }
 
+        val modulesPath = rootProject.childProjects["modules"]!!.projectDir
+        val patchesPath = modulesPath.resolve("patches")
+        val shadersPath = modulesPath.resolve("shaders")
+
         repositories {
             mavenCentral()
             mojang()
@@ -109,6 +113,18 @@ subprojects {
         }
 
         tasks {
+            named<ProcessResources>("processResources") {
+                if (project.name == "common") {
+                    from(patchesPath) {
+                        into("/assets/photonics/patches/")
+                    }
+
+                    from(shadersPath) {
+                        into("/assets/photonics/shaders/")
+                    }
+                }
+            }
+
             named<Jar>("jar") {
                 from(impl.output)
             }
