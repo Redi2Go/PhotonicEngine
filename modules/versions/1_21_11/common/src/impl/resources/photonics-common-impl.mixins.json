@@ -26,7 +26,9 @@
     "mc.world.level.ILevelReaderImpl",
     "mc.commands.arguments.blocks.IBlockStateParserImpl",
     "mc.commands.arguments.blocks.BlockStateParser$BlockResultMixin",
-    "mc.commands.arguments.blocks.BlockStateParser$TagResultMixin"
+    "mc.commands.arguments.blocks.BlockStateParser$TagResultMixin",
+    "shaders.AbsolutePackPathMixin",
+    "shaders.IPathPackImpl"
   ],
   "mixins": [
   ],
