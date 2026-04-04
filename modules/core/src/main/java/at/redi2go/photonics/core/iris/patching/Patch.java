@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 public class Patch {
     private static final int FORMAT_VERSION = 1;
     private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(IPackPath.class, new IPackPath.Adapter())
             .excludeFieldsWithoutExposeAnnotation()
             .setStrictness(Strictness.LENIENT)
             .create();
@@ -244,6 +245,7 @@ public class Patch {
                     )
             );
         } catch (IOException e) {
+        } catch (Exception e) {
             Photonics.LOGGER.error("Could not parse patch.json for {}", patchName, e);
             return Optional.empty();
         }
