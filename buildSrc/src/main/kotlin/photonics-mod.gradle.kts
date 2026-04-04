@@ -122,7 +122,7 @@ subprojects {
 
         tasks {
             named<ProcessResources>("processResources") {
-                if (project.name == "common") {
+                if (project.name != "common") {
                     from(patchesPath) {
                         into("/assets/photonics/patches/")
                     }

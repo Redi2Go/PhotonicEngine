@@ -18,11 +18,12 @@ public class Photonics {
 
     public static void init(
            Semver modVersion,
-           boolean isDevelopmentEnvironment
+           boolean isDevelopmentEnvironment,
+           Path assetsPath
     ) throws URISyntaxException{
         version = modVersion;
         isDevEnvironment = isDevelopmentEnvironment;
-        assets = Path.of(Photonics.class.getResource("/assets").toURI());
+        assets = assetsPath;
 
         PhConfig.reloadConfig();
         PhConfigWatchThread.INSTANCE.start();
