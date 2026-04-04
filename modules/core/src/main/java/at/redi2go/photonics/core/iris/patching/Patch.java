@@ -107,6 +107,10 @@ public class Patch {
         return false;
     }
 
+    public boolean isDebugEnabled() {
+        return Photonics.isDevEnvironment() || debug;
+    }
+
     public Collection<IPackPath> getFiles() {
         return patches.keySet();
     }
@@ -127,6 +131,9 @@ public class Patch {
         } catch (IOException e) {
             Photonics.LOGGER.warn("An exception was thrown applying patch file {}", patch, e);
         }
+
+        if (isDebugEnabled())
+            ShaderPatcher.writeDebug(path, source);
 
         return source;
     }
@@ -244,7 +251,6 @@ public class Patch {
                             Patch.class
                     )
             );
-        } catch (IOException e) {
         } catch (Exception e) {
             Photonics.LOGGER.error("Could not parse patch.json for {}", patchName, e);
             return Optional.empty();
