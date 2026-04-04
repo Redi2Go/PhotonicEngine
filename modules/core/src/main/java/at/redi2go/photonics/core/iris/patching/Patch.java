@@ -99,7 +99,7 @@ public class Patch {
 
     public boolean canBeApplied(IShaderPack shaderPack) {
         for (var name : shaderPackNames) {
-            if (name.contains(shaderPack.name()))
+            if (shaderPack.name().contains(name))
                 return true;
         }
 
