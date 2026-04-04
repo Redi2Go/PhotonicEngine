@@ -3,6 +3,7 @@ package org.gradle.kotlin.dsl
 import dev.architectury.plugin.ArchitectPluginExtension
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.provider.Provider
@@ -73,6 +74,7 @@ value class ArchitecturyCommonDependenciesScope(
 
 var ArchitectPluginExtension._dependencyBlock: Action<ArchitecturyCommonDependenciesScope>? by Extensions
 var ArchitectPluginExtension._resourceBlock: Action<ProcessResources>? by Extensions
+var ArchitectPluginExtension.javaVersion: JavaVersion? by Extensions
 
 fun ArchitectPluginExtension.commonDependencies(action: Action<ArchitecturyCommonDependenciesScope>) {
     _dependencyBlock = action

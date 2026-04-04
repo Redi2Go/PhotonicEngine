@@ -20,9 +20,6 @@ subprojects {
     apply(plugin = "java")
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-
         withSourcesJar()
     }
 
@@ -56,6 +53,11 @@ subprojects {
 
         val jarName = "photonics-${project.version}-${project.name}+MC-${architecturyConfig.minecraft}"
 
+        java {
+            sourceCompatibility = architecturyConfig.javaVersion ?: JavaVersion.VERSION_17
+            targetCompatibility = architecturyConfig.javaVersion ?: JavaVersion.VERSION_17
+        }
+
         architectury {
             if (project.name != "common") platformSetupLoomIde()
 
@@ -70,7 +72,9 @@ subprojects {
 
         repositories {
             mavenCentral()
+
             mojang()
+
         }
 
         // Some of this is unnecessary and no I don't care

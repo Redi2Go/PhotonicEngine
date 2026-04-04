@@ -19,6 +19,14 @@ repositories {
         name = "Architectury"
     }
 
+    maven("https://api.modrinth.com/maven") {
+        name = "Modrinth"
+
+        content {
+            includeGroup("maven.modrinth")
+        }
+    }
+
     google()
     mavenCentral()
 
