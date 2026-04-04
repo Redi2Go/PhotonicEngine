@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "shaderPackNames": [ "BSL_v10.1" ],
   "supportedVersions": [ "0.3.5" ],
-  "debug": true,
+  "debug": false,
   "alwaysPatched": [
     "/lib/settings.glsl",
     "/shaders.properties",

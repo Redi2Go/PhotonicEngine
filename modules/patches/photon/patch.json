@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "shaderPackNames": [ "photon-main" ],
   "supportedVersions": [ "0.3.5" ],
-  "debug": true,
+  "debug": false,
   "alwaysPatched": [
     "/settings.glsl",
     "/shaders.properties",
