@@ -3,5 +3,22 @@ minecraft = "1.21.11"
 
 fabric-loader = "0.18.4"
 
+antlr = "4.13.1"
+glsl-transformer = "3.0.0-pre3"
+jcpp = "1.4.14"
+
+fabric-api = "0.140.2+1.21.11"
+
+sodium = "mc1.21.11-0.8.4-fabric"
+iris = "1.10.5+1.21.11-fabric"
+
 [libraries]
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+
+antlr4-runtime = { module = "org.antlr:antlr4-runtime", version.ref = "antlr" }
+glsl-transformer = { module = "io.github.douira:glsl-transformer", version.ref = "glsl-transformer" }
+jcpp = { module = "org.anarres:jcpp", version.ref = "jcpp" }
+
+sodium = { module = "maven.modrinth:sodium", version.ref = "sodium" }
+iris = { module = "maven.modrinth:iris", version.ref = "iris" }

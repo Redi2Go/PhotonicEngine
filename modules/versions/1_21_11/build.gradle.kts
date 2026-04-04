@@ -11,5 +11,12 @@ architectury {
         fabricLoader(mainLibs.fabric.loader)
 
         shadow(sharedLibs.semver)
+
+        runtimeOnly(mainLibs.antlr4.runtime)
+        implementation(mainLibs.glsl.transformer)
+        implementation(mainLibs.jcpp)
+
+        modImplementation(mainLibs.sodium)
+        modImplementation(mainLibs.iris)
     }
 }

@@ -75,6 +75,10 @@ subprojects {
 
             mojang()
 
+            fabric()
+            forge()
+            architectury()
+            modrinth()
         }
 
         // Some of this is unnecessary and no I don't care

@@ -1,5 +1,10 @@
 val mainLibs = libs12111
 
+dependencies {
+    // Required by sodium
+    modRuntimeOnly(mainLibs.fabric.api)
+}
+
 tasks {
     processResources {
         inputs.property("version", project.version)

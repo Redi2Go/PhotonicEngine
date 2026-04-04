@@ -13,3 +13,25 @@ fun RepositoryHandler.fabric() {
         name = "Fabric"
     }
 }
+
+fun RepositoryHandler.forge() {
+    maven("https://maven.minecraftforge.net/") {
+        name = "Forge"
+    }
+}
+
+fun RepositoryHandler.architectury() {
+    maven("https://maven.architectury.dev/") {
+        name = "Architectury"
+    }
+}
+
+fun RepositoryHandler.modrinth() {
+    maven("https://api.modrinth.com/maven") {
+        name = "Modrinth"
+
+        content {
+            includeGroup("maven.modrinth")
+        }
+    }
+}
