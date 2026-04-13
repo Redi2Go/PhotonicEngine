@@ -1,6 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.block;
 
 public class VoxelColor {
+    public static final int WHITE = -1;
+
     public static int r(int packedColor) {
         return (packedColor >>> 16) & 0xff;
     }

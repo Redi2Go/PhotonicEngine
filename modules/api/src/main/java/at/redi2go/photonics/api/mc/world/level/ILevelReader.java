@@ -5,7 +5,7 @@ import at.redi2go.photonics.api.mc.core.IRegistryAccess;
 import at.redi2go.photonics.api.mc.world.level.block.IBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
-public interface ILevelReader extends IBlockGetter {
+public interface ILevelReader extends IBlockAndTintGetter {
     IRegistryAccess registryAccess();
 
     static ILevelReader createFacade(IBlockState blockState) {

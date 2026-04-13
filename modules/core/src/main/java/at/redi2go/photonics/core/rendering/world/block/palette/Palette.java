@@ -70,6 +70,7 @@ public interface Palette {
         }
     }
 
+    // TODO: Rewrite this to do tinting after creating palettes
     class Builder {
         private final Object2ObjectMap<MutablePaletteEntry, MutablePaletteEntry> intern = new Object2ObjectOpenHashMap<>();
         private MutablePaletteEntry[] sortedEntries;
