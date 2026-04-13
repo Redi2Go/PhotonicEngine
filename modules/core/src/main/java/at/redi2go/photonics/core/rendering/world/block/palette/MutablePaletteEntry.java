@@ -4,7 +4,7 @@ import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import org.jetbrains.annotations.Nullable;
 
-public final class MutablePaletteEntry extends Palette.Entry {
+public final class MutablePaletteEntry extends PaletteEntry {
     int index = 0;
 
     public boolean canMerge(MutablePaletteEntry other) {
