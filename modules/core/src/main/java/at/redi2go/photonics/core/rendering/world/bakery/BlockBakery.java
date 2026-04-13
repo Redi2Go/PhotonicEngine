@@ -3,11 +3,13 @@ package at.redi2go.photonics.core.rendering.world.bakery;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.bakery.vertex.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.vertex.VertexBuilderImpl;
+import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import org.joml.RoundingMode;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
+import org.joml.Vector4f;
 
 public class BlockBakery {
     private static final float BLOCK_SIZE_INV = 1f / 16f;
@@ -18,6 +20,8 @@ public class BlockBakery {
     private final Vertex v1 = new Vertex();
     private final Vertex v2 = new Vertex();
     private final Vertex v3 = new Vertex();
+
+    private final Vector4f tint = new Vector4f();
 
     private final Vertex[] tri = new Vertex[3];
 
@@ -35,15 +39,17 @@ public class BlockBakery {
             v2.readVertex(vertexBuilder);
             v3.readVertex(vertexBuilder);
 
+            VoxelColor.toVector(v0.tint(), tint);
+
             tri[0] = v0;
             tri[1] = v1;
             tri[2] = v2;
-            voxelizeTri(texture, blockId, tri, consumer);
+            voxelizeTri(texture, blockId, tint, tri, consumer);
 
             tri[0] = v2;
             tri[1] = v3;
             tri[2] = v0;
-            voxelizeTri(texture, blockId, tri, consumer);
+            voxelizeTri(texture, blockId, tint, tri, consumer);
         }
     }
 
@@ -51,6 +57,7 @@ public class BlockBakery {
     private void voxelizeTri(
             CpuTexture texture,
             int blockId,
+            Vector4f tint,
             Vertex[] tri,
             VoxelConsumer consumer
     ) {
@@ -106,7 +113,7 @@ public class BlockBakery {
                     var textureData = sample(texture, blockId, tri, baryPos);
                     if (textureData == null) continue;
 
-                    consumer.accept(x, y, z, normalIndex, textureData);
+                    consumer.accept(x, y, z, normalIndex, textureData.withTint(tint));
                 }
             }
         }
