@@ -60,7 +60,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     }
 
     protected int getVoxelPtr(Object voxel) {
-        return (int) (((WorldVoxel) voxel).memory.begin() >> 2);
+        return MemoryView.intBufferBegin(((WorldVoxel) voxel).memory);
     }
 
     protected Object createMutableCopy(Object voxel) {

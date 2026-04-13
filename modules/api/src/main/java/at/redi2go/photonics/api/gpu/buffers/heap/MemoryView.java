@@ -15,4 +15,8 @@ public interface MemoryView extends Disposable {
     ByteBuffer buffer();
 
     void upload();
+
+    static int intBufferBegin(MemoryView memory) {
+        return (int) (memory.begin() >> 2);
+    }
 }
