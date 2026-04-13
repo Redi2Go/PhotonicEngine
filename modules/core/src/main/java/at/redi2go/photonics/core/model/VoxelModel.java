@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-public interface VoxelModel<S> {
+public interface VoxelModel {
     /**
      * The dimensions of the model. Each component must always be a power of 2.
      */
@@ -25,32 +25,33 @@ public interface VoxelModel<S> {
         return get(pos.x(), pos.y(), pos.z());
     }
 
-    /**
-     * Applies {@code transform} to each voxel in this model, and returns the new model.
-     *
-     * @param transform The transform to apply, where {@link Vector3i} is the x,y,z of the voxel. The value after the transform is used as the new position for the voxel.
-     */
-    VoxelModel<S> applyTransform(Consumer<Vector3i> transform, IntFunction<S> storageSupplier);
-
-    /**
-     * Returns an axis-independent hash, that encodes rotation.
-     * Vector components can be hashed together, to create a rotation-independent hash.
-     * <br><br>
-     * Useful to avoid saving multiple schematics that only differ in rotation.
-     *
-     * @apiNote Requires {@link VoxelModel#size()} to be 16x16x16
-     */
-    Optional<Vector3ic> hashVector();
-
-    interface Builder<S> extends VoxelModel<S> {
-        void set(int x, int y, int z, int value);
-
-        default void set(Vector3i pos, int value) {
-            set(pos.x, pos.y, pos.z, value);
-        }
-
-        Builder<S> optimize();
-
-        VoxelModel<S> build();
+    default int getAir(int x, int y, int z) {
+        return VoxelEntry.getAir(get(x, y, z));
     }
+
+    default int getAir(Vector3ic pos) {
+        return getAir(pos.x(), pos.y(), pos.z());
+    }
+
+    default int getData(int x, int y, int z) {
+        return VoxelEntry.getData(get(x, y, z));
+    }
+
+    default int getData(Vector3ic pos) {
+        return getData(pos.x(), pos.y(), pos.z());
+    }
+
+    private static int expandBits(int value) {
+        int v = value & 0x1F;
+        v = (v | (v << 16)) & 0x030000FF;
+        v = (v | (v << 8)) & 0x0300F00F;
+        v = (v | (v << 4)) & 0x030C30C3;
+        v = (v | (v << 2)) & 0x09249249;
+        return v;
+    }
+
+    public static int toVoxelIndex(int x, int y, int z) {
+        return expandBits(x) | (expandBits(y) << 1) | (expandBits(z) << 2);
+    }
+
 }
