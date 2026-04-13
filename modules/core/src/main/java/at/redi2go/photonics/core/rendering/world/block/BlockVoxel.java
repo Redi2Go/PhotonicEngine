@@ -9,6 +9,8 @@ import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import java.nio.IntBuffer;
 
 public interface BlockVoxel extends RtVoxel, ReferencedObject {
+    int memory();
+
     @Override
     default int blockSideLength() {
         return 1;

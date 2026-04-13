@@ -19,4 +19,6 @@ public interface WorldAllocator {
      * Returns the object that owns the memory at {@code begin}
      */
     @Nullable Object getOwner(int begin);
+
+    void freeUnusedObjects();
 }
