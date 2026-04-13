@@ -30,6 +30,8 @@ dependencies {
     implementation(projects.modules.api)
     implementation(coreLibs.jetrains.annotations)
     implementation(coreLibs.slf4j.api)
+
+    implementation(coreLibs.fastutil.concurrent.wrapper)
 }
 
 
