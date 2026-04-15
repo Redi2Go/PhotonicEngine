@@ -5,10 +5,10 @@ import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 public interface RtVoxel extends VoxelModel {
-    int SIZE = 16;
-    Vector3ic SIZE_3 = new Vector3i(SIZE);
+    int SIDE_LENGTH = 16;
+    Vector3ic SIZE_3 = new Vector3i(SIDE_LENGTH);
 
-    int ENTRIES_SIZE = SIZE * SIZE * SIZE;
+    int ENTRIES_SIZE = SIDE_LENGTH * SIDE_LENGTH * SIDE_LENGTH;
 
     int blockSideLength();
 
@@ -25,11 +25,7 @@ public interface RtVoxel extends VoxelModel {
     default boolean containsBlock(int x, int y, int z) {
         var size = blockSideLength();
 
-        return ((x | y | z |
-                ~(x - size) |
-                ~(y - size) |
-                ~(z - size)
-        ) & Integer.MIN_VALUE) == 0;
+        return VoxelModel.contains(x, y, z, size, size, size);
     }
 
     default boolean containsBlock(Vector3ic pos) {
@@ -39,11 +35,7 @@ public interface RtVoxel extends VoxelModel {
     default boolean containsVoxel(int x, int y, int z) {
         var size = voxelSideLength();
 
-        return ((x | y | z |
-                ~(x - size) |
-                ~(y - size) |
-                ~(z - size)
-        ) & Integer.MIN_VALUE) == 0;
+        return VoxelModel.contains(x, y, z, size, size, size);
     }
 
     default boolean containsVoxel(Vector3ic pos) {

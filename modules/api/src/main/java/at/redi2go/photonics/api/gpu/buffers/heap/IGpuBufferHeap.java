@@ -1,6 +1,7 @@
 package at.redi2go.photonics.api.gpu.buffers.heap;
 
 import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
 import org.jetbrains.annotations.Nullable;
 
 public interface IGpuBufferHeap extends Disposable {

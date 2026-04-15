@@ -34,13 +34,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
 
     @Override
     public boolean contains(int x, int y, int z) {
-        // Dumb way to do this check without using branches
-        // From my testing its around 20x faster than checking <c> >= 0 && <c> < size.<c>() x3
-        return ((x | y | z |
-                        ~(x - width) |
-                        ~(y - height) |
-                        ~(z - depth)
-        ) & Integer.MIN_VALUE) == 0;
+        return VoxelModel.contains(x, y, z, width, height, depth);
     }
 
     @Override

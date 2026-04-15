@@ -6,6 +6,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.vertex.VertexBuilderImpl
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import org.apache.commons.lang3.NotImplementedException;
 import org.joml.RoundingMode;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -14,7 +15,7 @@ import org.joml.Vector4f;
 public class BlockBakery {
     private static final float BLOCK_SIZE_INV = 1f / 16f;
 
-    private final VertexBuilderImpl vertexBuilder = new VertexBuilderImpl();
+    private final VertexBuilderImpl vertexBuilder = new VertexBuilderImpl(null);
 
     private final Vertex v0 = new Vertex();
     private final Vertex v1 = new Vertex();

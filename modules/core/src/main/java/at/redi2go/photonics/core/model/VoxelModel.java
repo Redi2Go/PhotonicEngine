@@ -50,8 +50,17 @@ public interface VoxelModel {
         return v;
     }
 
-    public static int toVoxelIndex(int x, int y, int z) {
+    static int toVoxelIndex(int x, int y, int z) {
         return expandBits(x) | (expandBits(y) << 1) | (expandBits(z) << 2);
     }
 
+    static boolean contains(int x, int y, int z, int width, int height, int depth) {
+        // Dumb way to do this check without using branches
+        // From my testing its around 20x faster than checking <c> >= 0 && <c> < size.<c>() x3
+        return ((x | y | z |
+                ~(x - width) |
+                ~(y - height) |
+                ~(z - depth)
+        ) & Integer.MIN_VALUE) == 0;
+    }
 }

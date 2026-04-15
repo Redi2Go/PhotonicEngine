@@ -1,69 +1,158 @@
 package at.redi2go.photonics.core.rendering.world.allocator;
 
 import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
-import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
+import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
+import at.redi2go.photonics.core.collect.ConcurrentInt2ObjectMap;
 import at.redi2go.photonics.core.rendering.world.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.allocator.block.BlockEntryBuilderImpl;
+import at.redi2go.photonics.core.rendering.world.allocator.block.BlockEntryData;
+import at.redi2go.photonics.core.rendering.world.allocator.block.BlockVoxelImpl;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
+import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
+import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class BufferWorldAllocator implements WorldAllocator, Disposable {
     private final IGpuBufferHeap heap;
     private final PaletteTexture paletteTexture;
 
-    private final ConcurrentLong2ObjectMap<Object> ownerLookup = new ConcurrentLong2ObjectMap<>(8);
-    private final ConcurrentHashMap<PaletteEntry, PaletteAllocation> paletteLookup = new ConcurrentHashMap<>();
+    private final ConcurrentInt2ObjectMap<Object> ownerLookup = new ConcurrentInt2ObjectMap<>(8);
+    private final ConcurrentHashMap<Object, HashedObject> hashedObjectCache = new ConcurrentHashMap<>();
+//    private final ConcurrentHashMap<PaletteEntry, PaletteAllocation> paletteLookup = new ConcurrentHashMap<>();
 
-    private final Set<RefCounter> freeQueue = ConcurrentHashMap.newKeySet();
+    private final Set<HashedObject> freeQueue = ConcurrentHashMap.newKeySet();
+    private final Random random = new Random();
 
-    public BufferWorldAllocator(IGpuBufferHeap heap, PaletteTexture allocator) {
-        this.heap = heap;
+    public BufferWorldAllocator(
+            long byteSize,
+            PaletteTexture allocator
+    ) {
+        this.heap = IRenderSystem.getDevice()
+                .createBufferHeap(
+                        () -> "World Buffer",
+                        byteSize,
+                        BufferUsage.MAP_WRITE
+                );
+
         this.paletteTexture = allocator;
+    }
+
+    public IGpuBufferHeap buffer() {
+        return heap;
+    }
+
+    public PaletteTexture paletteTexture() {
+        return paletteTexture;
     }
 
     @Override
     public MemoryView allocate(int byteSize, Object object) {
         MemoryView original = heap.allocateOrThrow(byteSize);
-        ownerLookup.put(original.begin(), object);
+        ownerLookup.put(MemoryView.intBufferBegin(original), object);
 
         return new ObjectMemoryView(original);
     }
 
-    PaletteAllocation allocatePalette(PaletteEntry entry) {
-        var value = paletteLookup.get(entry);
-        if (value != null)
-            return value;
-
-        var palette = new PaletteAllocation(entry, this);
-
-        var result = paletteLookup.putIfAbsent(palette, palette);
-        if (result == null) return palette;
-
-        result.allocate(paletteTexture);
-
-        return result;
+    @Override
+    public @Nullable Object getOwner(int begin) {
+        return ownerLookup.get(begin);
     }
 
     @Override
     public BlockEntry.Builder createBlockBuilder() {
-        return null;
+        return new BlockEntryBuilderImpl(this);
     }
 
-    @Override
-    public @Nullable Object getOwner(int begin) {
-        return null;
+
+    // Hashed objects
+
+    @SuppressWarnings("unchecked")
+    private <T extends HashedObject, K> T cacheObject(
+            K key,
+            Function<K, T> supplier,
+            Consumer<T> allocator
+    ) {
+        var value = hashedObjectCache.get(key);
+        if (value != null) return (T) value;
+
+        var newValue = supplier.apply(key);
+        var result = hashedObjectCache.putIfAbsent(newValue, newValue);
+        if (result == null) {
+            allocator.accept(newValue);
+            return newValue;
+        }
+
+        return (T) result;
     }
 
-    public void enqueueFreedObject(RefCounter object) {
-        freeQueue.add(object);
+    public void freeHashedObject(HashedObject obj) {
+        freeQueue.add(obj);
     }
+
+    // Hash object allocations
+
+    public PaletteAllocation allocatePalette(PaletteEntry entry) {
+        return cacheObject(
+                entry,
+                e -> new PaletteAllocation(e, this),
+                e -> e.allocate(paletteTexture)
+        );
+    }
+
+    public BlockVoxelImpl allocateBlockVoxel(
+            long hashCode,
+            int shift,
+            int[] data
+    ) {
+        return cacheObject(
+            new BlockVoxelImpl(this, shift, hashCode),
+            e -> e,
+            e -> e.allocate(data)
+        );
+    }
+
+    public BlockEntryData allocateBlockEntryData(
+            int skylight,
+            PaletteAllocation[] palette,
+            BlockVoxelImpl blockVoxel
+    ) {
+        return cacheObject(
+                new BlockEntryData(this, skylight, palette, blockVoxel),
+                e -> e,
+                BlockEntryData::allocate
+        );
+    }
+
+    // Temp objects
+
+    public TempMapping allocateTempMapping(Object value) {
+        for (int i = 0; i < 10; i++) {
+            var id = random.nextInt((int) (heap.capacity() >> 2), Integer.MAX_VALUE);
+            var result = ownerLookup.computeIfAbsent(id, (ignored) -> value);
+            if (result != value) continue;
+
+            return new TempMapping(this, id);
+        }
+
+        throw new IllegalStateException("Could not allocate temp mapping");
+    }
+
+    void removeTempMapping(int id) {
+        ownerLookup.remove(id);
+    }
+
 
     @Override
     public void freeUnusedObjects() {
@@ -71,10 +160,10 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
             if (obj.count() > 0) continue;
 
             obj.close();
-
-            if (obj instanceof PaletteAllocation)
-                paletteLookup.remove(obj);
+            hashedObjectCache.remove(obj);
         }
+
+        freeQueue.clear();
     }
 
     @Override
@@ -112,7 +201,7 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
 
         @Override
         public void close() {
-            ownerLookup.remove(original.begin());
+            ownerLookup.remove(MemoryView.intBufferBegin(original));
             original.close();
         }
     }

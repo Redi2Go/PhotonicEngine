@@ -1,25 +1,21 @@
 package at.redi2go.photonics.core.rendering.world.allocator;
 
-import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
-import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
-import org.joml.Vector4i;
+import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public class PaletteAllocation extends PaletteEntry implements HashedObject {
+public abstract class AbstractHashedObject implements HashedObject {
     private volatile int count = 0;
     protected final BufferWorldAllocator allocator;
 
-    private PaletteTextureView memory;
+    protected MemoryView memory;
 
-    public PaletteAllocation(PaletteEntry toCopy, BufferWorldAllocator allocator) {
+    protected AbstractHashedObject(BufferWorldAllocator allocator) {
         this.allocator = allocator;
-
-        copyFrom(toCopy);
     }
+
+    protected abstract long hash();
 
     @Override
     public int count() {
@@ -31,33 +27,13 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
         return memory != null;
     }
 
-    public void allocate(PaletteTexture paletteTexture) {
-        this.memory = paletteTexture.reserveEntry();
-
-        var faceData = new Vector4i();
-
-        for (int i = 0; i < faces.length; i++) {
-            var face = faces[i];
-            if (face == null) {
-                faceData.set(0);
-                memory.writeFace(i, faceData);
-
-                continue;
-            }
-
-            faceData.x = face.blockId();
-            faceData.y = face.color();
-            faceData.z = 0;
-            faceData.w = 0;
-
-            memory.writeFace(i, faceData);
-        }
-
-        memory.upload();
+    @Override
+    public int begin() {
+        return MemoryView.intBufferBegin(memory);
     }
 
-    public int begin() {
-        return memory.pos();
+    protected void initMemory(int byteSize) {
+        memory = allocator.allocate(byteSize, this);
     }
 
     @Override
@@ -80,13 +56,29 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
             if (HANDLE.compareAndSet(this, previous, newValue)) {
                 if (newValue == 0)
                     allocator.freeHashedObject(this);
+
             }
         }
     }
 
+    protected abstract void dispose();
+
     @Override
     public void close() {
+        if (memory == null) return;
+
         memory.close();
+        dispose();
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(hash());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return getClass() == obj.getClass() && hash() == ((AbstractHashedObject) obj).hash();
     }
 
     private static final VarHandle HANDLE;
@@ -94,7 +86,7 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
     static {
         try {
             HANDLE = MethodHandles.lookup()
-                    .findVarHandle(PaletteAllocation.class, "count", int.class);
+                    .findVarHandle(AbstractHashedObject.class, "count", int.class);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

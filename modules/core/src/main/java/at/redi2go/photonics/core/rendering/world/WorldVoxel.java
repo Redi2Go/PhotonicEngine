@@ -42,7 +42,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
 
     @Override
     public int voxelSideLength() {
-        return SIZE << magnitude;
+        return SIDE_LENGTH << magnitude;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         return create(depth, allocator);
     }
 
-    protected int getVoxelPtr(Object voxel) {
+    protected int getVoxelBegin(Object voxel) {
         return MemoryView.intBufferBegin(((WorldVoxel) voxel).memory);
     }
 
@@ -70,7 +70,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     protected boolean setVoxelData(
             Object voxel,
             int x, int y, int z,
-            int region,
+            short region,
             int normal,
             TextureData textureData
     ) {
@@ -88,7 +88,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
 
     public boolean insert(
             int x, int y, int z,
-            int region,
+            short region,
             int normal,
             TextureData textureData
     ) {
@@ -104,7 +104,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         int entry = get(index);
         if (VoxelEntry.isAir(entry)) {
             voxel = createVoxel(depth - 1);
-            set(index, VoxelEntry.toData(getVoxelPtr(voxel)));
+            set(index, VoxelEntry.toData(getVoxelBegin(voxel)));
 
             needsOptimization = true;
         } else {

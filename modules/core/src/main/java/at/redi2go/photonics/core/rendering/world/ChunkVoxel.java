@@ -14,8 +14,8 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
-    protected int getVoxelPtr(Object voxel) {
-        return ((BlockEntry) voxel).memory();
+    protected int getVoxelBegin(Object voxel) {
+        return ((BlockEntry) voxel).begin();
     }
 
     @Override
@@ -27,7 +27,7 @@ public class ChunkVoxel extends WorldVoxel {
     protected boolean setVoxelData(
             Object voxel,
             int x, int y, int z,
-            int region,
+            short region,
             int normal,
             TextureData textureData
     ) {
@@ -36,6 +36,6 @@ public class ChunkVoxel extends WorldVoxel {
 
     @Override
     protected void finalizeVoxel(int index, Object voxel) {
-        set(index, ((BlockEntry.Builder) voxel).build().memory());
+        set(index, ((BlockEntry.Builder) voxel).build().begin());
     }
 }

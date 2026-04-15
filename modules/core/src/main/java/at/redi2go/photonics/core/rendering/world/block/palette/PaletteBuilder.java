@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 // TODO: Rewrite this to do tinting after creating palettes
-class PaletteBuilder {
+public class PaletteBuilder {
     private final Object2ObjectMap<MutablePaletteEntry, MutablePaletteEntry> intern = new Object2ObjectOpenHashMap<>();
     private MutablePaletteEntry[] sortedEntries;
 
