@@ -2,7 +2,7 @@ package at.redi2go.photonics.core.rendering.world.bakery.vertex;
 
 import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.core.rendering.world.bakery.VertexBuilder;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasManager;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 
@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class VertexBuilderImpl implements VertexBuilder {
     private static final int FP_ZERO = Float.floatToRawIntBits(0);
 
-    private final AtlasManager atlasManager;
+    private final AtlasDownloader atlasDownloader;
 
     private int[] vertexData = new int[1024];
     private final ArrayDeque<StateChange> stateChanges = new ArrayDeque<>();
@@ -23,8 +23,8 @@ public class VertexBuilderImpl implements VertexBuilder {
     private CpuTexture currentTexture = null;
     private int currentBlockId = Integer.MIN_VALUE;
 
-    public VertexBuilderImpl(AtlasManager atlasManager) {
-        this.atlasManager = atlasManager;
+    public VertexBuilderImpl(AtlasDownloader atlasDownloader) {
+        this.atlasDownloader = atlasDownloader;
     }
 
     public void clear() {
@@ -86,7 +86,7 @@ public class VertexBuilderImpl implements VertexBuilder {
 
     @Override
     public VertexBuilder useAtlas(Id id) {
-        return useTexture(atlasManager.get(id));
+        return useTexture(atlasDownloader.get(id));
     }
 
     @Override

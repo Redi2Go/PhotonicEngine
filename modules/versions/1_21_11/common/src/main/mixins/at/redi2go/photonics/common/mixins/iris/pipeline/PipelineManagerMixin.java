@@ -1,8 +1,10 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline;
 
 import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.common.AtlasDownloaderImpl;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
@@ -30,7 +32,10 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
                 .orElseThrow();
 
         var properties = shaderPack.properties();
-        photonics = PhotonicsExtension.create(properties);
+        photonics = PhotonicsExtension.create(
+                properties,
+                AtlasDownloaderImpl::new
+        );
     }
 
     @Override

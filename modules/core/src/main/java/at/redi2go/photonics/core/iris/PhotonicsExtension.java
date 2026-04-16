@@ -6,6 +6,9 @@ import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
 import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.extensions.TestingExtension;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+
+import java.util.function.Supplier;
 
 /**
  * The extension for Iris (maybe aperture?), handles world building, light list, ect.
@@ -17,10 +20,16 @@ public interface PhotonicsExtension extends Disposable {
 
     void registerBuffers(IBufferHolder buffers);
 
-    static PhotonicsExtension create(PhotonicsProperties properties) {
+    static PhotonicsExtension create(
+            PhotonicsProperties properties,
+            Supplier<AtlasDownloader> atlasDownloader
+    ) {
         if (!properties.isPhotonicsEnabled()) return new Disabled();
 
-        return new TestingExtension();
+        return new TestingExtension(
+                properties,
+                atlasDownloader.get()
+        );
     }
 
     class Disabled implements PhotonicsExtension {
