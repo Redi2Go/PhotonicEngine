@@ -34,7 +34,12 @@
     "mc.blaze3d.buffers.GpuBufferMappedViewMixin",
     "mc.blaze3d.buffers.GpuBufferSliceMixin",
     "shaders.AbsolutePackPathMixin",
-    "shaders.IPathPackImpl"
+    "shaders.IPathPackImpl",
+    "shaders.rendering.uniform.DynamicUniformHolderMixin",
+    "shaders.rendering.uniform.IUniformUpdateFrequencyImpl",
+    "shaders.rendering.uniform.IValueUpdateNotifierImpl",
+    "shaders.rendering.uniform.UniformHolderMixin",
+    "shaders.rendering.uniform.UniformUpdateFrequencyMixin"
   ],
   "mixins": [
   ],
