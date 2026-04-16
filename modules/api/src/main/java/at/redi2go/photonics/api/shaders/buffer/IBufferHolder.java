@@ -1,4 +1,4 @@
-package at.redi2go.photonics.api.shaders.rendering.buffer;
+package at.redi2go.photonics.api.shaders.buffer;
 
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
 

@@ -1,4 +1,4 @@
-package at.redi2go.photonics.api.shaders.rendering.uniform;
+package at.redi2go.photonics.api.shaders.uniform;
 
 public interface IUniformUpdateFrequency {
     static IUniformUpdateFrequency once() {

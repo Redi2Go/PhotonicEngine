@@ -1,6 +1,5 @@
-package at.redi2go.photonics.api.shaders.rendering.uniform;
+package at.redi2go.photonics.api.shaders.uniform;
 
-import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -8,7 +7,6 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;
-import org.joml.Vector4i;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;

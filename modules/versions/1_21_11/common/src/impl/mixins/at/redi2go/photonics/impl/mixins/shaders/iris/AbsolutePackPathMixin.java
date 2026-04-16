@@ -1,13 +1,10 @@
-package at.redi2go.photonics.impl.mixins.shaders;
+package at.redi2go.photonics.impl.mixins.shaders.iris;
 
 import at.redi2go.photonics.api.shaders.IPackPath;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.nio.file.Path;
-import java.util.Optional;
 
 @Mixin(AbsolutePackPath.class)
 public abstract class AbsolutePackPathMixin implements IPackPath {

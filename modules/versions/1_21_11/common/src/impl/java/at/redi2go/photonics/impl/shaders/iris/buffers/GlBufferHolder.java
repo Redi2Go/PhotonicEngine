@@ -1,17 +1,13 @@
-package at.redi2go.photonics.impl.shaders.rendering.buffers;
+package at.redi2go.photonics.impl.shaders.iris.buffers;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.shaders.rendering.buffer.IBufferHolder;
-import at.redi2go.photonics.core.Photonics;
+import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
 import at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.GlBufferAccessor;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.opengl.GlBuffer;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;

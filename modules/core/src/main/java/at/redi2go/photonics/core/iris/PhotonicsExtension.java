@@ -2,9 +2,9 @@ package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
-import at.redi2go.photonics.api.shaders.rendering.buffer.IBufferHolder;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IUniformHolder;
+import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
+import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.extensions.TestingExtension;
 
 /**

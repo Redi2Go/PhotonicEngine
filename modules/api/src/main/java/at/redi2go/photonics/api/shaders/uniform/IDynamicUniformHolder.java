@@ -1,4 +1,4 @@
-package at.redi2go.photonics.api.shaders.rendering.uniform;
+package at.redi2go.photonics.api.shaders.uniform;
 
 import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;

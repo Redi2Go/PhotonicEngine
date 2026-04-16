@@ -1,11 +1,9 @@
-package at.redi2go.photonics.impl.mixins.shaders.rendering.uniform;
+package at.redi2go.photonics.impl.mixins.shaders.iris.uniform;
 
-import at.redi2go.photonics.api.shaders.rendering.uniform.IUniformHolder;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IUniformUpdateFrequency;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IValueUpdateNotifier;
+import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
+import at.redi2go.photonics.api.shaders.uniform.IUniformUpdateFrequency;
 import net.irisshaders.iris.gl.uniform.UniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
-import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -13,7 +11,6 @@ import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 import org.joml.Vector4f;
-import org.joml.Vector4i;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.function.BooleanSupplier;

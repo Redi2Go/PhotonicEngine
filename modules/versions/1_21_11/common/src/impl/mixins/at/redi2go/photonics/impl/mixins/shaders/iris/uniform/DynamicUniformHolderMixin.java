@@ -1,11 +1,10 @@
-package at.redi2go.photonics.impl.mixins.shaders.rendering.uniform;
+package at.redi2go.photonics.impl.mixins.shaders.iris.uniform;
 
-import at.redi2go.photonics.api.shaders.rendering.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IUniformHolder;
-import at.redi2go.photonics.api.shaders.rendering.uniform.IValueUpdateNotifier;
+import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
+import at.redi2go.photonics.api.shaders.uniform.IValueUpdateNotifier;
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
-import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;

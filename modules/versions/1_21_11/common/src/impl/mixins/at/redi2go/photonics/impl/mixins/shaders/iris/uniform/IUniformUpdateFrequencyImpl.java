@@ -1,6 +1,6 @@
-package at.redi2go.photonics.impl.mixins.shaders.rendering.uniform;
+package at.redi2go.photonics.impl.mixins.shaders.iris.uniform;
 
-import at.redi2go.photonics.api.shaders.rendering.uniform.IUniformUpdateFrequency;
+import at.redi2go.photonics.api.shaders.uniform.IUniformUpdateFrequency;
 import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
