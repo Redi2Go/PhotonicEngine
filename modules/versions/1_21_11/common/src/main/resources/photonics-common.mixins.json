@@ -6,7 +6,12 @@
   "client": [
     "iris.ShaderPackMixin",
     "iris.IncludeGraphMixin",
-    "iris.pipeline.PipelineManagerMixin"
+    "iris.pipeline.PipelineManagerMixin",
+    "iris.pipeline.IrisRenderingPipelineMixin",
+    "iris.pipeline.passes.GlProgramMixin",
+    "iris.pipeline.passes.ShadowCompositeRendererMixin",
+    "iris.pipeline.passes.CompositeRendererMixin",
+    "iris.pipeline.passes.FinalPassRendererMixin"
   ],
   "mixins": [
   ],
