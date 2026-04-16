@@ -1,4 +1,4 @@
-package at.redi2go.photonics.common;
+package at.redi2go.photonics.common.iris;
 
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 

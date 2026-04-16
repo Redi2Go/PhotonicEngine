@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.api.shaders.IPackPath;
-import at.redi2go.photonics.common.PatcherBridge;
+import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;

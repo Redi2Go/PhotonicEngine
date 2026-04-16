@@ -2,7 +2,7 @@ package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
-import at.redi2go.photonics.common.PatcherBridge;
+import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import at.redi2go.photonics.impl.shaders.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
