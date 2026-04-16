@@ -5,7 +5,8 @@
   "minVersion": "0.8",
   "client": [
     "iris.ShaderPackMixin",
-    "iris.IncludeGraphMixin"
+    "iris.IncludeGraphMixin",
+    "iris.pipeline.PipelineManagerMixin"
   ],
   "mixins": [
   ],

@@ -17,6 +17,12 @@ public interface PhotonicsExtension extends Disposable {
 
     void registerBuffers(IBufferHolder buffers);
 
+    static PhotonicsExtension create(PhotonicsProperties properties) {
+        if (!properties.isPhotonicsEnabled()) return new Disabled();
+
+        return new TestingExtension();
+    }
+
     class Disabled implements PhotonicsExtension {
         @Override
         public void registerUniforms(IUniformHolder uniforms) {
