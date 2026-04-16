@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Mixin(IncludeGraph.class)
-public class IncludeGraphMixin {
+public abstract class IncludeGraphMixin {
     @Unique private Path root;
     @Unique private ShaderPatcher patcher;
 

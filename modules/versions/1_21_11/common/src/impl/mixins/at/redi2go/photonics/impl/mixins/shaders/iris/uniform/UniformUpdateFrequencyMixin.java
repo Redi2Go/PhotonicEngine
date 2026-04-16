@@ -5,5 +5,5 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(UniformUpdateFrequency.class)
-public class UniformUpdateFrequencyMixin implements IUniformUpdateFrequency {
+public abstract class UniformUpdateFrequencyMixin implements IUniformUpdateFrequency {
 }

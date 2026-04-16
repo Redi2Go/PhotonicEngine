@@ -1,10 +1,8 @@
 package at.redi2go.photonics.common.mixins.iris;
 
-import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.common.PatcherBridge;
-import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import at.redi2go.photonics.impl.shaders.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
@@ -23,7 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 
 @Mixin(ShaderPack.class)
-public class ShaderPackMixin implements IShaderPack {
+public abstract class ShaderPackMixin implements IShaderPack {
     @Unique private PhotonicsPropertiesImpl phProperties;
     @Unique private ShaderPatcher patcher;
 
