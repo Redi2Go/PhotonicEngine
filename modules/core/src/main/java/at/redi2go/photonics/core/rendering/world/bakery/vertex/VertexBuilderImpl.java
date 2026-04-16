@@ -23,6 +23,8 @@ public class VertexBuilderImpl implements VertexBuilder {
     private CpuTexture currentTexture = null;
     private int currentBlockId = Integer.MIN_VALUE;
 
+    private double offsetX, offsetY, offsetZ = 0f;
+
     public VertexBuilderImpl(AtlasDownloader atlasDownloader) {
         this.atlasDownloader = atlasDownloader;
     }
@@ -104,15 +106,24 @@ public class VertexBuilderImpl implements VertexBuilder {
     }
 
     @Override
+    public VertexBuilder setOffset(double x, double y, double z) {
+        offsetX = x;
+        offsetY = y;
+        offsetZ = z;
+
+        return this;
+    }
+
+    @Override
     public VertexBuilder addVertex(float x, float y, float z) {
         int index = size;
         size = index + 6;
 
         requireCapacity(size);
 
-        vertexData[index] = Float.floatToRawIntBits(x);
-        vertexData[index + 1] = Float.floatToRawIntBits(y);
-        vertexData[index + 2] = Float.floatToRawIntBits(z);
+        vertexData[index] = Float.floatToRawIntBits((float) (x - offsetX));
+        vertexData[index + 1] = Float.floatToRawIntBits((float) (y - offsetY));
+        vertexData[index + 2] = Float.floatToRawIntBits((float) (z - offsetZ));
 
         // Default tint
         vertexData[index + 3] = VoxelColor.WHITE;

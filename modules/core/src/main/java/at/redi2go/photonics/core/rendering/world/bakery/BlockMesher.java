@@ -5,7 +5,7 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
+import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
@@ -20,6 +20,7 @@ public interface BlockMesher {
      * @apiNote {@code VertexBuilder} only accepts quads
      */
     void meshBlock(
+            WorldOrigin origin,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter,
