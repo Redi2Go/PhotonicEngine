@@ -15,6 +15,8 @@ public interface PhotonicsExtension extends Disposable {
 
     void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms);
 
+    void registerBuffers(IBufferHolder buffers);
+
     class Disabled implements PhotonicsExtension {
         @Override
         public void registerUniforms(IUniformHolder uniforms) {
@@ -23,6 +25,11 @@ public interface PhotonicsExtension extends Disposable {
 
         @Override
         public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
+
+        }
+
+        @Override
+        public void registerBuffers(IBufferHolder buffers) {
 
         }
 

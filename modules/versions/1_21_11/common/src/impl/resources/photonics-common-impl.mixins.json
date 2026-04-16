@@ -39,7 +39,8 @@
     "shaders.rendering.uniform.IUniformUpdateFrequencyImpl",
     "shaders.rendering.uniform.IValueUpdateNotifierImpl",
     "shaders.rendering.uniform.UniformHolderMixin",
-    "shaders.rendering.uniform.UniformUpdateFrequencyMixin"
+    "shaders.rendering.uniform.UniformUpdateFrequencyMixin",
+    "mc.blaze3d.opengl.GlBufferAccessor"
   ],
   "mixins": [
   ],
