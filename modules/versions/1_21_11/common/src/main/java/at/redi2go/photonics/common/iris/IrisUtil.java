@@ -6,6 +6,8 @@ import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
+import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -13,6 +15,11 @@ import java.util.Optional;
 public class IrisUtil {
     public static Optional<PhotonicsExtension> getPhotonics() {
         return ((PipelineManagerExt) Iris.getPipelineManager()).photonics();
+    }
+
+    public static int getBlockId(BlockState block) {
+        var blockIds = WorldRenderingSettings.INSTANCE.getBlockStateIds();
+        return blockIds == null ? -1 : blockIds.getOrDefault(block, -1);
     }
 
     public static IntSet getUsedBuffers() {

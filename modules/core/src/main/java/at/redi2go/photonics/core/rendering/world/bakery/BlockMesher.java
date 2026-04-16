@@ -29,22 +29,28 @@ public interface BlockMesher {
     class Registry {
         private final Object2ObjectMap<Id, BlockMesher> blockRegistry = new Object2ObjectOpenHashMap<>();
         private final Object2ObjectMap<String, BlockMesher> namespaceRegistry = new Object2ObjectOpenHashMap<>();
+        private BlockMesher defaultMesher = null;
 
         Registry() {
 
         }
 
         public void addBlock(Id id, BlockMesher mesher) {
-            blockRegistry.put(id, mesher);
+            blockRegistry.putIfAbsent(id, mesher);
         }
 
         public void addNamespace(String namespace, BlockMesher mesher) {
-            namespaceRegistry.put(namespace, mesher);
+            namespaceRegistry.putIfAbsent(namespace, mesher);
+        }
+
+        public void addDefault(BlockMesher mesher) {
+            defaultMesher = mesher;
         }
 
         public Optional<BlockMesher> get(IBlock block) {
             return Optional.ofNullable(blockRegistry.get(block.id()))
-                    .or(() -> Optional.of(namespaceRegistry.get(block.id().namespace())));
+                    .or(() -> Optional.of(namespaceRegistry.get(block.id().namespace())))
+                    .or(() -> Optional.ofNullable(defaultMesher));
         }
     }
 }

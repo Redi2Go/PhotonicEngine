@@ -2,8 +2,10 @@ package at.redi2go.photonics.common.mixins.iris.pipeline;
 
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
+import at.redi2go.photonics.common.MinecraftBlockMesher;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.PipelineManager;
@@ -26,6 +28,9 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     @Inject(method = "preparePipeline", at = @At("HEAD"))
     private void preparePipeline(NamespacedId currentDimension, CallbackInfoReturnable<WorldRenderingPipeline> cir) {
         if (photonics != null) return;
+
+        //TODO Add to more sensible spot
+        BlockMesher.REGISTRY.addDefault(new MinecraftBlockMesher());
 
         var shaderPack = Iris.getCurrentPack()
                 .map(e -> (IShaderPack) e)
