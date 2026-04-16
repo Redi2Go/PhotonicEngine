@@ -15,6 +15,6 @@ public @interface BufferUsage {
     int COPY_SRC = 1 << 4;
     int VERTEX = 1 << 5;
     int INDEX = 1 << 6;
-    int UNIFORM = 1 << 6;
-    int UNIFORM_TEXEL_BUFFER = 1 << 7;
+    int UNIFORM = 1 << 7;
+    int UNIFORM_TEXEL_BUFFER = 1 << 8;
 }
