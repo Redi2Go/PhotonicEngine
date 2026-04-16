@@ -27,6 +27,12 @@
     "mc.commands.arguments.blocks.IBlockStateParserImpl",
     "mc.commands.arguments.blocks.BlockStateParser$BlockResultMixin",
     "mc.commands.arguments.blocks.BlockStateParser$TagResultMixin",
+    "mc.blaze3d.systems.IRenderSystemMixin",
+    "mc.blaze3d.systems.GpuDeviceMixin",
+    "mc.blaze3d.systems.CommandEncoderMixin",
+    "mc.blaze3d.buffers.GpuBufferMixin",
+    "mc.blaze3d.buffers.GpuBufferMappedViewMixin",
+    "mc.blaze3d.buffers.GpuBufferSliceMixin",
     "shaders.AbsolutePackPathMixin",
     "shaders.IPathPackImpl"
   ],

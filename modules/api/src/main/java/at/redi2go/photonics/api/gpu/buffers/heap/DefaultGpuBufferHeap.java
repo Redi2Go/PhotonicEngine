@@ -3,6 +3,7 @@ package at.redi2go.photonics.api.gpu.buffers.heap;
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
 import at.redi2go.photonics.api.gpu.systems.ICommandEncoder;
+import at.redi2go.photonics.api.gpu.systems.IGpuDevice;
 import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,11 +21,12 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
     private final Queue<Region> uploadQueue = new ConcurrentLinkedQueue<>();
 
     public DefaultGpuBufferHeap(
+            IGpuDevice device,
             @Nullable Supplier<String> label,
             long byteSize,
             @BufferUsage int usage
     ) {
-        this.gpuBuffer = IRenderSystem.getDevice().createBuffer(label, byteSize, usage);
+        this.gpuBuffer = device.createBuffer(label, byteSize, usage);
         this.buffer = ByteBuffer.allocateDirect(Math.toIntExact(byteSize))
                 .order(ByteOrder.nativeOrder());
     }
