@@ -10,7 +10,7 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import java.nio.IntBuffer;
 
 public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposable {
-    private static final int MASKS_SIZE = (int) Math.ceil(ENTRIES_SIZE/ 64d);
+    private static final int MASKS_SIZE = (int) Math.ceil(ENTRIES_SIZE / 64d);
 
     protected final WorldAllocator allocator;
     private final MemoryView memory;
@@ -83,7 +83,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     }
 
     protected void finalizeVoxel(int index, Object voxel) {
-
+        ((WorldVoxel) voxel).finalizeBuild();
     }
 
     public boolean insert(
@@ -109,11 +109,13 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             needsOptimization = true;
         } else {
             var previous = allocator.getOwner(VoxelEntry.getData(entry));
-            if (previous instanceof ReferencedObject obj)
-                obj.release();
-
             voxel = createMutableCopy(previous);
-            created = true;
+            if (previous != voxel) {
+                if (previous instanceof ReferencedObject obj)
+                    obj.release();
+
+                created = true;
+            }
         }
 
         if (setVoxelData(voxel, x, y, z, region, normal, textureData) || created) {
@@ -124,6 +126,17 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         }
 
         return true;
+    }
+
+    public void finalizeBuild() {
+        for (int i = 0; i < RtVoxel.ENTRIES_SIZE; i++) {
+            int entry = buffer.get(i);
+            if (VoxelEntry.isAir(entry)) continue;
+
+            finalizeVoxel(i, allocator.getOwner(VoxelEntry.getData(entry)));
+        }
+
+        memory.upload();
     }
 
     @Override

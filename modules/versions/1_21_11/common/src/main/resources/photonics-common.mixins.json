@@ -11,9 +11,11 @@
     "iris.pipeline.passes.GlProgramMixin",
     "iris.pipeline.passes.ShadowCompositeRendererMixin",
     "iris.pipeline.passes.CompositeRendererMixin",
-    "iris.pipeline.passes.FinalPassRendererMixin"
+    "iris.pipeline.passes.FinalPassRendererMixin",
+    "rendering.world.bakery.VertexBuilderMixin"
   ],
   "mixins": [
+
   ],
   "injectors": {
     "defaultRequire": 1

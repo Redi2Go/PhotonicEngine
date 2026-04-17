@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.bakery.vertex.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.vertex.VertexBuilderImpl;
@@ -15,7 +16,7 @@ import org.joml.Vector4f;
 public class BlockBakery {
     private static final float BLOCK_SIZE_INV = 1f / 16f;
 
-    private final VertexBuilderImpl vertexBuilder = new VertexBuilderImpl(null);
+    private final VertexBuilderImpl vertexBuilder;
 
     private final Vertex v0 = new Vertex();
     private final Vertex v1 = new Vertex();
@@ -26,8 +27,9 @@ public class BlockBakery {
 
     private final Vertex[] tri = new Vertex[3];
 
-    public VertexBuilder vertexBuilder() {
-        return vertexBuilder;
+    public BlockBakery(AtlasDownloader atlasDownloader) {
+        vertexBuilder = new VertexBuilderImpl(atlasDownloader);
+    }
     }
 
     public void bake(VoxelConsumer consumer) {
@@ -39,6 +41,9 @@ public class BlockBakery {
             v1.readVertex(vertexBuilder);
             v2.readVertex(vertexBuilder);
             v3.readVertex(vertexBuilder);
+
+            CpuTexture texture = vertexBuilder.currentTexture();
+            int blockId = vertexBuilder.currentBlockId();
 
             VoxelColor.toVector(v0.tint(), tint);
 

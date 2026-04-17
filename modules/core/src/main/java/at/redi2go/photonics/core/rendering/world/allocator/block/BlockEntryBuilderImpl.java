@@ -181,6 +181,8 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
         for (int i = 0; i < palette.size(); i++)
             paletteArray[i] = allocator.allocatePalette(palette.get(i));
 
+        tempMapping.close();
+
         return new BlockEntryImpl(
                 regionBuilder,
                 allocator.allocateBlockEntryData(

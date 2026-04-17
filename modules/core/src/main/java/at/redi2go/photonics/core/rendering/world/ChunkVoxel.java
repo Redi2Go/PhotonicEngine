@@ -36,6 +36,9 @@ public class ChunkVoxel extends WorldVoxel {
 
     @Override
     protected void finalizeVoxel(int index, Object voxel) {
-        set(index, ((BlockEntry.Builder) voxel).build().begin());
+        var result = ((BlockEntry.Builder) voxel).build();
+        result.acquire();
+
+        set(index, result.begin());
     }
 }

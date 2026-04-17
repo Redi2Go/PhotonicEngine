@@ -7,6 +7,15 @@ import org.jetbrains.annotations.Nullable;
 public final class MutablePaletteEntry extends PaletteEntry {
     int index = 0;
 
+    public MutablePaletteEntry() {
+        super();
+    }
+
+    public MutablePaletteEntry(PaletteEntry other) {
+        super();
+        copyFrom(other);
+    }
+
     public boolean canMerge(MutablePaletteEntry other) {
         return (presentFaces & other.presentFaces) == 0;
     }

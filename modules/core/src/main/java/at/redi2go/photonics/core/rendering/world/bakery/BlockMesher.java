@@ -50,7 +50,7 @@ public interface BlockMesher {
 
         public Optional<BlockMesher> get(IBlock block) {
             return Optional.ofNullable(blockRegistry.get(block.id()))
-                    .or(() -> Optional.of(namespaceRegistry.get(block.id().namespace())))
+                    .or(() -> Optional.ofNullable(namespaceRegistry.get(block.id().namespace())))
                     .or(() -> Optional.ofNullable(defaultMesher));
         }
     }

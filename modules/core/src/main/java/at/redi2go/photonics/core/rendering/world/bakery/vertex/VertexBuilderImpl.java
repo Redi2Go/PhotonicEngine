@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.bakery.vertex;
 
 import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.VertexBuilder;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
@@ -121,9 +122,9 @@ public class VertexBuilderImpl implements VertexBuilder {
 
         requireCapacity(size);
 
-        vertexData[index] = Float.floatToRawIntBits((float) (x - offsetX));
-        vertexData[index + 1] = Float.floatToRawIntBits((float) (y - offsetY));
-        vertexData[index + 2] = Float.floatToRawIntBits((float) (z - offsetZ));
+        vertexData[index] = Float.floatToRawIntBits((float) (x + offsetX));
+        vertexData[index + 1] = Float.floatToRawIntBits((float) (y + offsetY));
+        vertexData[index + 2] = Float.floatToRawIntBits((float) (z + offsetZ));
 
         // Default tint
         vertexData[index + 3] = VoxelColor.WHITE;
@@ -137,14 +138,14 @@ public class VertexBuilderImpl implements VertexBuilder {
 
     @Override
     public VertexBuilder setTint(int argb) {
-        vertexData[size - 4] = argb;
+        vertexData[size - 3] = argb;
         return this;
     }
 
     @Override
     public VertexBuilder setUv(float u, float v) {
-        vertexData[size - 3] = Float.floatToRawIntBits(u);
-        vertexData[size - 2] = Float.floatToRawIntBits(v);
+        vertexData[size - 2] = Float.floatToRawIntBits(u);
+        vertexData[size - 1 ] = Float.floatToRawIntBits(v);
 
         return this;
     }

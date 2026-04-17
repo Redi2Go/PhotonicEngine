@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world;
 
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
@@ -7,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public interface WorldAllocator {
+public interface WorldAllocator extends Disposable {
     /**
      * Reserves {@code byteSize} bytes for {@code object} and returns the allocated memory
      */
