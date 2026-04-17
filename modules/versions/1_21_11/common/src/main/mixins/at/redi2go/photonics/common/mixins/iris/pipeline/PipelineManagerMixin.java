@@ -50,7 +50,9 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
 
     @Inject(method = "destroyPipeline", at = @At("HEAD"))
     private void destroyEverything(CallbackInfo ci) {
-        photonics.close();
-        photonics = null;
+        if (photonics != null) {
+            photonics.close();
+            photonics = null;
+        }
     }
 }
