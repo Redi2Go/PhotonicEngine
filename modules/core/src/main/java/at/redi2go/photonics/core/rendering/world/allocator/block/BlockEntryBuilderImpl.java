@@ -5,7 +5,6 @@ import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.allocator.PaletteAllocation;
-import at.redi2go.photonics.core.rendering.world.allocator.TempMapping;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
@@ -15,20 +14,19 @@ import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
 public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.Builder {
-    private final TempMapping tempMapping;
-
+    private final BufferWorldAllocator allocator;
     private int skylight = 0;
     private final MutablePaletteEntry[] data;
 
     public BlockEntryBuilderImpl(BufferWorldAllocator allocator, RegionMapping regions) {
         super(regions);
 
-        tempMapping = allocator.allocateTempMapping(this);
+        this.allocator = allocator;
         this.data = new MutablePaletteEntry[RtVoxel.ENTRIES_SIZE];
     }
 
     public BlockEntryBuilderImpl(BufferWorldAllocator allocator) {
-        tempMapping = allocator.allocateTempMapping(this);
+        this.allocator = allocator;
         this.data = new MutablePaletteEntry[RtVoxel.ENTRIES_SIZE];
     }
 
@@ -77,7 +75,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
 
     @Override
     public int begin() {
-        return tempMapping.id();
+        throw new UnsupportedOperationException("begin");
     }
 
     @Override
@@ -169,8 +167,6 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             }
         }
 
-        var allocator = tempMapping.allocator();
-
         BlockVoxelImpl blockVoxel = allocator.allocateBlockVoxel(
                 hash,
                 shift,
@@ -181,9 +177,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
         for (int i = 0; i < palette.size(); i++)
             paletteArray[i] = allocator.allocatePalette(palette.get(i));
 
-        tempMapping.close();
-
-        return new BlockEntryImpl(
+        var result = new BlockEntryImpl(
                 regionBuilder,
                 allocator.allocateBlockEntryData(
                         skylight,
@@ -191,16 +185,15 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
                         blockVoxel
                 )
         );
+
+        result.acquire();
+
+        return result;
     }
 
     @Override
-    public void release() {
-        tempMapping.close();
-    }
+    public void close() {
 
-    @Override
-    public void acquire() {
-        // DOES NOTHING
     }
 
     private class RegionBuilder extends RegionMapping {

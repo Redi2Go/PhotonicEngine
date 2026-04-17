@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.bakery.vertex;
 
 import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.VertexBuilder;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;

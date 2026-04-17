@@ -9,36 +9,45 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
-    protected Object createVoxel(int depth) {
+    protected Object entryCreate(int depth) {
         return allocator.createBlockBuilder();
     }
 
     @Override
-    protected int getVoxelBegin(Object voxel) {
-        return ((BlockEntry) voxel).begin();
+    protected boolean entryIsEmpty(Object entry) {
+        return false;
     }
 
     @Override
-    protected Object createMutableCopy(Object voxel) {
-        return ((BlockEntry) voxel).createBuilder();
+    protected int entryBegin(Object entry) {
+        return ((BlockEntry) entry).begin();
     }
 
     @Override
-    protected boolean setVoxelData(
-            Object voxel,
-            int x, int y, int z,
-            short region,
-            int normal,
-            TextureData textureData
-    ) {
-        return ((BlockEntry.Builder) voxel).insert(x, y, z, region, normal, textureData);
+    protected Object entryMakeMutable(Object entry) {
+        return ((BlockEntry) entry).createBuilder();
     }
 
     @Override
-    protected void finalizeVoxel(int index, Object voxel) {
-        var result = ((BlockEntry.Builder) voxel).build();
-        result.acquire();
+    public boolean entryInsert(Object entry, int x, int y, int z, short region, int normal, TextureData textureData) {
+        return ((BlockEntry.Builder) entry).insert(
+                x, y, z,
+                region,
+                normal,
+                textureData
+        );
+    }
 
-        set(index, result.begin());
+    @Override
+    protected Object entryBuild(Object entry) {
+        if (entry instanceof BlockEntry.Builder builder)
+            return builder.build();
+
+        return entry;
+    }
+
+    @Override
+    protected void entryUpload(Object entry) {
+
     }
 }

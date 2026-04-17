@@ -1,9 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.block;
 
-import at.redi2go.photonics.core.rendering.world.ReferencedObject;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
 
-public interface BlockVoxel extends RtVoxel, ReferencedObject {
+public interface BlockVoxel extends RtVoxel {
     int begin();
 
     @Override

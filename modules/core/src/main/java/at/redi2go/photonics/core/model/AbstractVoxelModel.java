@@ -46,17 +46,17 @@ public abstract class AbstractVoxelModel implements VoxelModel {
     }
 
     protected void optimize() {
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                for (int z = 0; z < depth; z++) {
-                    int index = VoxelModel.toVoxelIndex(x, y, z);
-                    int entry = get(index);
+        int length = width * height * depth;
 
-                    if (VoxelEntry.isData(entry)) continue;
+        for (int i = 0; i < length; i++) {
+            int entry = get(i);
+            if (VoxelEntry.isData(entry)) continue;
 
-                    set(index, VoxelEntry.toAir(mergeNeighbours(x, y, z)));
-                }
-            }
+            set(i, VoxelEntry.toAir(mergeNeighbours(
+                    VoxelModel.shrinkBits(i),
+                    VoxelModel.shrinkBits(i >> 1),
+                    VoxelModel.shrinkBits(i >> 2)
+            )));
         }
     }
 
@@ -64,9 +64,9 @@ public abstract class AbstractVoxelModel implements VoxelModel {
         int startX = x;
         int startY = y;
         int startZ = z;
-        int endX   = x + 1;
-        int endY   = y + 1;
-        int endZ   = z + 1;
+        int endX = x + 1;
+        int endY = y + 1;
+        int endZ = z + 1;
 
         boolean northMerged = true, southMerged = true, eastMerged = true, westMerged = true, topMerged = true, bottomMerged = true;
         boolean merged;

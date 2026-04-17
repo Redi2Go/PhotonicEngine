@@ -11,7 +11,6 @@ import at.redi2go.photonics.core.rendering.world.allocator.block.BlockEntryBuild
 import at.redi2go.photonics.core.rendering.world.allocator.block.BlockEntryData;
 import at.redi2go.photonics.core.rendering.world.allocator.block.BlockVoxelImpl;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import org.jetbrains.annotations.Nullable;
@@ -22,15 +21,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class BufferWorldAllocator implements WorldAllocator, Disposable {
     private final IGpuBufferHeap heap;
     private final PaletteTexture paletteTexture;
 
-    private final ConcurrentInt2ObjectMap<Object> ownerLookup = new ConcurrentInt2ObjectMap<>(8);
     private final ConcurrentHashMap<Object, HashedObject> hashedObjectCache = new ConcurrentHashMap<>();
-//    private final ConcurrentHashMap<PaletteEntry, PaletteAllocation> paletteLookup = new ConcurrentHashMap<>();
 
     private final Set<HashedObject> freeQueue = ConcurrentHashMap.newKeySet();
     private final Random random = new Random();
@@ -58,16 +54,8 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
     }
 
     @Override
-    public MemoryView allocate(int byteSize, Object object) {
-        MemoryView original = heap.allocateOrThrow(byteSize);
-        ownerLookup.put(MemoryView.intBufferBegin(original), object);
-
-        return new ObjectMemoryView(original);
-    }
-
-    @Override
-    public @Nullable Object getOwner(int begin) {
-        return ownerLookup.get(begin);
+    public MemoryView allocate(int byteSize) {
+        return heap.allocateOrThrow(byteSize);
     }
 
     @Override
@@ -135,31 +123,12 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
         );
     }
 
-    // Temp objects
-
-    public TempMapping allocateTempMapping(Object value) {
-        for (int i = 0; i < 10; i++) {
-            var id = random.nextInt((int) (heap.capacity() >> 2), Integer.MAX_VALUE);
-            var result = ownerLookup.computeIfAbsent(id, (ignored) -> value);
-            if (result != value) continue;
-
-            return new TempMapping(this, id);
-        }
-
-        throw new IllegalStateException("Could not allocate temp mapping");
-    }
-
-    void removeTempMapping(int id) {
-        ownerLookup.remove(id);
-    }
-
-
     @Override
     public void freeUnusedObjects() {
         for (var obj : freeQueue) {
             if (obj.count() > 0) continue;
 
-            obj.close();
+            obj.free();
             hashedObjectCache.remove(obj);
         }
 
@@ -170,39 +139,5 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
     public void close() {
         heap.close();
         paletteTexture.close();
-    }
-
-    private class ObjectMemoryView implements MemoryView {
-        private final MemoryView original;
-
-        ObjectMemoryView(MemoryView original) {
-            this.original = original;
-        }
-
-        @Override
-        public long begin() {
-            return original.begin();
-        }
-
-        @Override
-        public long end() {
-            return original.end();
-        }
-
-        @Override
-        public ByteBuffer buffer() {
-            return original.buffer();
-        }
-
-        @Override
-        public void upload() {
-            original.upload();
-        }
-
-        @Override
-        public void close() {
-            ownerLookup.remove(MemoryView.intBufferBegin(original));
-            original.close();
-        }
     }
 }

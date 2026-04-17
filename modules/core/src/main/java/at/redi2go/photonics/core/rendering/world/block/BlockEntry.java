@@ -1,11 +1,11 @@
 package at.redi2go.photonics.core.rendering.world.block;
 
-import at.redi2go.photonics.core.rendering.world.ReferencedObject;
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-public interface BlockEntry extends ReferencedObject {
+public interface BlockEntry extends Disposable {
     int begin();
 
     int skylight();

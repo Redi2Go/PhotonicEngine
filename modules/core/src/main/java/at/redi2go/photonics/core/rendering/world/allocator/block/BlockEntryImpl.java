@@ -37,13 +37,12 @@ public class BlockEntryImpl extends RegionMapping implements BlockEntry {
         return null;
     }
 
-    @Override
     public void acquire() {
         data.acquire();
     }
 
     @Override
-    public void release() {
-        data.release();
+    public void close() {
+        data.close();
     }
 }

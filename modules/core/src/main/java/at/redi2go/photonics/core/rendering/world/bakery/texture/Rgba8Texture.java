@@ -4,8 +4,6 @@ import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import org.joml.Math;
 
-import java.nio.ByteBuffer;
-
 public class Rgba8Texture implements CpuTexture {
     private final int width, height;
 

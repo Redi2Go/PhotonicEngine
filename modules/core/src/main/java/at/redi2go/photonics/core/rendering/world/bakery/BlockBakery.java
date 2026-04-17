@@ -1,5 +1,9 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
+import at.redi2go.photonics.api.mc.core.IBlockPos;
+import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.bakery.vertex.Vertex;
@@ -7,7 +11,6 @@ import at.redi2go.photonics.core.rendering.world.bakery.vertex.VertexBuilderImpl
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import org.apache.commons.lang3.NotImplementedException;
 import org.joml.RoundingMode;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -30,13 +33,29 @@ public class BlockBakery {
     public BlockBakery(AtlasDownloader atlasDownloader) {
         vertexBuilder = new VertexBuilderImpl(atlasDownloader);
     }
+
+    public void meshBlock(
+            WorldOrigin origin,
+            IBlockPos pos,
+            IBlockState blockState,
+            IBlockAndTintGetter blockAndTintGetter
+    ) {
+        var result = BlockMesher.REGISTRY.get(blockState.block())
+                .orElse(null);
+
+        if (result == null) return;
+
+        result.meshBlock(
+                origin,
+                pos,
+                blockState,
+                blockAndTintGetter,
+                vertexBuilder
+        );
     }
 
     public void bake(VoxelConsumer consumer) {
         while (vertexBuilder.hasNext()) {
-            CpuTexture texture = vertexBuilder.currentTexture();
-            int blockId = vertexBuilder.currentBlockId();
-
             v0.readVertex(vertexBuilder);
             v1.readVertex(vertexBuilder);
             v2.readVertex(vertexBuilder);

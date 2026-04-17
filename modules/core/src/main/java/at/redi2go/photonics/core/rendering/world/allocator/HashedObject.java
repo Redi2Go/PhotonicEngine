@@ -1,9 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.allocator;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.core.rendering.world.ReferencedObject;
 
-public interface HashedObject extends ReferencedObject, Disposable {
+public interface HashedObject extends Disposable {
     int count();
 
     boolean isAllocated();
@@ -14,4 +13,8 @@ public interface HashedObject extends ReferencedObject, Disposable {
     }
 
     int begin();
+
+    void acquire();
+
+    void free();
 }

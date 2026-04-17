@@ -1,7 +1,5 @@
 package at.redi2go.photonics.common;
 
-import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
 import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
@@ -11,14 +9,8 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.TextureFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.client.resources.model.AtlasManager;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
-import net.minecraft.util.Unit;
-import org.jspecify.annotations.NonNull;
 
 import java.nio.IntBuffer;
 import java.util.HashMap;
@@ -26,7 +18,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 
 public class AtlasDownloaderImpl implements AtlasDownloader, Runnable {
     //TODO Replace with ITextureFormat

@@ -1,14 +1,9 @@
 package at.redi2go.photonics.core.rendering.world.allocator.block;
 
-import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.allocator.AbstractHashedObject;
 import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.allocator.PaletteAllocation;
-import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.IntBuffer;
 
@@ -83,8 +78,8 @@ public class BlockEntryData extends AbstractHashedObject {
 
     @Override
     protected void dispose() {
-        blockVoxel.release();
+        blockVoxel.close();
         for (PaletteAllocation entry : palette)
-            entry.release();
+            entry.close();
     }
 }

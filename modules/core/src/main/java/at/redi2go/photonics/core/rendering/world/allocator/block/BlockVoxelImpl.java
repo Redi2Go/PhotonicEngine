@@ -6,7 +6,6 @@ import at.redi2go.photonics.core.rendering.world.allocator.AbstractHashedObject;
 import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.util.IntPacking;
-import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import java.nio.IntBuffer;

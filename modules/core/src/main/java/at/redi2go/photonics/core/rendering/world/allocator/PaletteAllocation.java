@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.allocator;
 
-import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
@@ -71,7 +70,7 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
     }
 
     @Override
-    public void release() {
+    public void close() {
         while (true) {
             var previous = count;
             var newValue = count - 1;
@@ -85,7 +84,7 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
     }
 
     @Override
-    public void close() {
+    public void free() {
         memory.close();
     }
 

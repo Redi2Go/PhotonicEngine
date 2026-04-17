@@ -33,7 +33,7 @@ public abstract class AbstractHashedObject implements HashedObject {
     }
 
     protected void initMemory(int byteSize) {
-        memory = allocator.allocate(byteSize, this);
+        memory = allocator.allocate(byteSize);
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class AbstractHashedObject implements HashedObject {
     }
 
     @Override
-    public void release() {
+    public void close() {
         while (true) {
             var previous = count;
             var newValue = count - 1;
@@ -64,7 +64,7 @@ public abstract class AbstractHashedObject implements HashedObject {
     protected abstract void dispose();
 
     @Override
-    public void close() {
+    public void free() {
         if (memory == null) return;
 
         memory.close();
