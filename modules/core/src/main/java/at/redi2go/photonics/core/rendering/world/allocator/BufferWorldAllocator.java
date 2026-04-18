@@ -39,7 +39,7 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
                 .createBufferHeap(
                         () -> "World Buffer",
                         byteSize,
-                        BufferUsage.MAP_WRITE
+                        BufferUsage.MAP_WRITE | BufferUsage.COPY_DST
                 );
 
         this.paletteTexture = allocator;
