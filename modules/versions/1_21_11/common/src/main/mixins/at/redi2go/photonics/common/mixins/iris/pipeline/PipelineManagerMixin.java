@@ -6,7 +6,6 @@ import at.redi2go.photonics.common.MinecraftBlockMesher;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.PipelineManager;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
@@ -32,9 +31,8 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         //TODO Add to more sensible spot
         BlockMesher.REGISTRY.addDefault(new MinecraftBlockMesher());
 
-        var shaderPack = Iris.getCurrentPack()
-                .map(e -> (IShaderPack) e)
-                .orElseThrow();
+        var shaderPack = (IShaderPack) Iris.getCurrentPack().orElse(null);
+        if (shaderPack == null) return;
 
         var properties = shaderPack.properties();
         photonics = PhotonicsExtension.create(
