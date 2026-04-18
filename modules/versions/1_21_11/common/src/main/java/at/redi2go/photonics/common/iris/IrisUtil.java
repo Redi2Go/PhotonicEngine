@@ -5,6 +5,7 @@ import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.irisshaders.iris.Iris;
+import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,8 +28,8 @@ public class IrisUtil {
     }
 
     public static void bindBuffers(@Nullable WorldRenderingPipeline pipeline, int programId) {
-        if (pipeline instanceof IrisRenderingPipelineExt ext)
-            ext.photonics$bufferHolder().bind(programId, IrisUtil.getUsedBuffers());
+        if (pipeline instanceof IrisRenderingPipeline ext)
+            ((IrisRenderingPipelineExt) ext).photonics$bufferHolder().bind(programId, IrisUtil.getUsedBuffers());
     }
 
     public static void bindBuffers(int programId) {
