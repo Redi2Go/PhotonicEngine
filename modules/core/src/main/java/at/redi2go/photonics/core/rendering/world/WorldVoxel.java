@@ -62,8 +62,6 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             int normal,
             TextureData textureData
     ) {
-        if (!containsVoxel(x, y, z)) return false;
-
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude);
         var entry = data[index];
 
@@ -72,8 +70,9 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
 
         if (entry == null) {
             entry = entryCreate(depth - 1);
-            voxelCount++;
+            data[index] = entry;
 
+            voxelCount++;
             newState |= STATE_ENTRY_CREATED;
         } else {
             var previous = entry;
@@ -90,14 +89,15 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         if (entryInsert(entry, x, y, z, region, normal, textureData))
             newState |= STATE_SET_VOXEL;
 
+        int sectionData = state[stateIndex];
         state[stateIndex] = IntPacking.setValue(
-                state[stateIndex],
+                sectionData,
                 IntPacking.sectionIndex(index, STATE_SHIFT),
-                newState,
+                IntPacking.getValue(sectionData, index, STATE_SHIFT) | newState,
                 STATE_SHIFT
         );
 
-        return newState != 0;
+        return true;
     }
 
     public void upload() {
@@ -115,7 +115,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             var sectionData = state[s];
 
             for (int o = 0; o < STATE_SECTION_LENGTH; o++) {
-                int i = s + o;
+                int i = (s << STATE_SHIFT) + o;
                 int state = IntPacking.getValue(sectionData, o, STATE_SHIFT);
                 var entry = data[i];
 
@@ -142,17 +142,21 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
                         data[i] = null;
                         entry = null;
 
+                        voxelCount--;
+
                         needsSet = true;
                     }
                 }
+
+                if (state != 0 && entry != null) entryUpload(entry);
 
                 if (needsSet) {
                     buffer.put(i, entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entryBegin(entry)));
                     needsUpload = true;
                 }
-
-                if (state != 0) entryUpload(entry);
             }
+
+            state[s] = 0;
         }
 
         if (needsUpload) {

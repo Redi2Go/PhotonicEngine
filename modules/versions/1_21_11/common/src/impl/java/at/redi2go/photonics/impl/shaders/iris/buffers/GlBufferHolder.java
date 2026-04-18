@@ -69,10 +69,10 @@ public class GlBufferHolder implements IBufferHolder {
         int handle = ((GlBufferAccessor) buffer).getHandle();
 
         if ((buffer.usage() & BufferUsage.UNIFORM) == 0) {
-            GL30.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, blockIndex, handle);
+            GL30.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, bindingPointIndex, handle);
             GL43.glShaderStorageBlockBinding(program, blockIndex, bindingPointIndex);
         } else {
-            GL30.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, blockIndex, handle);
+            GL30.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, bindingPointIndex, handle);
             GL31.glUniformBlockBinding(program, blockIndex, bindingPointIndex);
         }
     }

@@ -146,7 +146,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             int entry = 0;
 
             for (int i = 0; i < sectionLength; i++) {
-                int voxelIndex = o + i;
+                int voxelIndex = (o << shift) + i;
 
                 var paletteEntry = data[voxelIndex];
                 var voxelEntry = palette.getIndex(paletteEntry) << 1;

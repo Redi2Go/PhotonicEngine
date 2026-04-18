@@ -25,6 +25,8 @@ public class ChunkVoxel extends WorldVoxel {
 
     @Override
     protected Object entryMakeMutable(Object entry) {
+        if (entry instanceof BlockEntry.Builder) return entry;
+
         return ((BlockEntry) entry).createBuilder();
     }
 
