@@ -137,6 +137,8 @@ public abstract class AbstractVoxelModel implements VoxelModel {
 
         for (int y = startY; y < endY; y++) {
             for (int z = startZ; z < endZ; z++) {
+                if (!contains(x, y, z)) return false;
+
                 var index = VoxelModel.toVoxelIndex(x, y, z);
                 if (VoxelEntry.isData(get(index)))
                     return false;
@@ -151,6 +153,8 @@ public abstract class AbstractVoxelModel implements VoxelModel {
 
         for (int x = startX; x < endX; x++) {
             for (int y = startY; y < endY; y++) {
+                if (!contains(x, y, z)) return false;
+
                 var index = VoxelModel.toVoxelIndex(x, y, z);
                 if (VoxelEntry.isData(get(index)))
                     return false;
@@ -165,6 +169,8 @@ public abstract class AbstractVoxelModel implements VoxelModel {
 
         for (int x = startX; x < endX; x++) {
             for (int z = startZ; z < endZ; z++) {
+                if (!contains(x, y, z)) return false;
+
                 var index = VoxelModel.toVoxelIndex(x, y, z);
                 if (VoxelEntry.isData(get(index)))
                     return false;
