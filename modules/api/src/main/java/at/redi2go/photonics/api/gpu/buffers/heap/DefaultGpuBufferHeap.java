@@ -73,6 +73,7 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
             encoder.writeToBuffer(
                     gpuBuffer.slice(offset, length),
                     buffer.slice(Math.toIntExact(offset), Math.toIntExact(length))
+                            .order(buffer.order())
             );
         }
     }
@@ -88,7 +89,8 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
         private Allocation(long begin, long length) {
             super(begin, length);
 
-            slice = buffer.slice(Math.toIntExact(begin), Math.toIntExact(length));
+            slice = buffer.slice(Math.toIntExact(begin), Math.toIntExact(length))
+                    .order(buffer.order());
         }
 
         @Override
@@ -109,7 +111,8 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
 
         @Override
         protected ByteBuffer createSlice(long begin, long length) {
-            return buffer.slice(Math.toIntExact(begin), Math.toIntExact(length));
+            return buffer.slice(Math.toIntExact(begin), Math.toIntExact(length))
+                    .order(buffer.order());
         }
 
         @Override
