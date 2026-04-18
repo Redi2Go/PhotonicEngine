@@ -68,9 +68,9 @@ public abstract class AbstractGpuBufferHeap implements IGpuBufferHeap {
         private long begin;
         private final long end;
 
-        protected AbstractAllocation(long begin, long end) {
+        protected AbstractAllocation(long begin, long length) {
             this.begin = begin;
-            this.end = end;
+            this.end = begin + length;
         }
 
         @Override
