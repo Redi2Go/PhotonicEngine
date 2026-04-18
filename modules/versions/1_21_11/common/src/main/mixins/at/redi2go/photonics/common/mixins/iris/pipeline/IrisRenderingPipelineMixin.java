@@ -26,8 +26,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
     )
     private void init(ProgramSet programSet, CallbackInfo ci) {
         IrisUtil.getPhotonics()
-                .orElseThrow()
-                .registerBuffers(bufferHolder);
+                .ifPresent(e -> e.registerBuffers(bufferHolder));
     }
 
     @Override
