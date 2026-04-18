@@ -36,9 +36,6 @@ public class GlBufferHolder implements IBufferHolder {
                 var buffer = (GlBuffer) bufferPair.second().get();
 
                 var blockIndex = getBlockIndex(shaderId, name, buffer);
-                if (blockIndex == GL31.GL_INVALID_INDEX)
-                    throw new IllegalStateException("Block index for " + name + " was GL_INVALID_INDEX");
-
                 result[i] = blockIndex;
             }
 
@@ -49,6 +46,7 @@ public class GlBufferHolder implements IBufferHolder {
         for (int i = 0; i < buffers.size(); i++) {
             var bufferPair = buffers.get(i);
             var blockIndex = blockIndices[i];
+            if (blockIndex == GL31.GL_INVALID_INDEX) continue;
 
             while (usedBuffers.contains(--bindingPointIndex)) continue;
 
