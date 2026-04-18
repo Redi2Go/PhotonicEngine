@@ -12,6 +12,7 @@
     "iris.pipeline.passes.ShadowCompositeRendererMixin",
     "iris.pipeline.passes.CompositeRendererMixin",
     "iris.pipeline.passes.FinalPassRendererMixin",
+    "iris.pipeline.uniforms.CommonUniformsMixin",
     "rendering.world.bakery.VertexBuilderMixin"
   ],
   "mixins": [
