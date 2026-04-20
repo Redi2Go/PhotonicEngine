@@ -1,54 +1,48 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
+import at.redi2go.photonics.core.Photonics;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 // TODO: Rewrite this to do tinting after creating palettes
 public class PaletteBuilder {
-    private final Object2ObjectMap<MutablePaletteEntry, MutablePaletteEntry> intern = new Object2ObjectOpenHashMap<>();
-    private MutablePaletteEntry[] sortedEntries;
+    private static final Object NO_FACE_DATA = new Object();
 
-    @SuppressWarnings("unchecked")
-    private final @Nullable ObjectSet<MutablePaletteEntry>[] missingFaces = new ObjectSet[6];
+    private final Object2ObjectMap<MutablePaletteEntry, MutablePaletteEntry> interner = new Object2ObjectOpenHashMap<>();
+    private ArrayDeque<MutablePaletteEntry> mergeQueue;
 
-    private void addMissingFaces(MutablePaletteEntry data) {
-        for (int i = 0; i < 6; i++) {
-            if (data.hasFace(i)) continue;
-
-            var set = missingFaces[i];
-            if (set == null) {
-                set = new ObjectRBTreeSet<>();
-                missingFaces[i] = set;
-            }
-
-            set.add(data);
-        }
-    }
+    private final Object2ObjectMap<Object, ObjectSet<MutablePaletteEntry>>[] faces = new Object2ObjectMap[6];
 
     public void add(MutablePaletteEntry data) {
         data.computeHashCode();
 
-        intern.computeIfAbsent(data, (e) -> (MutablePaletteEntry) e)
+        interner.computeIfAbsent(data, (e) -> (MutablePaletteEntry) e)
                 .usages++;
     }
 
     private void sort() {
-        sortedEntries = new MutablePaletteEntry[intern.size()];
+        MutablePaletteEntry[] sortedEntries = new MutablePaletteEntry[interner.size()];
+
         int i = 0;
 
-        for (var MutablePaletteEntry : intern.values()) {
-            sortedEntries[i++] = MutablePaletteEntry;
-            addMissingFaces(MutablePaletteEntry);
+        for (var entry : interner.values()) {
+            sortedEntries[i++] = entry;
+            insertFaceData(entry);
         }
 
         Arrays.sort(sortedEntries);
+
+        mergeQueue = new ArrayDeque<>(sortedEntries.length);
+
+        for (var entry : sortedEntries)
+            mergeQueue.addLast(entry);
     }
 
     /**
@@ -56,41 +50,30 @@ public class PaletteBuilder {
      * This needs to work with sorted values so that tinted blocks are merged the same way
      */
     private void merge() {
-        sort();
-
-        for (var MutablePaletteEntry : sortedEntries) {
-            if (!MutablePaletteEntry.hasMissingFace()) continue;
-
-            merging:
+        while (!mergeQueue.isEmpty()) {
+            outerLoop:
             {
-                for (int i = 0; i < 6; i++) {
-                    if (MutablePaletteEntry.hasFace(i)) continue;
+                var entry = mergeQueue.pop();
 
-                    var candidates = missingFaces[i];
-                    if (candidates == null) continue;
+                for (int i = 0; i < 6; i++) {
+                    var key = key(entry, i);
+
+                    var map = faces[i];
+                    var candidates = map.get(key);
 
                     for (var candidate : candidates) {
-                        if (candidate.canMerge(MutablePaletteEntry)) {
-                            candidate.addFaces(MutablePaletteEntry, missingFaces);
+                        if (candidate == entry) continue;
+                        if (!candidate.canMerge(entry)) continue;
 
-                            intern.put(MutablePaletteEntry, candidate);
+                        removeFaceData(candidate);
+                        removeFaceData(entry);
 
-                            break merging;
-                        }
+                        candidate.addFaces(entry, interner);
+                        insertFaceData(candidate);
+
+                        mergeQueue.addLast(candidate);
+                        break outerLoop;
                     }
-                }
-            }
-
-            // None of the candidates match, remove it from all to save some time
-            removeFromMissingFaces:
-            {
-                for (int i = 0; i < 6; i++) {
-                    if (MutablePaletteEntry.hasFace(i)) continue;
-
-                    var candidates = missingFaces[i];
-                    if (candidates == null) continue;
-
-                    candidates.remove(MutablePaletteEntry);
                 }
             }
         }
@@ -103,10 +86,11 @@ public class PaletteBuilder {
         var seen = new ObjectOpenHashSet<MutablePaletteEntry>();
         var counts = new ArrayList<MutablePaletteEntry>();
 
-        for (var entry : intern.values()) {
+        for (var entry : interner.values()) {
             if (!seen.add(entry)) continue;
 
             counts.add(entry);
+            entry.dependants = null;
         }
 
         counts.sort(MutablePaletteEntry::compareTo);
@@ -114,6 +98,35 @@ public class PaletteBuilder {
             counts.get(i).index = i;
         }
 
-        return new BlockPalette(intern, counts);
+        return new BlockPalette(interner, counts);
+    }
+
+    // Merge map
+
+    private static Object key(MutablePaletteEntry entry, int face) {
+        var faceData = entry.faces[face];
+        return faceData == null ? NO_FACE_DATA : face;
+    }
+
+    private void insertFaceData(MutablePaletteEntry entry) {
+        for (int i = 0; i < 6; i++) {
+            var key = key(entry, i);
+
+            var map = faces[i];
+            if (map == null) {
+                map = new Object2ObjectOpenHashMap<>();
+                faces[i] = map;
+            }
+
+            map.computeIfAbsent(key, (k) -> new ObjectRBTreeSet<>())
+                    .add(entry);
+        }
+    }
+
+    private void removeFaceData(MutablePaletteEntry entry) {
+        for (int i = 0; i < 6; i++) {
+            var key = key(entry, i);
+            faces[i].get(key).remove(entry);
+        }
     }
 }

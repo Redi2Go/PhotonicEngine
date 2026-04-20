@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -116,11 +117,14 @@ public class MinecraftBlockMesher implements BlockMesher {
             builder.setOffset(origin.applyOffset((IBlockPos) pos));
 
             poseStack.pushPose();
+            poseStack.translate(blockState.getOffset(pos));
 
             parts.clear();
             randomSource.setSeed(blockState.getSeed(pos));
             blockRenderer.getBlockModel(blockState).collectParts(randomSource, parts);
-            blockRenderer.renderBatched(blockState, pos, blockAndTintGetter, poseStack, (VertexConsumer) builder, false, parts);
+            ((BlockRenderDispatcherExt) blockRenderer)
+                    .photonics$modelBlockRenderer()
+                    .tesselateWithoutAO(blockAndTintGetter, parts, blockState, pos, poseStack, (VertexConsumer) builder, false, OverlayTexture.NO_OVERLAY);
 
             poseStack.popPose();
         }

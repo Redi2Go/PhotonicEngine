@@ -29,11 +29,11 @@ public class BaryPos extends Vector3f {
             Vector3f ca,
             Vector3f n
     ) {
-        var nDotN = n.dot(n);
+        var nDotN = 1 / n.dot(n);
 
         var result = new BaryPos(
-                ba.cross(pos, new Vector3f()).dot(n) / nDotN,
-                pos.cross(ca, new Vector3f()).dot(n) / nDotN,
+                ba.cross(pos, new Vector3f()).dot(n) * nDotN,
+                pos.cross(ca, new Vector3f()).dot(n) * nDotN,
                 0
         );
 

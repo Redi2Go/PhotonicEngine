@@ -13,7 +13,8 @@
     "iris.pipeline.passes.CompositeRendererMixin",
     "iris.pipeline.passes.FinalPassRendererMixin",
     "iris.pipeline.uniforms.CommonUniformsMixin",
-    "rendering.world.bakery.VertexBuilderMixin"
+    "rendering.world.bakery.VertexBuilderMixin",
+    "mc.client.renderer.block.BlockRenderDispatcherMixin"
   ],
   "mixins": [
 

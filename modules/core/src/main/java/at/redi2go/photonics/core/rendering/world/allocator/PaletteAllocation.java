@@ -3,6 +3,7 @@ package at.redi2go.photonics.core.rendering.world.allocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
+import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import org.joml.Vector4i;
 
 import java.lang.invoke.MethodHandles;
@@ -18,6 +19,23 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
         this.allocator = allocator;
 
         copyFrom(toCopy);
+
+        TextureData notNullFace = null;
+        for (int i = 0; i < 6; i++) {
+            var face = faces[i];
+            if (face == null) continue;
+
+            if (notNullFace == null)
+                notNullFace = face;
+            else if (face.gt(notNullFace))
+                notNullFace = face;
+        }
+
+        for (int i = 0; i < 6; i++) {
+            if (faces[i] != null) continue;
+
+            faces[i] = notNullFace;
+        }
     }
 
     @Override

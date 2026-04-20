@@ -26,8 +26,6 @@ public class BlockBakery {
     private final Vertex v2 = new Vertex();
     private final Vertex v3 = new Vertex();
 
-    private final Vector4f tint = new Vector4f();
-
     private final Vertex[] tri = new Vertex[3];
 
     public BlockBakery(AtlasDownloader atlasDownloader) {
@@ -64,7 +62,7 @@ public class BlockBakery {
             CpuTexture texture = vertexBuilder.currentTexture();
             int blockId = vertexBuilder.currentBlockId();
 
-            VoxelColor.toVector(v0.tint(), tint);
+            int tint = v0.tint();
 
             tri[0] = v0;
             tri[1] = v1;
@@ -81,7 +79,7 @@ public class BlockBakery {
     private void voxelizeTri(
             CpuTexture texture,
             int blockId,
-            Vector4f tint,
+            int tint,
             Vertex[] tri,
             VoxelConsumer consumer
     ) {
@@ -140,25 +138,35 @@ public class BlockBakery {
                     voxelPos.sub(tri[0]);
 
                     var baryPos = BaryPos.from(voxelPos, ba, ca, n);
-                    var textureData = sample(texture, blockId, tri, baryPos);
+                    var textureData = sample(texture, blockId, tint, tri, baryPos);
                     if (textureData == null) continue;
 
                     if (VoxelColor.a(textureData.color()) != 0)
-                        consumer.accept(x, y, z, normalIndex, textureData.withTint(tint));
+                        consumer.accept(x, y, z, normalIndex, textureData);
                 }
             }
         }
     }
 
-    private static TextureData sample(CpuTexture texture, int blockId, Vertex[] tri, BaryPos barycentricPos) {
+    private static int signBit(float value) {
+        return Float.floatToRawIntBits(value) & Integer.MIN_VALUE;
+    }
+
+    private static TextureData sample(
+            CpuTexture texture,
+            int blockId,
+            int tint,
+            Vertex[] tri,
+            BaryPos barycentricPos
+    ) {
         float w1 = barycentricPos.x;
         float w2 = barycentricPos.y;
         float w3 = barycentricPos.z;
-        if (w1 < 0 || w2 < 0 || w3 < 0) return null;
+        if ((signBit(w1) | signBit(w2) | signBit(w3)) != 0) return null;
 
         float u = Math.fma(w1, tri[2].u(), Math.fma(w2, tri[1].u(), w3 * tri[0].u()));
         float v = Math.fma(w1, tri[2].v(), Math.fma(w2, tri[1].v(), w3 * tri[0].v()));
 
-        return texture.sample(blockId, u, v);
+        return texture.sample(blockId, tint, u, v);
     }
 }

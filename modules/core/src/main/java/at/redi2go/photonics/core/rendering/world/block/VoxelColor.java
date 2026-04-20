@@ -55,6 +55,17 @@ public class VoxelColor {
         );
     }
 
+    public static int applyTint(int color, int tint) {
+        if ((tint ^ WHITE) == 0) return color;
+
+        return from(
+                ((r(color) + 1) * r(tint)) >> 8,
+                ((g(color) + 1) * g(tint)) >> 8,
+                ((b(color) + 1) * b(tint)) >> 8,
+                ((a(color) + 1) * a(tint)) >> 8
+        );
+    }
+
     private VoxelColor() {
 
     }

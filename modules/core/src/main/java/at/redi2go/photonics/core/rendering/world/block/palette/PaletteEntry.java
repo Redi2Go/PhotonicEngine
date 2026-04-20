@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class PaletteEntry implements Comparable<PaletteEntry> {
     protected short usages = 0;
-    protected short presentFaces = -1;
+    protected short presentFaces = 0;
 
     protected final TextureData[] faces = new TextureData[6];
 
@@ -19,7 +19,9 @@ public abstract class PaletteEntry implements Comparable<PaletteEntry> {
         computeHashCode();
     }
 
-    protected void computeHashCode() {
+    public void computeHashCode() {
+        hashCode = 0;
+
         for (int i = 0; i < 6; i++) {
             var face = faces[i];
             if (face == null) {

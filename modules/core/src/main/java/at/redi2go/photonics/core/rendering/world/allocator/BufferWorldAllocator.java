@@ -92,6 +92,8 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
     // Hash object allocations
 
     public PaletteAllocation allocatePalette(PaletteEntry entry) {
+        entry.computeHashCode();
+
         return cacheObject(
                 entry,
                 e -> new PaletteAllocation(e, this),

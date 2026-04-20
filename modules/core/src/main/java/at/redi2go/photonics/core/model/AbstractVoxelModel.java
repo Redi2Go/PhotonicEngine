@@ -52,15 +52,22 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             int entry = get(i);
             if (VoxelEntry.isData(entry)) continue;
 
-            set(i, VoxelEntry.toAir(mergeNeighbours(
-                    VoxelModel.shrinkBits(i),
-                    VoxelModel.shrinkBits(i >> 1),
-                    VoxelModel.shrinkBits(i >> 2)
-            )));
+            int maxIndex = VoxelModel.toVoxelIndex(width - 1, height - 1, depth - 1);
+
+            set(i,
+                    VoxelEntry.toAir(
+                            mergeNeighbours(
+                                    VoxelModel.shrinkBits(i),
+                                    VoxelModel.shrinkBits(i >> 1),
+                                    VoxelModel.shrinkBits(i >> 2),
+                                    ~maxIndex
+                            )
+                    )
+            );
         }
     }
 
-    protected int mergeNeighbours(int x, int y, int z) {
+    protected int mergeNeighbours(int x, int y, int z, int indexMask) {
         int startX = x;
         int startY = y;
         int startZ = z;
@@ -75,7 +82,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             merged = false;
 
             // North
-            if (northMerged && canMergeNorthSouth(startX, startY, endZ, endX, endY)) {
+            if (northMerged && canMergeNorthSouth(startX, startY, endZ, endX, endY, indexMask)) {
                 endZ++;
 
                 merged = true;
@@ -84,7 +91,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             }
 
             // South
-            if (southMerged && canMergeNorthSouth(startX, startY, startZ - 1, endX, endY)) {
+            if (southMerged && canMergeNorthSouth(startX, startY, startZ - 1, endX, endY, indexMask)) {
                 startZ--;
 
                 merged = true;
@@ -93,7 +100,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             }
 
             // East
-            if (eastMerged && canMergeEastWest(endX, startY, startZ, endY, endZ)) {
+            if (eastMerged && canMergeEastWest(endX, startY, startZ, endY, endZ, indexMask)) {
                 endX++;
 
                 merged = true;
@@ -102,7 +109,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             }
 
             // West
-            if (westMerged && canMergeEastWest(startX - 1, startY, startZ, endY, endZ)) {
+            if (westMerged && canMergeEastWest(startX - 1, startY, startZ, endY, endZ, indexMask)) {
                 startX--;
 
                 merged = true;
@@ -111,7 +118,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             }
 
             // Top
-            if (topMerged && canMergeTopBottom(startX, endY, startZ, endX, endZ)) {
+            if (topMerged && canMergeTopBottom(startX, endY, startZ, endX, endZ, indexMask)) {
                 endY++;
 
                 merged = true;
@@ -120,7 +127,7 @@ public abstract class AbstractVoxelModel implements VoxelModel {
             }
 
             // Bottom
-            if (bottomMerged && canMergeTopBottom(startX, startY - 1, startZ, endX, endZ)) {
+            if (bottomMerged && canMergeTopBottom(startX, startY - 1, startZ, endX, endZ, indexMask)) {
                 startY--;
 
                 merged = true;
@@ -132,12 +139,12 @@ public abstract class AbstractVoxelModel implements VoxelModel {
         return VoxelEntry.toAir(startX, startY, startZ, endX, endY, endZ);
     }
 
-    private boolean canMergeEastWest(int x, int startY, int startZ, int endY, int endZ) {
+    private boolean canMergeEastWest(int x, int startY, int startZ, int endY, int endZ, int indexMask) {
         for (int y = startY; y < endY; y++) {
             for (int z = startZ; z < endZ; z++) {
-                if (!contains(x, y, z)) return false;
-
                 var index = VoxelModel.toVoxelIndex(x, y, z);
+                if ((index & indexMask) != 0) return false;
+
                 if (VoxelEntry.isData(get(index)))
                     return false;
             }
@@ -146,12 +153,12 @@ public abstract class AbstractVoxelModel implements VoxelModel {
         return true;
     }
 
-    private boolean canMergeNorthSouth(int startX, int startY, int z, int endX, int endY) {
+    private boolean canMergeNorthSouth(int startX, int startY, int z, int endX, int endY, int indexMask) {
         for (int x = startX; x < endX; x++) {
             for (int y = startY; y < endY; y++) {
-                if (!contains(x, y, z)) return false;
-
                 var index = VoxelModel.toVoxelIndex(x, y, z);
+                if ((index & indexMask) != 0) return false;
+
                 if (VoxelEntry.isData(get(index)))
                     return false;
             }
@@ -160,12 +167,12 @@ public abstract class AbstractVoxelModel implements VoxelModel {
         return true;
     }
 
-    private boolean canMergeTopBottom(int startX, int y, int startZ, int endX, int endZ) {
+    private boolean canMergeTopBottom(int startX, int y, int startZ, int endX, int endZ, int indexMask) {
         for (int x = startX; x < endX; x++) {
             for (int z = startZ; z < endZ; z++) {
-                if (!contains(x, y, z)) return false;
-
                 var index = VoxelModel.toVoxelIndex(x, y, z);
+                if ((index & indexMask) != 0) return false;
+
                 if (VoxelEntry.isData(get(index)))
                     return false;
             }
