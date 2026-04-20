@@ -78,7 +78,6 @@ public class BlockBakery {
         }
     }
 
-    //TODO: tinting
     private void voxelizeTri(
             CpuTexture texture,
             int blockId,
@@ -91,6 +90,7 @@ public class BlockBakery {
 
         Vector3f n = ba.cross(ca, new Vector3f());
         Vector3f normal = n.normalize(new Vector3f());
+        Vector3f normalHalf = normal.mul(0.5f, new Vector3f());
 
         Vector3i temp = new Vector3i();
         Vector3i min = new Vector3i(Integer.MAX_VALUE);
@@ -98,7 +98,7 @@ public class BlockBakery {
 
         Vector3f vertex = new Vector3f();
         for (int i = 2; i >= 0; i--) {
-            tri[i].mul(16, vertex);
+            tri[i].mul(16, vertex).sub(normalHalf);
 
             min.min(temp.set(vertex, RoundingMode.FLOOR));
             max.max(temp.set(vertex, RoundingMode.CEILING));
@@ -107,6 +107,8 @@ public class BlockBakery {
         min.max(new Vector3i(0));
         max.max(min);
 
+        max.sub(min).max(new Vector3i(1));
+
         Vector3f voxelPos = new Vector3f();
         Vector3f worldPos = new Vector3f();
 
@@ -114,9 +116,13 @@ public class BlockBakery {
         // Will work for straight blocks for now
         int normalIndex = VoxelNormal.getIndex(normal);
 
-        for (int x = min.x; x <= max.x; x++) {
-            for (int y = min.y; y <= max.y; y++) {
-                for (int z = min.z; z <= max.z; z++) {
+        for (int px = 0; px < max.x; px++) {
+            for (int py = 0; py < max.y; py++) {
+                for (int pz = 0; pz < max.z; pz++) {
+                    int x = min.x + px;
+                    int y = min.y + py;
+                    int z = min.z + pz;
+
                     voxelPos.set(x + 0.5f, y + 0.5f, z + 0.5f);
 
                     voxelPos.sub(vertex, worldPos);
@@ -130,7 +136,6 @@ public class BlockBakery {
                             || (int) worldPos.z != z
                     ) continue;
 
-
                     voxelPos.mul(BLOCK_SIZE_INV);
                     voxelPos.sub(tri[0]);
 
@@ -138,7 +143,8 @@ public class BlockBakery {
                     var textureData = sample(texture, blockId, tri, baryPos);
                     if (textureData == null) continue;
 
-                    consumer.accept(x, y, z, normalIndex, textureData.withTint(tint));
+                    if (VoxelColor.a(textureData.color()) != 0)
+                        consumer.accept(x, y, z, normalIndex, textureData.withTint(tint));
                 }
             }
         }

@@ -9,6 +9,8 @@ import java.nio.IntBuffer;
 
 public class BlockEntryData extends AbstractHashedObject {
     private final int skylight;
+    private final int shift;
+    private final int valueMask;
     private final PaletteAllocation[] palette;
     private final BlockVoxelImpl blockVoxel;
 
@@ -17,12 +19,16 @@ public class BlockEntryData extends AbstractHashedObject {
     public BlockEntryData(
             BufferWorldAllocator allocator,
             int skylight,
+            int shift,
+            int valueMask,
             PaletteAllocation[] palette,
             BlockVoxelImpl blockVoxel
     ) {
         super(allocator);
 
         this.skylight = skylight;
+        this.shift = shift;
+        this.valueMask = valueMask;
         this.palette = palette;
         this.blockVoxel = blockVoxel;
 
@@ -46,18 +52,22 @@ public class BlockEntryData extends AbstractHashedObject {
     }
 
     public void allocate() {
-        initMemory(4 * (palette.length + 3));
+        initMemory(4 * (palette.length + 5));
         IntBuffer buffer = memory.buffer().asIntBuffer();
 
         blockVoxel.acquire();
 
         buffer.put(skylight);
         buffer.put(blockVoxel.begin());
+        buffer.put(shift);
+        buffer.put(valueMask);
         buffer.put(palette.length);
         for (PaletteAllocation entry : palette) {
             entry.acquire();
             buffer.put(entry.begin());
         }
+
+        memory.upload();
     }
 
     public BufferWorldAllocator allocator() {

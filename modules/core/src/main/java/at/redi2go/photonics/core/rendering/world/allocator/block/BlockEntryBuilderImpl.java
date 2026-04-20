@@ -135,7 +135,10 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
         // We need a bit to indicate transparency
         // Bit 0 is used so that it's unaffected by the int packing
         // Max element is <size> because index 0 is used for air
-        var shift = IntPacking.shiftFactor(palette.size() << 1);
+
+        //TODO: FIX ME!
+        //var shift = IntPacking.shiftFactor(palette.size() << 1);
+        var shift = IntPacking.shiftFactor(Integer.MAX_VALUE);
 
         var voxelData = new int[RtVoxel.ENTRIES_SIZE >> shift];
         var sectionLength = IntPacking.sectionLength(shift);
@@ -165,6 +168,8 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
 
                 entry = IntPacking.setValue(entry, i, voxelEntry, shift);
             }
+
+            voxelData[o] = entry;
         }
 
         BlockVoxelImpl blockVoxel = allocator.allocateBlockVoxel(
@@ -181,6 +186,8 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
                 regionBuilder,
                 allocator.allocateBlockEntryData(
                         skylight,
+                        shift,
+                        IntPacking.valueMask(shift),
                         paletteArray,
                         blockVoxel
                 )

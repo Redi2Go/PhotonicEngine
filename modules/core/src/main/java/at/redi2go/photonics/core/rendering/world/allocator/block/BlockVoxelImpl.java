@@ -37,6 +37,8 @@ public class BlockVoxelImpl extends AbstractHashedObject implements BlockVoxel {
         buffer = memory.buffer().asIntBuffer();
 
         buffer.put(data);
+
+        memory.upload();
     }
 
     public int shift() {
