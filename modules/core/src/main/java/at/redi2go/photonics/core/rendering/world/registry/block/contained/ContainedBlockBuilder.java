@@ -56,8 +56,8 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
     }
 
     @Override
-    public void accept(int x, int y, int z, int normal, int tint, TextureData textureData) {
-        insert(x, y, z, (short) 0, normal, tint, textureData);
+    public void acceptVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
+        insert(x, y, z, region, normal, tint, textureData);
     }
 
     @Override

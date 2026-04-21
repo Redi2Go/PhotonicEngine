@@ -1,7 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
-import at.redi2go.photonics.core.rendering.world.allocator_old.BufferWorldAllocator;
-import at.redi2go.photonics.core.rendering.world.allocator_old.block.BlockVoxelImpl;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.registry.AbstractHashedObject;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
@@ -98,6 +96,10 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
 
     public PaletteEntry getPaletteEntry(int index) {
         return palette[index - 1];
+    }
+
+    public int getTint(int index) {
+        return tint[index - 1];
     }
 
     @Override

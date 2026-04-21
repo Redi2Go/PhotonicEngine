@@ -1,17 +1,22 @@
 package at.redi2go.photonics.core.rendering.world;
 
 import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.core.model.AbstractVoxelModel;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockConsumer;
+import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
+import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
+import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.util.IntPacking;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.IntBuffer;
 
-public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposable {
+public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposable, BlockConsumer, VoxelConsumer {
     private final static int STATE_SHIFT = IntPacking.shiftFactor(0b11);
     private final static int STATE_LENGTH = RtVoxel.ENTRIES_SIZE >> STATE_SHIFT;
     private final static int STATE_SECTION_LENGTH = IntPacking.sectionLength(STATE_SHIFT);
@@ -19,7 +24,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     private final static int STATE_ENTRY_CREATED = 0b01;
     private final static int STATE_SET_VOXEL = 0b10;
 
-    protected final WorldAllocator allocator;
+    protected final BlockRegistry registry;
 
     private final int[] state;
 
@@ -27,15 +32,15 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     private final Object[] data;
 
     private final int depth;
-    private final int magnitude;
+    protected final int magnitude;
 
     private @Nullable MemoryView memory;
     private IntBuffer buffer;
 
-    public WorldVoxel(int depth, WorldAllocator allocator) {
+    public WorldVoxel(int depth, BlockRegistry registry) {
         super(SIZE_3);
 
-        this.allocator = allocator;
+        this.registry = registry;
         this.depth = depth;
 
         this.magnitude = depth << 2;
@@ -56,7 +61,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         return SIDE_LENGTH << magnitude;
     }
 
-    public boolean insert(
+    public boolean insertVoxel(
             int x, int y, int z,
             short region,
             int normal,
@@ -83,6 +88,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
                 if (previous instanceof Disposable disposable)
                     disposable.close();
 
+                data[index] = entry;
                 newState |= STATE_ENTRY_CREATED;
             }
         }
@@ -101,16 +107,41 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         return true;
     }
 
-    public void upload() {
-        var firstUpload = false;
-        var needsUpload = false;
+    public void insertBlock(
+            int x, int y, int z,
+            short region,
+            BlockEntry block
+    ) {
+        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude);
+        var entry = data[index];
 
-        if (memory == null) {
-            memory = allocator.allocate(ENTRIES_SIZE << 2);
-            buffer = memory.buffer().asIntBuffer();
+        var stateIndex = IntPacking.dataOffset(index, STATE_SHIFT);
+        var newState = 0;
 
-            firstUpload = needsUpload = true;
-        }
+        var newEntry = entryInsertBlock(entry, block);
+        if (entry == null) {
+            voxelCount++;
+            newState |= STATE_ENTRY_CREATED;
+        } else entryFree(entry);
+
+        data[index] = newEntry;
+        if (newEntry instanceof WorldVoxel voxel)
+            voxel.insertBlock(x, y, z, region, block);
+
+        newState |= STATE_SET_VOXEL;
+
+        int sectionData = state[stateIndex];
+        state[stateIndex] = IntPacking.setValue(
+                sectionData,
+                IntPacking.sectionIndex(index, STATE_SHIFT),
+                IntPacking.getValue(sectionData, index, STATE_SHIFT) | newState,
+                STATE_SHIFT
+        );
+    }
+
+    public void upload(IGpuBufferHeap allocator) {
+        boolean firstUpload, needsUpload;
+        needsUpload = firstUpload = ensureAllocated(allocator);
 
         for (int s = 0; s < state.length; s++) {
             var sectionData = state[s];
@@ -149,7 +180,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
                     }
                 }
 
-                if (state != 0 && entry != null) entryUpload(entry);
+                if (state != 0 && entry != null) entryUpload(entry, allocator);
 
                 if (needsSet) {
                     buffer.put(i, entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entryBegin(entry)));
@@ -169,7 +200,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     // entry methods
 
     protected Object entryCreate(int depth) {
-        return WorldVoxel.create(depth, allocator);
+        return WorldVoxel.create(depth, registry);
     }
 
     protected boolean entryIsEmpty(Object entry) {
@@ -195,7 +226,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             int tint,
             TextureData textureData
     ) {
-        return ((WorldVoxel) entry).insert(
+        return ((WorldVoxel) entry).insertVoxel(
                 x, y, z,
                 region,
                 normal,
@@ -204,12 +235,19 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         );
     }
 
+    protected Object entryInsertBlock(
+            Object previousEntry,
+            BlockEntry entry
+    ) {
+        return previousEntry != null ? previousEntry : entryCreate(depth - 1);
+    }
+
     protected Object entryBuild(Object entry) {
         return entry;
     }
 
-    protected void entryUpload(Object entry) {
-        ((WorldVoxel) entry).upload();
+    protected void entryUpload(Object entry, IGpuBufferHeap allocator) {
+        ((WorldVoxel) entry).upload(allocator);
     }
 
     protected void entryFree(Object entry) {
@@ -218,6 +256,25 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
     }
 
     // Voxel model
+
+    public boolean ensureAllocated(IGpuBufferHeap allocator) {
+        if (memory == null) {
+            memory = allocator.allocate(ENTRIES_SIZE << 2);
+            buffer = memory.buffer().asIntBuffer();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isAllocated() {
+        return memory != null;
+    }
+
+    public int begin() {
+        return MemoryView.intBufferBegin(memory);
+    }
 
     private void checkAllocated() {
         if (memory == null)
@@ -243,7 +300,17 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         if (memory != null) memory.close();
     }
 
-    public static WorldVoxel create(int depth, WorldAllocator allocator) {
-        return depth <= 1 ? new ChunkVoxel(depth, allocator) : new WorldVoxel(depth, allocator);
+    public static WorldVoxel create(int depth, BlockRegistry registry) {
+        return depth <= 1 ? new ChunkVoxel(depth, registry) : new WorldVoxel(depth, registry);
+    }
+
+    @Override
+    public void acceptBlock(int x, int y, int z, short region, BlockEntry entry) {
+        insertBlock(x, y, z, region, entry);
+    }
+
+    @Override
+    public void acceptVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
+        insertVoxel(x, y, z, region, normal, tint, textureData);
     }
 }

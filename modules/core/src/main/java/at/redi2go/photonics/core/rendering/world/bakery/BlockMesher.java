@@ -24,7 +24,7 @@ public interface BlockMesher {
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter,
-            VertexBuilder vertexBuilder
+            BlockBuilder blockBuilder
     );
 
     class Registry {

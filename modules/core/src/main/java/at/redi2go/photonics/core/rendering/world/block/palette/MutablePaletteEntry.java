@@ -21,6 +21,13 @@ public final class MutablePaletteEntry extends PaletteEntry {
         copyFrom(other);
     }
 
+    public MutablePaletteEntry(PaletteEntry other, int tint) {
+        super();
+        copyFrom(other);
+
+        this.tint = tint;
+    }
+
     void computeBuilderHashCode() {
         hashCode = tint;
 

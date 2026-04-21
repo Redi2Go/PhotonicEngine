@@ -1,17 +1,18 @@
 package at.redi2go.photonics.core.rendering.world;
 
-import at.redi2go.photonics.core.rendering.world.allocator_old.WorldAllocator;
+import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
+import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 
 public class ChunkVoxel extends WorldVoxel {
-    public ChunkVoxel(int depth, WorldAllocator allocator) {
-        super(depth, allocator);
+    public ChunkVoxel(int depth, BlockRegistry registry) {
+        super(depth, registry);
     }
 
     @Override
     protected Object entryCreate(int depth) {
-        return allocator.createBlockBuilder();
+        return registry.newBlockBuilder();
     }
 
     @Override
@@ -50,6 +51,11 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
+    protected Object entryInsertBlock(Object previousEntry, BlockEntry entry) {
+        return entry;
+    }
+
+    @Override
     protected Object entryBuild(Object entry) {
         if (entry instanceof BlockEntry.Builder builder)
             return builder.build();
@@ -58,7 +64,7 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
-    protected void entryUpload(Object entry) {
+    protected void entryUpload(Object entry, IGpuBufferHeap allocator) {
 
     }
 }

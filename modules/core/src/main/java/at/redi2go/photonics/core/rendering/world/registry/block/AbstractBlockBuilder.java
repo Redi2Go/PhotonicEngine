@@ -76,7 +76,10 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
                         break moveEntry;
 
                     isEmpty = false;
-                    data[voxelIndex] = new MutablePaletteEntry(entryData.getPaletteEntry(entry));
+                    data[voxelIndex] = new MutablePaletteEntry(
+                            entryData.getPaletteEntry(entry),
+                            entryData.getTint(entry)
+                    );
                 }
 
                 sectionData >>= valueShift;

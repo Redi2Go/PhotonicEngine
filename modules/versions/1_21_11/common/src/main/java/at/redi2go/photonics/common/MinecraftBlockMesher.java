@@ -7,7 +7,7 @@ import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
-import at.redi2go.photonics.core.rendering.world.bakery.VertexBuilder;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
@@ -34,14 +34,14 @@ public class MinecraftBlockMesher implements BlockMesher {
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter,
-            VertexBuilder vertexBuilder
+            BlockBuilder blockBuilder
     ) {
         meshBlock(
                 origin,
                 (BlockPos) pos,
                 (BlockState) blockState,
                 (BlockAndTintGetter) blockAndTintGetter,
-                vertexBuilder
+                blockBuilder
         );
     }
 
@@ -50,14 +50,13 @@ public class MinecraftBlockMesher implements BlockMesher {
             BlockPos pos,
             BlockState blockState,
             BlockAndTintGetter blockAndTintGetter,
-            VertexBuilder builder
+            BlockBuilder builder
     ) {
         var renderer = this.renderer.get();
-        builder.useBlockId(IrisUtil.getBlockId(blockState));
+        builder.beginBlock(IrisUtil.getBlockId(blockState), origin.applyOffset(pos.toMutable()));
 
         FluidState fluidState = blockState.getFluidState();
         if (!fluidState.isEmpty()) renderer.submitFluid(
-                origin,
                 pos,
                 blockAndTintGetter,
                 builder,
@@ -69,7 +68,6 @@ public class MinecraftBlockMesher implements BlockMesher {
 
         if (blockState.getRenderShape() == RenderShape.MODEL) {
             renderer.submitBlock(
-                    origin,
                     pos,
                     blockState,
                     blockAndTintGetter,
@@ -87,34 +85,30 @@ public class MinecraftBlockMesher implements BlockMesher {
         private static final Id BLOCK_ATLAS = (Id) (Object) TextureAtlas.LOCATION_BLOCKS;
 
         private void submitFluid(
-                WorldOrigin origin,
                 BlockPos blockPos,
                 BlockAndTintGetter blockAndTintGetter,
-                VertexBuilder builder,
+                BlockBuilder builder,
                 BlockState blockState,
                 FluidState fluidState
         ) {
             builder.useAtlas(BLOCK_ATLAS);
-            builder.setOffset(origin.applyOffset(
-                    blockPos.toMutable().sub(
-                            blockPos.getX() & 15,
-                            blockPos.getY() & 15,
-                            blockPos.getZ() & 15
-                    )
-            ));
+            builder.useOffset(
+                    -(blockPos.getX() & 15),
+                    -(blockPos.getY() & 15),
+                    -(blockPos.getZ() & 15)
+            );
 
             blockRenderer.renderLiquid(blockPos, blockAndTintGetter, (VertexConsumer) builder, blockState, fluidState);
         }
 
         private void submitBlock(
-                WorldOrigin origin,
                 BlockPos pos,
                 BlockState blockState,
                 BlockAndTintGetter blockAndTintGetter,
-                VertexBuilder builder
+                BlockBuilder builder
         ) {
             builder.useAtlas(BLOCK_ATLAS);
-            builder.setOffset(origin.applyOffset((IBlockPos) pos));
+            builder.useOffset(0f, 0f, 0f);
 
             poseStack.pushPose();
             poseStack.translate(blockState.getOffset(pos));

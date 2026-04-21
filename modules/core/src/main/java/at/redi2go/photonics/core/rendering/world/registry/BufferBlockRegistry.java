@@ -14,6 +14,7 @@ import at.redi2go.photonics.core.rendering.world.registry.block.contained.Contai
 import at.redi2go.photonics.core.rendering.world.registry.block.contained.ContainedBlockFuture;
 import at.redi2go.photonics.core.rendering.world.registry.block.contained.ContainedBlockVariant;
 import at.redi2go.photonics.core.rendering.world.registry.block.contained.ContainedBlockVoxelImpl;
+import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockVariant;
 import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockVoxel;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -41,7 +42,7 @@ public class BufferBlockRegistry implements BlockRegistry {
 
     @Override
     public BlockEntry.Builder newBlockBuilder() {
-        return null;
+        return new RegularBlockBuilder(this);
     }
 
     @Override

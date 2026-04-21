@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
-import at.redi2go.photonics.core.rendering.world.bakery.vertex.Vertex;
 import org.joml.Vector3f;
 
 /**

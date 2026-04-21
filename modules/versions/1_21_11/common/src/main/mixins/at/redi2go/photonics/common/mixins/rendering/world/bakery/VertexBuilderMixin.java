@@ -1,16 +1,16 @@
 package at.redi2go.photonics.common.mixins.rendering.world.bakery;
 
-import at.redi2go.photonics.core.rendering.world.bakery.VertexBuilder;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(VertexBuilder.class)
+@Mixin(BlockBuilder.class)
 public interface VertexBuilderMixin extends VertexConsumer {
     @Shadow
-    VertexBuilder shadow$addVertex(float x, float y, float z);
+    BlockBuilder shadow$addVertex(float x, float y, float z);
 
     @Override
     default @NonNull VertexConsumer addVertex(float x, float y, float z) {
@@ -18,7 +18,7 @@ public interface VertexBuilderMixin extends VertexConsumer {
     }
 
     @Shadow
-    VertexBuilder shadow$setTint(int color);
+    BlockBuilder shadow$setTint(int color);
 
     @Override
     default @NonNull VertexConsumer setColor(int argb) {
@@ -31,7 +31,7 @@ public interface VertexBuilderMixin extends VertexConsumer {
     }
 
     @Shadow
-    VertexBuilder shadow$setUv(float u, float v);
+    BlockBuilder shadow$setUv(float u, float v);
 
     @Override
     default @NonNull VertexConsumer setUv(float u, float v) {
