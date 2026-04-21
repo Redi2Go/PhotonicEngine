@@ -111,7 +111,7 @@ public class MinecraftBlockMesher implements BlockMesher {
             builder.useOffset(0f, 0f, 0f);
 
             poseStack.pushPose();
-            poseStack.translate(blockState.getOffset(pos));
+            //poseStack.translate(blockState.getOffset(pos));
 
             parts.clear();
             randomSource.setSeed(blockState.getSeed(pos));
