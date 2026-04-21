@@ -1,16 +1,16 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 public final class MutablePaletteEntry extends PaletteEntry {
     int index = 0;
-    List<MutablePaletteEntry> dependants;
+
+    int tint = -1;
+    MutablePaletteEntry mergedEntry = null;
+
+    Int2IntMap tintDependencies;
 
     public MutablePaletteEntry() {
         super();
@@ -19,6 +19,30 @@ public final class MutablePaletteEntry extends PaletteEntry {
     public MutablePaletteEntry(PaletteEntry other) {
         super();
         copyFrom(other);
+    }
+
+    void computeBuilderHashCode() {
+        hashCode = tint;
+
+        computeHashCodeImpl();
+    }
+
+    public int getIndex(int tint) {
+        if (this.tint == tint) return index;
+
+        return tintDependencies.get(tint);
+    }
+
+    public MutablePaletteEntry actualize() {
+        var entry = this;
+        while (true) {
+            var nextEntry = entry.mergedEntry;
+            if (nextEntry == null) break;
+
+            entry = nextEntry;
+        }
+
+        return entry;
     }
 
     public boolean canMerge(MutablePaletteEntry other) {
@@ -35,43 +59,48 @@ public final class MutablePaletteEntry extends PaletteEntry {
         return true;
     }
 
-    private void initDependants() {
-        if (dependants != null) return;
-
-        dependants = new ArrayList<>();
+    private void initTintDependencies() {
+        if (tintDependencies != null) return;
+        tintDependencies = new Int2IntOpenHashMap();
     }
 
-    public void addFaces(MutablePaletteEntry other, Object2ObjectMap<MutablePaletteEntry, MutablePaletteEntry> interner) {
+    private void addTints(Int2IntMap tints) {
+        initTintDependencies();
+
+        this.tintDependencies.putAll(tints);
+    }
+
+    private void addTint(int tint) {
+        initTintDependencies();
+
+        this.tintDependencies.put(tint, 0);
+    }
+
+
+    public void addFaces(MutablePaletteEntry other) {
         for (int i = 0; i < 6; i++) {
             var face = other.faces[i];
             if (face == null) continue;
 
             faces[i] = face;
-            presentFaces |= (short) (1 << i);
         }
 
         hasTransparent = hasTransparent || other.hasTransparent;
-        usages+= other.usages;
+        other.mergedEntry = this;
 
-        initDependants();
-        if (other.dependants != null) {
-            for (var dependant : other.dependants) {
-                dependants.add(dependant);
-                interner.put(dependant, this);
-            }
-
-            other.dependants = null;
+        if (other.tintDependencies != null) {
+            addTints(other.tintDependencies);
+//            other.tintDependencies = null;
         }
 
-        dependants.add(other);
-        interner.put(other, this);
+        if (other.tint != tint) addTint(other.tint);
     }
 
-    public boolean update(int normal, TextureData data) {
+    public boolean update(int normal, int tint, TextureData data) {
+        this.tint = tint;
         faces[normal] = data;
         hasTransparent = hasTransparent || VoxelColor.a(data.color()) != 255;
 
-
-        return false;
+        return true;
     }
 }

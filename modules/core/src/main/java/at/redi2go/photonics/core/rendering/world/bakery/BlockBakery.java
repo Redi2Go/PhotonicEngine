@@ -138,11 +138,11 @@ public class BlockBakery {
                     voxelPos.sub(tri[0]);
 
                     var baryPos = BaryPos.from(voxelPos, ba, ca, n);
-                    var textureData = sample(texture, blockId, tint, tri, baryPos);
+                    var textureData = sample(texture, blockId, tri, baryPos);
                     if (textureData == null) continue;
 
                     if (VoxelColor.a(textureData.color()) != 0)
-                        consumer.accept(x, y, z, normalIndex, textureData);
+                        consumer.accept(x, y, z, normalIndex, tint, textureData);
                 }
             }
         }
@@ -155,7 +155,6 @@ public class BlockBakery {
     private static TextureData sample(
             CpuTexture texture,
             int blockId,
-            int tint,
             Vertex[] tri,
             BaryPos barycentricPos
     ) {
@@ -167,6 +166,6 @@ public class BlockBakery {
         float u = Math.fma(w1, tri[2].u(), Math.fma(w2, tri[1].u(), w3 * tri[0].u()));
         float v = Math.fma(w1, tri[2].v(), Math.fma(w2, tri[1].v(), w3 * tri[0].v()));
 
-        return texture.sample(blockId, tint, u, v);
+        return texture.sample(blockId, u, v);
     }
 }

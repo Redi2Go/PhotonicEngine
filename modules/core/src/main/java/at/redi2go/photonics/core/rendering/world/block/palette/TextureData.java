@@ -14,7 +14,10 @@ public record TextureData(
         return VoxelColor.gt(color, other.color());
     }
 
-    public static int fastEquals(TextureData p1, TextureData p2) {
+    public static int fastEquals(
+            TextureData p1,
+            TextureData p2
+    ) {
         return (p1.blockId ^ p2.blockId) | (p1.color ^ p2.color);
     }
 }

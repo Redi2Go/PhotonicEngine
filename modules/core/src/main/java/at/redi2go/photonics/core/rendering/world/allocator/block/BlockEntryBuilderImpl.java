@@ -95,6 +95,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             int z,
             short region,
             int normal,
+            int tint,
             TextureData textureData
     ) {
         int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
@@ -111,7 +112,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             setRegion(voxelIndex, region);
         }
 
-        return entry.update(normal, textureData);
+        return entry.update(normal, tint, textureData);
     }
 
     @Override
@@ -179,8 +180,12 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
         );
 
         PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
-        for (int i = 0; i < palette.size(); i++)
+        int[] tint = new int[palette.size()];
+
+        for (int i = 0; i < palette.size(); i++) {
             paletteArray[i] = allocator.allocatePalette(palette.get(i));
+            tint[i] = palette.getTint(i);
+        }
 
         var result = new BlockEntryImpl(
                 regionBuilder,
@@ -189,6 +194,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
                         shift,
                         IntPacking.valueMask(shift),
                         paletteArray,
+                        tint,
                         blockVoxel
                 )
         );

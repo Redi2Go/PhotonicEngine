@@ -118,10 +118,11 @@ public class BufferWorldAllocator implements WorldAllocator, Disposable {
             int shift,
             int valueMask,
             PaletteAllocation[] palette,
+            int[] tint,
             BlockVoxelImpl blockVoxel
     ) {
         return cacheObject(
-                new BlockEntryData(this, skylight, shift, valueMask, palette, blockVoxel),
+                new BlockEntryData(this, skylight, shift, valueMask, palette, tint, blockVoxel),
                 e -> e,
                 BlockEntryData::allocate
         );

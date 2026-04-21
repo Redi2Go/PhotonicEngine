@@ -31,11 +31,19 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
-    public boolean entryInsert(Object entry, int x, int y, int z, short region, int normal, TextureData textureData) {
+    public boolean entryInsert(
+            Object entry,
+            int x, int y, int z,
+            short region,
+            int normal,
+            int tint,
+            TextureData textureData
+    ) {
         return ((BlockEntry.Builder) entry).insert(
                 x, y, z,
                 region,
                 normal,
+                tint,
                 textureData
         );
     }

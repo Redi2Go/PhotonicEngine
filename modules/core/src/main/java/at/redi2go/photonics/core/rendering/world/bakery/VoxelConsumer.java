@@ -8,6 +8,7 @@ public interface VoxelConsumer {
             int y,
             int z,
             int normal,
+            int tint,
             TextureData textureData
     );
 }

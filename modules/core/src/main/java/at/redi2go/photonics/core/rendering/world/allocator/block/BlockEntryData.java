@@ -12,6 +12,7 @@ public class BlockEntryData extends AbstractHashedObject {
     private final int shift;
     private final int valueMask;
     private final PaletteAllocation[] palette;
+    private final int[] tint;
     private final BlockVoxelImpl blockVoxel;
 
     private final long hashCode;
@@ -22,6 +23,7 @@ public class BlockEntryData extends AbstractHashedObject {
             int shift,
             int valueMask,
             PaletteAllocation[] palette,
+            int[] tint,
             BlockVoxelImpl blockVoxel
     ) {
         super(allocator);
@@ -30,12 +32,17 @@ public class BlockEntryData extends AbstractHashedObject {
         this.shift = shift;
         this.valueMask = valueMask;
         this.palette = palette;
+        this.tint = tint;
         this.blockVoxel = blockVoxel;
 
         long hashCode = skylight;
 
         hashCode = hashCode * 31 + palette.length;
-        for (PaletteAllocation entry : palette) {
+        for (int i = 0; i < palette.length; i++) {
+            var entry = palette[i];
+
+            hashCode = hashCode * 31 + tint[i];
+
             entry.awaitAllocated();
             hashCode = hashCode * 31 + entry.begin();
         }
@@ -52,7 +59,8 @@ public class BlockEntryData extends AbstractHashedObject {
     }
 
     public void allocate() {
-        initMemory(4 * (palette.length + 5));
+        //TODO Make memory use powers of 2 for palette length
+        initMemory(4 * ((palette.length * 2) + 5));
         IntBuffer buffer = memory.buffer().asIntBuffer();
 
         blockVoxel.acquire();
@@ -62,7 +70,10 @@ public class BlockEntryData extends AbstractHashedObject {
         buffer.put(shift);
         buffer.put(valueMask);
         buffer.put(palette.length);
-        for (PaletteAllocation entry : palette) {
+        for (int i = 0; i < palette.length; i++) {
+            buffer.put(tint[i]);
+
+            var entry = palette[i];
             entry.acquire();
             buffer.put(entry.begin());
         }

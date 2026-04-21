@@ -27,6 +27,7 @@ public interface BlockEntry extends Disposable {
                 int x, int y, int z,
                 short region,
                 int normal,
+                int tint,
                 TextureData textureData
         );
 

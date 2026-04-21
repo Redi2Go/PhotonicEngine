@@ -60,6 +60,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             int x, int y, int z,
             short region,
             int normal,
+            int tint,
             TextureData textureData
     ) {
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude);
@@ -86,7 +87,7 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
             }
         }
 
-        if (entryInsert(entry, x, y, z, region, normal, textureData))
+        if (entryInsert(entry, x, y, z, region, normal, tint, textureData))
             newState |= STATE_SET_VOXEL;
 
         int sectionData = state[stateIndex];
@@ -186,11 +187,19 @@ public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposabl
         return entry;
     }
 
-    protected boolean entryInsert(Object entry, int x, int y, int z, short region, int normal, TextureData textureData) {
+    protected boolean entryInsert(
+            Object entry,
+            int x, int y, int z,
+            short region,
+            int normal,
+            int tint,
+            TextureData textureData
+    ) {
         return ((WorldVoxel) entry).insert(
                 x, y, z,
                 region,
                 normal,
+                tint,
                 textureData
         );
     }

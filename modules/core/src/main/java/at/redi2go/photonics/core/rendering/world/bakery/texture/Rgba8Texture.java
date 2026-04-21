@@ -18,7 +18,7 @@ public class Rgba8Texture implements CpuTexture {
     }
 
     @Override
-    public TextureData sample(int blockId, int tint, float u, float v) {
+    public TextureData sample(int blockId, float u, float v) {
         int realU = Math.clamp(Math.round(u * (width - 0.5f)), 0, width - 1);
         int realV = Math.clamp(Math.round(v * (height - 0.5f)), 0, height - 1);
 
@@ -26,10 +26,7 @@ public class Rgba8Texture implements CpuTexture {
 
         return new TextureData(
                 blockId,
-                VoxelColor.applyTint(
-                        fromABGR(color[index]),
-                        tint
-                )
+                fromABGR(color[index])
         );
     }
 
