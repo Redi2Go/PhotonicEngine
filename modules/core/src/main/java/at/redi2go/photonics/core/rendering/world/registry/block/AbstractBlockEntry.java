@@ -60,8 +60,12 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
     }
 
     public void allocate() {
-        //TODO Make memory use powers of 2 for palette length
-        initMemory(4 * ((palette.length * 2) + 5));
+        int adjustedLength = Integer.highestOneBit(palette.length);
+        if (adjustedLength != palette.length) adjustedLength <<= 1;
+
+        adjustedLength <<= 1;
+
+        initMemory(4 * (adjustedLength + 5));
         IntBuffer buffer = memory.buffer().asIntBuffer();
 
         blockVoxel.acquire();
