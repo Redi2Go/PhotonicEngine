@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.rendering.world;
 
-import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.util.IntPacking;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.apache.commons.lang3.NotImplementedException;

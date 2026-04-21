@@ -1,39 +1,42 @@
-package at.redi2go.photonics.core.rendering.world.allocator.block;
+package at.redi2go.photonics.core.rendering.world.registry.block;
 
-import at.redi2go.photonics.core.rendering.world.allocator.AbstractHashedObject;
-import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
-import at.redi2go.photonics.core.rendering.world.allocator.PaletteAllocation;
+import at.redi2go.photonics.core.rendering.world.allocator_old.BufferWorldAllocator;
+import at.redi2go.photonics.core.rendering.world.allocator_old.block.BlockVoxelImpl;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
+import at.redi2go.photonics.core.rendering.world.registry.AbstractHashedObject;
+import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
 
 import java.nio.IntBuffer;
 
-public class BlockEntryData extends AbstractHashedObject {
-    private final int skylight;
+public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends AbstractHashedObject {
+    private final T blockVoxel;
+
     private final int shift;
     private final int valueMask;
+    private final int skylight;
     private final PaletteAllocation[] palette;
     private final int[] tint;
-    private final BlockVoxelImpl blockVoxel;
 
     private final long hashCode;
 
-    public BlockEntryData(
-            BufferWorldAllocator allocator,
-            int skylight,
+    public AbstractBlockEntry(
+            BufferBlockRegistry registry,
+            T blockVoxel,
             int shift,
             int valueMask,
+            int skylight,
             PaletteAllocation[] palette,
-            int[] tint,
-            BlockVoxelImpl blockVoxel
+            int[] tint
     ) {
-        super(allocator);
+        super(registry);
 
-        this.skylight = skylight;
+        this.blockVoxel = blockVoxel;
         this.shift = shift;
         this.valueMask = valueMask;
+        this.skylight = skylight;
         this.palette = palette;
         this.tint = tint;
-        this.blockVoxel = blockVoxel;
 
         long hashCode = skylight;
 
@@ -81,15 +84,15 @@ public class BlockEntryData extends AbstractHashedObject {
         memory.upload();
     }
 
-    public BufferWorldAllocator allocator() {
-        return allocator;
-    }
-
     public int skylight() {
         return skylight;
     }
 
-    public BlockVoxelImpl blockVoxel() {
+    public BufferBlockRegistry registry() {
+        return registry;
+    }
+
+    public T blockVoxel() {
         return blockVoxel;
     }
 
@@ -100,7 +103,12 @@ public class BlockEntryData extends AbstractHashedObject {
     @Override
     protected void dispose() {
         blockVoxel.close();
-        for (PaletteAllocation entry : palette)
+        for (var entry : palette)
             entry.close();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof AbstractBlockEntry<?> other && hashCode == other.hashCode;
     }
 }

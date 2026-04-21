@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.allocator;
+package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.api.Disposable;
 

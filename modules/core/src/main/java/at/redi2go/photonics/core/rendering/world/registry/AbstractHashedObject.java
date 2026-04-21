@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.allocator;
+package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 
@@ -7,12 +7,12 @@ import java.lang.invoke.VarHandle;
 
 public abstract class AbstractHashedObject implements HashedObject {
     private volatile int count = 0;
-    protected final BufferWorldAllocator allocator;
+    protected final BufferBlockRegistry registry;
 
     protected MemoryView memory;
 
-    protected AbstractHashedObject(BufferWorldAllocator allocator) {
-        this.allocator = allocator;
+    protected AbstractHashedObject(BufferBlockRegistry registry) {
+        this.registry = registry;
     }
 
     protected abstract long hash();
@@ -33,7 +33,7 @@ public abstract class AbstractHashedObject implements HashedObject {
     }
 
     protected void initMemory(int byteSize) {
-        memory = allocator.allocate(byteSize);
+        memory = registry.allocate(byteSize);
     }
 
     @Override
@@ -55,8 +55,7 @@ public abstract class AbstractHashedObject implements HashedObject {
 
             if (HANDLE.compareAndSet(this, previous, newValue)) {
                 if (newValue == 0)
-                    allocator.freeHashedObject(this);
-
+                    registry.freeObject(this);
             }
         }
     }

@@ -1,45 +1,55 @@
-package at.redi2go.photonics.core.rendering.world.allocator.block;
+package at.redi2go.photonics.core.rendering.world.registry.block;
 
-import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
-import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
-import at.redi2go.photonics.core.rendering.world.allocator.PaletteAllocation;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
+import at.redi2go.photonics.core.rendering.world.block.palette.BlockPalette;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.util.IntPacking;
+import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.Builder {
-    private final BufferWorldAllocator allocator;
-    private int skylight = 0;
-    private final MutablePaletteEntry[] data;
+public abstract class AbstractBlockBuilder extends RegionMapping implements BlockEntry.Builder {
+    protected final BufferBlockRegistry registry;
 
-    public BlockEntryBuilderImpl(BufferWorldAllocator allocator, RegionMapping regions) {
-        super(regions);
+    protected int skylight = 0;
+    protected final MutablePaletteEntry[] data;
 
-        this.allocator = allocator;
+    public AbstractBlockBuilder(BufferBlockRegistry registry, RegionMapping mapping) {
+        super(mapping);
+
+        this.registry = registry;
         this.data = new MutablePaletteEntry[RtVoxel.ENTRIES_SIZE];
     }
 
-    public BlockEntryBuilderImpl(BufferWorldAllocator allocator) {
-        this.allocator = allocator;
+    public AbstractBlockBuilder(BufferBlockRegistry registry) {
+        this.registry = registry;
         this.data = new MutablePaletteEntry[RtVoxel.ENTRIES_SIZE];
     }
 
-    public void load(BlockEntryData entryData, ShortSet clearedRegions) {
-        if (regionCount() == 0) {
-            if (clearedRegions.contains(singleGetRegion()))
-                return;
-            else {
-                clearedRegions = ShortSet.of();
-            }
-        }
+    public void initRegion(short region) {
+        setRegion(0, region);
+    }
 
-        BlockVoxelImpl voxel = entryData.blockVoxel();
+    /**
+     * Loads the voxel data of {@code entryData} into this builder, ignoring voxels in {@code clearedRegions}.
+     *
+     * @return {@code true} if this builder is empty
+     */
+    public boolean load(AbstractBlockEntry<?> entryData, ShortSet clearedRegions) {
+        int regionCount = regionCount();
+        if (regionCount == 1) {
+            if (clearedRegions.contains(singleGetRegion())) return true;
+
+            clearedRegions = ShortSet.of();
+        } else if (regionCount == 0) clearedRegions = ShortSet.of();
+
+        boolean isEmpty = true;
+
+        AbstractBlockVoxel voxel = entryData.blockVoxel();
         int shift = voxel.shift();
 
         int voxelDataSize = RtVoxel.ENTRIES_SIZE >> shift;
@@ -65,17 +75,15 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
                     if (!clearedRegions.isEmpty() && clearedRegions.contains(getRegion(voxelIndex)))
                         break moveEntry;
 
+                    isEmpty = false;
                     data[voxelIndex] = new MutablePaletteEntry(entryData.getPaletteEntry(entry));
                 }
 
                 sectionData >>= valueShift;
             }
         }
-    }
 
-    @Override
-    public int begin() {
-        throw new UnsupportedOperationException("begin");
+        return isEmpty;
     }
 
     @Override
@@ -88,40 +96,7 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
         this.skylight = skylight;
     }
 
-    @Override
-    public boolean insert(
-            int x,
-            int y,
-            int z,
-            short region,
-            int normal,
-            int tint,
-            TextureData textureData
-    ) {
-        int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
-
-        MutablePaletteEntry entry = data[voxelIndex];
-
-        if (entry != null) {
-            if (getRegion(voxelIndex) != region)
-                return false;
-        } else {
-            entry = new MutablePaletteEntry();
-            data[voxelIndex] = entry;
-
-            setRegion(voxelIndex, region);
-        }
-
-        return entry.update(normal, tint, textureData);
-    }
-
-    @Override
-    public @Nullable Builder clearRegions(ShortSet regions) {
-        throw new UnsupportedOperationException("clearRegions");
-    }
-
-    @Override
-    public BlockEntry build() {
+    protected BlockPalette buildPalette() {
         var builder = new PaletteBuilder();
         for (int i = 0; i < RtVoxel.ENTRIES_SIZE; i++) {
             var entry = data[i];
@@ -130,9 +105,10 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             builder.add(entry);
         }
 
-        var palette = builder.build();
-        var regionBuilder = new RegionBuilder();
+        return builder.build();
+    }
 
+    protected BuildResult buildBlockVoxel(BlockPalette palette, RegionBuilder regionBuilder) {
         // We need a bit to indicate transparency
         // Bit 0 is used so that it's unaffected by the int packing
         // Max element is <size> because index 0 is used for air
@@ -173,48 +149,27 @@ public class BlockEntryBuilderImpl extends RegionMapping implements BlockEntry.B
             voxelData[o] = entry;
         }
 
-        BlockVoxelImpl blockVoxel = allocator.allocateBlockVoxel(
-                hash,
-                shift,
-                voxelData
-        );
+        return new BuildResult(hash, shift, voxelData);
+    }
 
-        PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
-        int[] tint = new int[palette.size()];
+    @Override
+    public @Nullable Builder clearRegions(ShortSet regions) {
+        throw new UnsupportedOperationException("clearRegions");
+    }
 
-        for (int i = 0; i < palette.size(); i++) {
-            paletteArray[i] = allocator.allocatePalette(palette.get(i));
-            tint[i] = palette.getTint(i);
-        }
-
-        var result = new BlockEntryImpl(
-                regionBuilder,
-                allocator.allocateBlockEntryData(
-                        skylight,
-                        shift,
-                        IntPacking.valueMask(shift),
-                        paletteArray,
-                        tint,
-                        blockVoxel
-                )
-        );
-
-        result.acquire();
-
-        return result;
+    @Override
+    public int begin() {
+        throw new UnsupportedOperationException("begin");
     }
 
     @Override
     public void close() {
-
+        //not used
     }
 
-    private class RegionBuilder extends RegionMapping {
-        public void set(int voxelIndex) {
-            setRegion(
-                    voxelIndex,
-                    BlockEntryBuilderImpl.this.getRegion(voxelIndex)
-            );
-        }
+    protected  record BuildResult(long hash, int shift, int[] voxelData) {}
+
+    protected interface RegionBuilder {
+        void set(int voxelIndex);
     }
 }

@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world;
 
+import at.redi2go.photonics.core.rendering.world.allocator_old.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 

@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.allocator;
+package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
@@ -11,12 +11,12 @@ import java.lang.invoke.VarHandle;
 
 public class PaletteAllocation extends PaletteEntry implements HashedObject {
     private volatile int count = 0;
-    protected final BufferWorldAllocator allocator;
+    protected final BufferBlockRegistry registry;
 
     private PaletteTextureView memory;
 
-    public PaletteAllocation(PaletteEntry toCopy, BufferWorldAllocator allocator) {
-        this.allocator = allocator;
+    public PaletteAllocation(PaletteEntry toCopy, BufferBlockRegistry registry) {
+        this.registry = registry;
 
         copyFrom(toCopy);
 
@@ -96,7 +96,7 @@ public class PaletteAllocation extends PaletteEntry implements HashedObject {
 
             if (HANDLE.compareAndSet(this, previous, newValue)) {
                 if (newValue == 0)
-                    allocator.freeHashedObject(this);
+                    registry.freeObject(this);
             }
         }
     }

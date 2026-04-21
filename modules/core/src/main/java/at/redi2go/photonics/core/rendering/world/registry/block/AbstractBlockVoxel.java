@@ -1,27 +1,29 @@
-package at.redi2go.photonics.core.rendering.world.allocator.block;
+package at.redi2go.photonics.core.rendering.world.registry.block;
 
+import at.redi2go.photonics.core.model.AbstractVoxelModel;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
-import at.redi2go.photonics.core.rendering.world.allocator.AbstractHashedObject;
-import at.redi2go.photonics.core.rendering.world.allocator.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
+import at.redi2go.photonics.core.rendering.world.registry.AbstractHashedObject;
+import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.HashedObject;
 import at.redi2go.photonics.core.util.IntPacking;
 import org.joml.Vector3ic;
 
 import java.nio.IntBuffer;
 
-public class BlockVoxelImpl extends AbstractHashedObject implements BlockVoxel {
-    private final int shift;
+public abstract class AbstractBlockVoxel extends AbstractHashedObject implements BlockVoxel {
+    protected final int shift;
     private final long hashCode;
 
     private IntBuffer buffer = null;
 
-    public BlockVoxelImpl(
-            BufferWorldAllocator allocator,
+    protected AbstractBlockVoxel(
+            BufferBlockRegistry registry,
             int shift,
             long hashCode
     ) {
-        super(allocator);
+        super(registry);
 
         this.shift = shift;
         this.hashCode = hashCode;
@@ -72,5 +74,10 @@ public class BlockVoxelImpl extends AbstractHashedObject implements BlockVoxel {
     @Override
     protected void dispose() {
         // Nothing to release
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof AbstractBlockVoxel other && hashCode == other.hashCode;
     }
 }

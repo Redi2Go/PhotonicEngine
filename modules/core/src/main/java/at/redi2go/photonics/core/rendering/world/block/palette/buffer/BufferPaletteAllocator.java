@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.allocator.palette;
+package at.redi2go.photonics.core.rendering.world.block.palette.buffer;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
