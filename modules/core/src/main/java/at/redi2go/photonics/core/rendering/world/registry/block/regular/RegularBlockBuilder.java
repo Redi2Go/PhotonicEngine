@@ -10,8 +10,11 @@ import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockVoxel;
 import at.redi2go.photonics.core.util.IntPacking;
+import org.jetbrains.annotations.Nullable;
 
 public class RegularBlockBuilder extends AbstractBlockBuilder {
+    private boolean isEmpty = true;
+
     public RegularBlockBuilder(BufferBlockRegistry registry, RegionMapping mapping) {
         super(registry, mapping);
     }
@@ -35,11 +38,15 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
             setRegion(voxelIndex, region);
         }
 
+        isEmpty = false;
+
         return entry.update(normal, tint, textureData);
     }
 
     @Override
-    public BlockEntry build() {
+    public @Nullable BlockEntry build() {
+        if (isEmpty) return null;
+
         var palette = buildPalette();
         var regionBuilder = new RegionBuilder();
 

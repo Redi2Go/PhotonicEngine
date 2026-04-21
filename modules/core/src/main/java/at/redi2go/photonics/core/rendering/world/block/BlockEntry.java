@@ -36,9 +36,6 @@ public interface BlockEntry extends Disposable {
             return this;
         }
 
-        /**
-         * Builds the block entry and automatically acquires a reference.
-         */
-        BlockEntry build();
+        @Nullable BlockEntry build();
     }
 }

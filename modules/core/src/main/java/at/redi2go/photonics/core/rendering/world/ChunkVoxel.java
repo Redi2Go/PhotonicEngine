@@ -17,7 +17,7 @@ public class ChunkVoxel extends WorldVoxel {
 
     @Override
     protected boolean entryIsEmpty(Object entry) {
-        return false;
+        return entry == null;
     }
 
     @Override

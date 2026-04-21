@@ -11,12 +11,15 @@ import at.redi2go.photonics.core.util.IntPacking;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import org.jetbrains.annotations.Nullable;
 
 public class ContainedBlockBuilder extends AbstractBlockBuilder implements ContainedBlockEntry.Builder, ContainedBlockEntry.Factory {
     private final long vertexHash;
     private final ContainedBlockFuture future;
 
     private final Int2IntMap tintIndexes = new Int2IntOpenHashMap();
+
+    private boolean isEmpty = true;
 
     public ContainedBlockBuilder(BufferBlockRegistry registry, long vertexHash, ContainedBlockFuture future) {
         super(registry);
@@ -43,6 +46,8 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
             int tint,
             TextureData textureData
     ) {
+        isEmpty = false;
+
         int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
         MutablePaletteEntry entry = data[voxelIndex];
 
@@ -61,7 +66,11 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
     }
 
     @Override
-    public ContainedBlockEntry build() {
+    public @Nullable ContainedBlockEntry build() {
+        if (isEmpty) {
+            future.complete(null);
+        }
+
         var palette = buildPalette();
         var result = buildBlockVoxel(palette, EmptyRegionBuilder.INSTANCE);
 

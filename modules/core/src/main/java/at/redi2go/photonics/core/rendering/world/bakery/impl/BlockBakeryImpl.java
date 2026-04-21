@@ -214,10 +214,13 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
         var result = registry.newContainedEntry(vertexHash);
         if (!(result instanceof ContainedBlockEntry.Builder builder)) {
+            var block = result.createVariant(tint, 0, region);
+            if (block == null) return;
+
             consumer.acceptBlock(
                     blockPosX, blockPosY, blockPosZ,
                     region,
-                    result.createVariant(tint, 0, region)
+                    block
             );
 
             return;
@@ -232,10 +235,13 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         for (int quad = 0; quad < quadCount; quad++)
             bakeQuad(blockId, builder, null);
 
+        var block = builder.build();
+        if (block == null) return;
+
         consumer.acceptBlock(
                 blockPosX, blockPosY, blockPosZ,
                 region,
-                builder.build()
+                block
         );
     }
 

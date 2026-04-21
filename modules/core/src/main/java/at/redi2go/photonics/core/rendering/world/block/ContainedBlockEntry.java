@@ -4,6 +4,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntList;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -14,10 +15,10 @@ public interface ContainedBlockEntry extends BlockEntry {
         void setRegion(short region);
 
         @Override
-        ContainedBlockEntry build();
+        @Nullable ContainedBlockEntry build();
     }
 
     interface Factory {
-        ContainedBlockEntry createVariant(IntArraySet tint, int skylight, short region);
+        @Nullable ContainedBlockEntry createVariant(IntArraySet tint, int skylight, short region);
     }
 }

@@ -10,11 +10,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class ContainedBlockFuture extends CompletableFuture<ContainedBlockVoxel> implements ContainedBlockEntry.Factory {
+public class ContainedBlockFuture extends CompletableFuture<@Nullable ContainedBlockVoxel> implements ContainedBlockEntry.Factory {
     @Override
     public ContainedBlockEntry createVariant(IntArraySet tint, int skylight, short region) {
         try {
-            return get().createVariant(tint, skylight, region);
+            var result = get();
+            if (result == null) return null;
+
+            return result.createVariant(tint, skylight, region);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
