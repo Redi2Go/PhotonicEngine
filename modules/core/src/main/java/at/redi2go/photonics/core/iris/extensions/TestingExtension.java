@@ -17,6 +17,11 @@ public class TestingExtension implements PhotonicsExtension {
     }
 
     @Override
+    public void onFrameBegin() {
+
+    }
+
+    @Override
     public void registerUniforms(IUniformHolder uniforms) {
 
     }

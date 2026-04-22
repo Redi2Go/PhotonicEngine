@@ -2,6 +2,8 @@ package at.redi2go.photonics.impl.shaders.iris.buffers;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
+import at.redi2go.photonics.api.gpu.buffers.heap.DefaultGpuBufferHeap;
+import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
 import at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.GlBufferAccessor;
 import com.mojang.blaze3d.opengl.GlBuffer;
@@ -24,6 +26,11 @@ public class GlBufferHolder implements IBufferHolder {
     @Override
     public void addDefaultBuffer(String name, Supplier<IGpuBuffer> buffer) {
         buffers.add(Pair.of(name, buffer));
+    }
+
+    @Override
+    public void addDefaultBufferHeap(String name, Supplier<IGpuBufferHeap> buffer) {
+        buffers.add(Pair.of(name, () -> ((DefaultGpuBufferHeap) buffer.get()).buffer()));
     }
 
     public void bind(int shaderId, IntSet usedBuffers) {

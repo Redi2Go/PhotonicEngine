@@ -9,300 +9,201 @@ import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockConsumer;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import at.redi2go.photonics.core.util.IntPacking;
+import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.IntBuffer;
+import java.util.Queue;
 
-public class WorldVoxel extends AbstractVoxelModel implements RtVoxel, Disposable, BlockConsumer, VoxelConsumer {
-    private final static int STATE_SHIFT = IntPacking.shiftFactor(0b11);
-    private final static int STATE_LENGTH = RtVoxel.ENTRIES_SIZE >> STATE_SHIFT;
-    private final static int STATE_SECTION_LENGTH = IntPacking.sectionLength(STATE_SHIFT);
-
-    private final static int STATE_ENTRY_CREATED = 0b01;
-    private final static int STATE_SET_VOXEL = 0b10;
-
-    protected final BlockRegistry registry;
-
-    private final int[] state;
-
-    private int voxelCount;
-    private final Object[] data;
-
+public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxel, BlockConsumer, VoxelConsumer {
     private final int depth;
-    protected final int magnitude;
+    protected final BlockRegistry blockRegistry;
+    protected final IGpuBufferHeap heap;
+    protected final Queue<WorldVoxel> uploadQueue;
 
-    private @Nullable MemoryView memory;
-    private IntBuffer buffer;
+    protected final VoxelEntry[] voxelData = new VoxelEntry[RtVoxel.ENTRIES_SIZE];
+    private int voxelCount = 0;
 
-    public WorldVoxel(int depth, BlockRegistry registry) {
+    private final MemoryView memory;
+    private boolean updateRequested = false;
+    protected boolean optimized = false;
+
+    public WorldVoxel(
+            int depth,
+            BlockRegistry blockRegistry,
+            IGpuBufferHeap heap,
+            Queue<WorldVoxel> uploadQueue
+    ) {
         super(SIZE_3);
 
-        this.registry = registry;
         this.depth = depth;
+        this.blockRegistry = blockRegistry;
+        this.heap = heap;
+        this.uploadQueue = uploadQueue;
 
-        this.magnitude = depth << 2;
+        this.memory = heap.allocateOrThrow(ENTRIES_SIZE << 2);
+    }
 
-        this.state = new int[STATE_LENGTH];
+    public int magnitude() {
+        return depth << 2;
+    }
 
-        this.voxelCount = 0;
-        this.data = new Object[RtVoxel.ENTRIES_SIZE];
+    protected void requestUpload() {
+        if (updateRequested) return;
+
+        uploadQueue.offer(this);
+        updateRequested = true;
+    }
+
+    protected void incVoxelCount() {
+        voxelCount++;
+        optimized = false;
+    }
+
+    protected void decVoxelCount() {
+        voxelCount--;
+        optimized = false;
+    }
+
+    // Voxel entry methods
+
+    protected VoxelEntry newMutableEntry(int depth) {
+        return depth > 1 ? new WorldVoxel(depth, blockRegistry, heap, uploadQueue) : new ChunkVoxel(depth, blockRegistry, heap, uploadQueue);
     }
 
     @Override
-    public int blockSideLength() {
-        return 1 << magnitude;
+    public int entryData() {
+        return MemoryView.intBufferBegin(memory);
+    }
+
+    private VoxelEntry getMutableEntry(
+            int x, int y, int z,
+            short region
+    ) {
+        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
+        var entry = voxelData[index];
+
+        if (entry == null) {
+            entry = newMutableEntry(depth - 1);
+            voxelData[index] = entry;
+            incVoxelCount();
+
+            requestUpload();
+        } else {
+            var previous = entry;
+            entry = entry.toMutableEntry();
+
+            if (entry != previous) {
+                previous.close();
+
+                voxelData[index] = entry;
+                requestUpload();
+            }
+        }
+
+        return entry;
     }
 
     @Override
-    public int voxelSideLength() {
-        return SIDE_LENGTH << magnitude;
-    }
-
-    public boolean insertVoxel(
+    public void insertVoxel(
             int x, int y, int z,
             short region,
             int normal,
             int tint,
             TextureData textureData
     ) {
-        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude);
-        var entry = data[index];
-
-         var stateIndex = IntPacking.dataOffset(index, STATE_SHIFT);
-         var newState = 0;
-
-        if (entry == null) {
-            entry = entryCreate(depth - 1);
-            data[index] = entry;
-
-            voxelCount++;
-            newState |= STATE_ENTRY_CREATED;
-        } else {
-            var previous = entry;
-            entry = entryMakeMutable(previous);
-
-            if (entry != previous) {
-                if (previous instanceof Disposable disposable)
-                    disposable.close();
-
-                data[index] = entry;
-                newState |= STATE_ENTRY_CREATED;
-            }
-        }
-
-        if (entryInsert(entry, x, y, z, region, normal, tint, textureData))
-            newState |= STATE_SET_VOXEL;
-
-        int sectionData = state[stateIndex];
-        state[stateIndex] = IntPacking.setValue(
-                sectionData,
-                IntPacking.sectionIndex(index, STATE_SHIFT),
-                IntPacking.getValue(sectionData, index, STATE_SHIFT) | newState,
-                STATE_SHIFT
-        );
-
-        return true;
+        getMutableEntry(x, y, z, region)
+                .insertVoxel(x, y, z, region, normal, tint, textureData);
     }
 
+    @Override
     public void insertBlock(
             int x, int y, int z,
             short region,
             BlockEntry block
     ) {
-        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude);
-        var entry = data[index];
-
-        var stateIndex = IntPacking.dataOffset(index, STATE_SHIFT);
-        var newState = 0;
-
-        var newEntry = entryInsertBlock(entry, block);
-        if (entry == null) {
-            voxelCount++;
-            newState |= STATE_ENTRY_CREATED;
-        } else entryFree(entry);
-
-        data[index] = newEntry;
-        if (newEntry instanceof WorldVoxel voxel)
-            voxel.insertBlock(x, y, z, region, block);
-
-        newState |= STATE_SET_VOXEL;
-
-        int sectionData = state[stateIndex];
-        state[stateIndex] = IntPacking.setValue(
-                sectionData,
-                IntPacking.sectionIndex(index, STATE_SHIFT),
-                IntPacking.getValue(sectionData, index, STATE_SHIFT) | newState,
-                STATE_SHIFT
-        );
+        getMutableEntry(x, y, z, region)
+                .insertBlock(x, y, z, region, block);
     }
 
-    public void upload(IGpuBufferHeap allocator) {
-        boolean firstUpload, needsUpload;
-        needsUpload = firstUpload = ensureAllocated(allocator);
+    @Override
+    public @Nullable VoxelEntry removeRegions(ShortSet regions) {
+        // TODO
 
-        for (int s = 0; s < state.length; s++) {
-            var sectionData = state[s];
+        return this;
+    }
 
-            for (int o = 0; o < STATE_SECTION_LENGTH; o++) {
-                int i = (s << STATE_SHIFT) + o;
-                int state = IntPacking.getValue(sectionData, o, STATE_SHIFT);
-                var entry = data[i];
+    @Override
+    public VoxelEntry toMutableEntry() {
+        return this;
+    }
 
-                var needsSet = firstUpload;
+    @Override
+    public @Nullable VoxelEntry build() {
+        return voxelCount == 0 ? null : this;
+    }
 
-                if ((state & STATE_ENTRY_CREATED) != 0) needsSet = true;
+    public void upload() {
+        var buffer = memory.buffer().asIntBuffer();
+        for (int i = 0; i < voxelData.length; i++) {
+            var entry = voxelData[i];
 
-                handleEntry: {
-                    if (entry == null) break handleEntry;
+            buildEntry: {
+                if (entry == null) break buildEntry;
 
-                    var previous = entry;
-                    entry = entryBuild(entry);
+                var previous = entry;
+                entry = entry.build();
 
-                    if (entry != previous) {
-                        entryFree(previous);
-                        data[i] = entry;
+                if (entry != previous) {
+                    previous.close();
 
-                        needsSet = true;
-                    }
+                    voxelData[i] = entry;
 
-                    if (entryIsEmpty(entry)) {
-                        entryFree(entry);
-
-                        data[i] = null;
-                        entry = null;
-
-                        voxelCount--;
-
-                        needsSet = true;
-                    }
-                }
-
-                if (state != 0 && entry != null) entryUpload(entry, allocator);
-
-                if (needsSet) {
-                    buffer.put(i, entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entryBegin(entry)));
-                    needsUpload = true;
+                    if (entry == null) decVoxelCount();
                 }
             }
 
-            state[s] = 0;
+            buffer.put(i, entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entry.entryData()));
         }
 
-        if (needsUpload) {
+        if (!optimized) {
             optimize();
-            memory.upload();
-        }
-    }
-
-    // entry methods
-
-    protected Object entryCreate(int depth) {
-        return WorldVoxel.create(depth, registry);
-    }
-
-    protected boolean entryIsEmpty(Object entry) {
-        return ((WorldVoxel) entry).voxelCount == 0;
-    }
-
-    protected int entryBegin(Object entry) {
-        var obj = ((WorldVoxel) entry);
-        obj.checkAllocated();
-
-        return MemoryView.intBufferBegin(obj.memory);
-    }
-
-    protected Object entryMakeMutable(Object entry) {
-        return entry;
-    }
-
-    protected boolean entryInsert(
-            Object entry,
-            int x, int y, int z,
-            short region,
-            int normal,
-            int tint,
-            TextureData textureData
-    ) {
-        return ((WorldVoxel) entry).insertVoxel(
-                x, y, z,
-                region,
-                normal,
-                tint,
-                textureData
-        );
-    }
-
-    protected Object entryInsertBlock(
-            Object previousEntry,
-            BlockEntry entry
-    ) {
-        return previousEntry != null ? previousEntry : entryCreate(depth - 1);
-    }
-
-    protected Object entryBuild(Object entry) {
-        return entry;
-    }
-
-    protected void entryUpload(Object entry, IGpuBufferHeap allocator) {
-        ((WorldVoxel) entry).upload(allocator);
-    }
-
-    protected void entryFree(Object entry) {
-        if (entry instanceof Disposable disposable)
-            disposable.close();
-    }
-
-    // Voxel model
-
-    public boolean ensureAllocated(IGpuBufferHeap allocator) {
-        if (memory == null) {
-            memory = allocator.allocate(ENTRIES_SIZE << 2);
-            buffer = memory.buffer().asIntBuffer();
-
-            return true;
+            optimized = true;
         }
 
-        return false;
-    }
-
-    public boolean isAllocated() {
-        return memory != null;
-    }
-
-    public int begin() {
-        return MemoryView.intBufferBegin(memory);
-    }
-
-    private void checkAllocated() {
-        if (memory == null)
-            throw new IllegalStateException("Cannot access voxel data before allocation");
-    }
-
-    @Override
-    protected int get(int index) {
-        checkAllocated();
-
-        return buffer.get(index);
-    }
-
-    @Override
-    protected void set(int index, int value) {
-        checkAllocated();
-
-        buffer.put(index, value);
+        memory.upload();
+        updateRequested = false;
     }
 
     @Override
     public void close() {
-        if (memory != null) memory.close();
+        memory.close();
     }
 
-    public static WorldVoxel create(int depth, BlockRegistry registry) {
-        return depth <= 1 ? new ChunkVoxel(depth, registry) : new WorldVoxel(depth, registry);
+    // VoxelModel methods
+
+    @Override
+    public int blockSideLength() {
+        return 1 << magnitude();
     }
+
+    @Override
+    public int voxelSideLength() {
+        return SIDE_LENGTH << magnitude();
+    }
+
+    @Override
+    protected int get(int index) {
+        return memory.buffer().getInt(index << 2);
+    }
+
+    @Override
+    protected void set(int index, int value) {
+        memory.buffer().putInt(index << 2, value);
+    }
+
+    // Consumer methods
 
     @Override
     public void acceptBlock(int x, int y, int z, short region, BlockEntry entry) {

@@ -27,8 +27,13 @@ public class BufferPaletteAllocator implements PaletteTexture {
         );
     }
 
-    public IGpuBufferHeap buffer() {
+    public IGpuBufferHeap heap() {
         return heap;
+    }
+
+    @Override
+    public void upload() {
+        heap.upload();
     }
 
     @Override

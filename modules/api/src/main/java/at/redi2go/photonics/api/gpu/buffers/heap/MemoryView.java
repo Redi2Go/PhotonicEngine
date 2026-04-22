@@ -17,6 +17,8 @@ public interface MemoryView extends Disposable {
     void upload();
 
     static int intBufferBegin(MemoryView memory) {
-        return memory == null ? -1 : (int) (memory.begin() >> 2);
+        if (memory == null) throw new IllegalStateException();
+
+        return (int) (memory.begin() >> 2);
     }
 }

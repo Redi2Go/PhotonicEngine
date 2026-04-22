@@ -7,36 +7,24 @@ import org.joml.Vector3f;
 public class BlockModel {
     int blockId = -1;
     int vertexCount = 0;
+    long vertexHash;
 
     Vector3f blockPos = new Vector3f();
 
-    Vector3f minVertex = new Vector3f();
-    Vector3f maxVertex = new Vector3f();
+    int contained;
 
     public void readBlock(BlockBakeryImpl builder) {
-        vertexCount = builder.readInt();
-        blockId = builder.readInt();
+        int index = builder.read(8);
 
-        blockPos.x = builder.readInt();
-        blockPos.y = builder.readInt();
-        blockPos.z = builder.readInt();
+        vertexCount = builder.intAt(index);
+        blockId = builder.intAt(index + 1);
+        vertexHash = builder.longAt(index + 2);
 
-        minVertex.x = builder.readFloat();
-        minVertex.y = builder.readFloat();
-        minVertex.z = builder.readFloat();
+        blockPos.x = builder.intAt(index + 4);
+        blockPos.y = builder.intAt(index + 5);
+        blockPos.z = builder.intAt(index + 6);
 
-        maxVertex.x = builder.readFloat();
-        maxVertex.y = builder.readFloat();
-        maxVertex.z = builder.readFloat();
-    }
-
-    public boolean isContained() {
-        return minVertex.x >= 0 &&
-                minVertex.y >= 0 &&
-                minVertex.z >= 0 &&
-                maxVertex.x <= 1.0 &&
-                maxVertex.y <= 1.0 &&
-                maxVertex.z <= 1.0;
+        contained = builder.intAt(index + 7);
     }
 
     public long hashVertices(BlockBakeryImpl builder, Vertex vertex, IntArraySet tint) {

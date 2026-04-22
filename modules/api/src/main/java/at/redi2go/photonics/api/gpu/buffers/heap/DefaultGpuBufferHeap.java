@@ -31,6 +31,10 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
                 .order(ByteOrder.nativeOrder());
     }
 
+    public IGpuBuffer buffer() {
+        return gpuBuffer;
+    }
+
     @Override
     public long capacity() {
         return gpuBuffer.size();

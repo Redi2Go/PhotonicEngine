@@ -14,6 +14,10 @@ import java.util.Optional;
 public interface BlockMesher {
     Registry REGISTRY = new Registry();
 
+    default void setup() {
+
+    }
+
     /**
      * Meshes a block at {@code pos} with {@code blockState}.
      *
@@ -27,6 +31,10 @@ public interface BlockMesher {
             BlockBuilder blockBuilder
     );
 
+    default void teardown() {
+
+    }
+
     class Registry {
         private final Object2ObjectMap<Id, BlockMesher> blockRegistry = new Object2ObjectOpenHashMap<>();
         private final Object2ObjectMap<String, BlockMesher> namespaceRegistry = new Object2ObjectOpenHashMap<>();
@@ -34,6 +42,28 @@ public interface BlockMesher {
 
         Registry() {
 
+        }
+
+        public void setup() {
+            for (var e : blockRegistry.values())
+                e.setup();
+
+            for (var e : namespaceRegistry.values())
+                e.setup();
+
+            if (defaultMesher != null)
+                defaultMesher.setup();
+        }
+
+        public void teardown() {
+            for (var e : blockRegistry.values())
+                e.teardown();
+
+            for (var e : namespaceRegistry.values())
+                e.teardown();
+
+            if (defaultMesher != null)
+                defaultMesher.teardown();
         }
 
         public void addBlock(Id id, BlockMesher mesher) {

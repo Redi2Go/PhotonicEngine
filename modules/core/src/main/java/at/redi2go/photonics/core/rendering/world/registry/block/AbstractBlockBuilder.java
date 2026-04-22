@@ -1,11 +1,13 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
+import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.BlockPalette;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
+import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.util.IntPacking;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
@@ -40,6 +42,8 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
      * @return {@code true} if this builder is empty
      */
     public boolean load(AbstractBlockEntry<?> entryData, ShortSet clearedRegions) {
+        if (!entryData.isAllocated()) throw new IllegalStateException();
+
         int regionCount = regionCount();
         if (regionCount == 1) {
             if (clearedRegions.contains(singleGetRegion())) return true;
@@ -99,6 +103,26 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
         this.skylight = skylight;
     }
 
+    @Override
+    public int entryData() {
+        throw new UnsupportedOperationException("entryData");
+    }
+
+    @Override
+    public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
+        throw new UnsupportedOperationException("insertBlock");
+    }
+
+    @Override
+    public @Nullable VoxelEntry removeRegions(ShortSet regions) {
+        throw new UnsupportedOperationException("removeRegions");
+    }
+
+    @Override
+    public VoxelEntry toMutableEntry() {
+        return this;
+    }
+
     protected BlockPalette buildPalette() {
         var builder = new PaletteBuilder();
         for (int i = 0; i < RtVoxel.ENTRIES_SIZE; i++) {
@@ -153,16 +177,6 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
         }
 
         return new BuildResult(hash, shift, voxelData);
-    }
-
-    @Override
-    public @Nullable Builder clearRegions(ShortSet regions) {
-        throw new UnsupportedOperationException("clearRegions");
-    }
-
-    @Override
-    public int begin() {
-        throw new UnsupportedOperationException("begin");
     }
 
     @Override

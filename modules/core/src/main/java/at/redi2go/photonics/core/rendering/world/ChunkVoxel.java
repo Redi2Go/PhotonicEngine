@@ -1,70 +1,43 @@
 package at.redi2go.photonics.core.rendering.world;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
+import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+
+import java.util.Queue;
 
 public class ChunkVoxel extends WorldVoxel {
-    public ChunkVoxel(int depth, BlockRegistry registry) {
-        super(depth, registry);
-    }
-
-    @Override
-    protected Object entryCreate(int depth) {
-        return registry.newBlockBuilder();
-    }
-
-    @Override
-    protected boolean entryIsEmpty(Object entry) {
-        return entry == null;
-    }
-
-    @Override
-    protected int entryBegin(Object entry) {
-        return ((BlockEntry) entry).begin();
-    }
-
-    @Override
-    protected Object entryMakeMutable(Object entry) {
-        if (entry instanceof BlockEntry.Builder) return entry;
-
-        return ((BlockEntry) entry).createBuilder();
-    }
-
-    @Override
-    public boolean entryInsert(
-            Object entry,
-            int x, int y, int z,
-            short region,
-            int normal,
-            int tint,
-            TextureData textureData
+    public ChunkVoxel(
+            int depth,
+            BlockRegistry blockRegistry,
+            IGpuBufferHeap heap,
+            Queue<WorldVoxel> uploadQueue
     ) {
-        return ((BlockEntry.Builder) entry).insert(
-                x, y, z,
-                region,
-                normal,
-                tint,
-                textureData
-        );
+        super(depth, blockRegistry, heap, uploadQueue);
     }
 
     @Override
-    protected Object entryInsertBlock(Object previousEntry, BlockEntry entry) {
-        return entry;
+    protected VoxelEntry newMutableEntry(int depth) {
+        return blockRegistry.newBlockBuilder();
     }
 
     @Override
-    protected Object entryBuild(Object entry) {
-        if (entry instanceof BlockEntry.Builder builder)
-            return builder.build();
+    public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
+        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
+        var entry = voxelData[index];
 
-        return entry;
-    }
+        if (entry == null) {
+            voxelData[index] = block;
+            incVoxelCount();
 
-    @Override
-    protected void entryUpload(Object entry, IGpuBufferHeap allocator) {
+            requestUpload();
+        } else if (entry != block) {
+            entry.close();
 
+            voxelData[index] = block;
+            requestUpload();
+        }
     }
 }

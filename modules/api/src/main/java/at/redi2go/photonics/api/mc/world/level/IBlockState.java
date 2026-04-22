@@ -11,6 +11,8 @@ public interface IBlockState {
         return block() == block;
     }
 
+    boolean isAir();
+
     boolean hasProperty(IProperty<?> property);
 
     <T extends Comparable<T>> T getValue(IProperty<T> property);

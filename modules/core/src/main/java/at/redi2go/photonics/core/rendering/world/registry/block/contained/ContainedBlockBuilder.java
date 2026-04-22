@@ -39,7 +39,7 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
     }
 
     @Override
-    public boolean insert(
+    public void insertVoxel(
             int x, int y, int z,
             short region,
             int normal,
@@ -57,12 +57,12 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
         }
 
         tintIndexes.putIfAbsent(tint, tintIndexes.size());
-        return entry.update(normal, tint, textureData);
+        entry.update(normal, tint, textureData);
     }
 
     @Override
     public void acceptVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
-        insert(x, y, z, region, normal, tint, textureData);
+        insertVoxel(x, y, z, region, normal, tint, textureData);
     }
 
     @Override

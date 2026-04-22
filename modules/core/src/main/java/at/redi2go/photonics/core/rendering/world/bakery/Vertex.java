@@ -19,13 +19,15 @@ public class Vertex extends Vector3f {
     }
 
     public void readVertex(BlockBakeryImpl builder) {
-        x = builder.readFloat();
-        y = builder.readFloat();
-        z = builder.readFloat();
+        int index = builder.read(6);
 
-        tint = builder.readInt();
+        x = builder.floatAt(index);
+        y = builder.floatAt(index + 1);
+        z = builder.floatAt(index + 2);
 
-        u = builder.readFloat();
-        v = builder.readFloat();
+        tint = builder.intAt(index + 3);
+
+        u = builder.floatAt(index + 4);
+        v = builder.floatAt(index + 5);
     }
 }

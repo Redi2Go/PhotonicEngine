@@ -14,6 +14,8 @@ import java.util.function.Supplier;
  * The extension for Iris (maybe aperture?), handles world building, light list, ect.
  */
 public interface PhotonicsExtension extends Disposable {
+    void onFrameBegin();
+
     void registerUniforms(IUniformHolder uniforms);
 
     void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms);
@@ -33,6 +35,11 @@ public interface PhotonicsExtension extends Disposable {
     }
 
     class Disabled implements PhotonicsExtension {
+        @Override
+        public void onFrameBegin() {
+
+        }
+
         @Override
         public void registerUniforms(IUniformHolder uniforms) {
 

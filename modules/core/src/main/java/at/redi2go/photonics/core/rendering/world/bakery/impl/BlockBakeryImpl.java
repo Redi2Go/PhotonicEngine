@@ -43,7 +43,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     private final Vertex[] tri = new Vertex[3];
 
-
     public BlockBakeryImpl(
             AtlasDownloader atlasDownloader,
             BlockRegistry registry
@@ -200,11 +199,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     }
 
     private void bakeContainedBlock(BlockConsumer consumer) {
-        IntArraySet tint = new IntArraySet();
-
-        int index = this.index;
-        long vertexHash = blockModel.hashVertices(this, v0, tint);
-
         int blockId = blockModel.blockId;
         Vector3f blockPos = blockModel.blockPos;
 
@@ -212,8 +206,23 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         int blockPosY = (int) blockPos.y << 4;
         int blockPosZ = (int) blockPos.z << 4;
 
-        var result = registry.newContainedEntry(vertexHash);
+        int vertexCount = blockModel.vertexCount;
+
+        var result = registry.newContainedEntry(blockModel.vertexHash);
         if (!(result instanceof ContainedBlockEntry.Builder builder)) {
+            IntArraySet tint = new IntArraySet();
+
+            int index = this.index;
+            int end = index + (vertexCount * 6);
+
+            this.index = end;
+            index+= 3;
+
+            while (index < end) {
+                tint.add(intAt(index));
+                index+= 6;
+            }
+
             var block = result.createVariant(tint, 0, region);
             if (block == null) return;
 
@@ -226,12 +235,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             return;
         }
 
-        int quadCount = blockModel.vertexCount >> 2;
+        int quadCount = vertexCount >> 2;
 
         builder.setRegion(region);
         builder.setSkylight(0);
 
-        this.index = index;
         for (int quad = 0; quad < quadCount; quad++)
             bakeQuad(blockId, builder, null);
 
@@ -259,7 +267,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         while (hasNext()) {
             blockModel.readBlock(this);
 
-            if (blockModel.isContained())
+            if ((blockModel.contained & ~1) == 0)
                 bakeContainedBlock(blockConsumer);
             else
                 bakeBlockModel(voxelConsumer);
@@ -285,6 +293,8 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             size = 0;
             offsetX = offsetY = offsetZ = 0f;
             currentTexture = null;
+            vertexIndex = -1;
+
             stateChanges.clear();
     }
 
@@ -307,14 +317,43 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         return index < size;
     }
 
-    public int readInt() {
-        if (index >= size)
-            throw new ArrayIndexOutOfBoundsException(index + " out of bounds for " + size);
+    public int read(int n) {
+        var index = this.index;
+        var end = index + n;
+        if (end > size) throw new ArrayIndexOutOfBoundsException(end + " out of bounds for " + size);
 
-        pollState();
-
-        return meshData[index++];
+        this.index = end;
+        return index;
     }
+
+    public int intAt(int index) {
+        return meshData[index];
+    }
+
+    private void putInt(int index, int value) {
+        meshData[index] = value;
+    }
+
+    public float floatAt(int index) {
+        return Float.intBitsToFloat(meshData[index]);
+    }
+
+    private void putFloat(int index, float value) {
+        meshData[index] = Float.floatToRawIntBits(value);
+    }
+
+    private static final long LOWER_INT = 0xffffffffL;
+
+    public long longAt(int index) {
+        return (((long) meshData[index]) << 32) | (((long) meshData[index + 1]) & LOWER_INT);
+    }
+
+    private void putLong(int index, long value) {
+        meshData[index] = (int) ((value >>> 32));
+        meshData[index + 1] = (int) (value & LOWER_INT);
+    }
+
+    // Building
 
     private void requireCapacity(int newSize) {
         if (newSize >= meshData.length) {
@@ -322,14 +361,10 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
                     meshData,
                     Math.max(
                             newSize,
-                            meshData.length << 1
+                            meshData.length << 2
                     )
             );
         }
-    }
-
-    public float readFloat() {
-        return Float.intBitsToFloat(readInt());
     }
 
     @Override
@@ -339,6 +374,9 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     @Override
     public BlockBuilder useTexture(CpuTexture texture) {
+        if (currentTexture == texture) return this;
+
+        currentTexture = texture;
         submitState(new TextureChange(texture));
 
         return this;
@@ -358,11 +396,12 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     private static final int FP_MAX_VALUE = Float.floatToRawIntBits(Integer.MAX_VALUE);
 
     private int blockIndex = 0;
+    private int vertexIndex = -1;
 
     @Override
     public BlockBuilder beginBlock(int blockId, Vector3d blockVoxelPos) {
         int index = size;
-        size = index + 11;
+        size = index + 8;
 
         requireCapacity(size);
 
@@ -371,62 +410,51 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         meshData[index] = 0; // Vertex count
         meshData[index + 1] = blockId;
 
+        // Vertex hash
+        meshData[index + 2] = 0;
+        meshData[index + 3] = 1;
+
         // Block pos
 
-        meshData[index + 2] = (int) blockVoxelPos.x;
-        meshData[index + 3] = (int) blockVoxelPos.y;
-        meshData[index + 4] = (int) blockVoxelPos.z;
+        meshData[index + 4] = (int) blockVoxelPos.x;
+        meshData[index + 5] = (int) blockVoxelPos.y;
+        meshData[index + 6] = (int) blockVoxelPos.z;
 
-        // Min vertex
+        // contained
 
-        meshData[index + 5] = FP_MAX_VALUE;
-        meshData[index + 6] = FP_MAX_VALUE;
-        meshData[index + 7] = FP_MAX_VALUE;
-
-        // Max vertex
-
-        meshData[index + 8] = FP_ZERO;
-        meshData[index + 9] = FP_ZERO;
-        meshData[index + 10] = FP_ZERO;
+        meshData[index + 7] = 0;
 
         return this;
     }
 
-    private void minComponent(int index, float value) {
-        meshData[index] = Float.floatToRawIntBits(
-                Math.min(
-                        Float.intBitsToFloat(meshData[index]),
-                        value
-                )
-        );
+    private static int isContained(float value) {
+        return (int) Math.ceil(value);
     }
 
-    private void maxComponent(int index, float value) {
-        meshData[index] = Float.floatToRawIntBits(
-                Math.max(
-                        Float.intBitsToFloat(meshData[index]),
-                        value
-                )
-        );
-    }
+    private void hashLastVertex() {
+        int index = vertexIndex;
+        if (index == -1) return;
 
+        long hash = longAt(blockIndex + 2);
 
-    private void minBlockVertex(float x, float y, float z) {
-        minComponent(blockIndex + 5, x);
-        minComponent(blockIndex + 6, y);
-        minComponent(blockIndex + 7, z);
-    }
+        hash = hash * 31 + intAt(vertexIndex);
+        hash = hash * 31 + intAt(vertexIndex + 1);
+        hash = hash * 31 + intAt(vertexIndex + 2);
 
-    private void maxBlockVertex(float x, float y, float z) {
-        maxComponent(blockIndex + 8, x);
-        maxComponent(blockIndex + 9, y);
-        maxComponent(blockIndex + 10, z);
+        hash = hash * 31 + intAt(vertexIndex + 4);
+        hash = hash * 31 + intAt(vertexIndex + 5);
+
+        putLong(blockIndex + 2, hash);
     }
 
     @Override
     public BlockBuilder addVertex(float x, float y, float z) {
+        hashLastVertex();
+
         int index = size;
         size = index + 6;
+
+        vertexIndex = index;
 
         requireCapacity(size);
         x+= offsetX;
@@ -434,8 +462,8 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         z+= offsetZ;
 
         meshData[blockIndex]++;
-        minBlockVertex(x, y, z);
-        maxBlockVertex(x, y, z);
+
+        meshData[blockIndex + 7] |= isContained(x) | isContained(y) | isContained(z);
 
         meshData[index] = Float.floatToRawIntBits(x);
         meshData[index + 1] = Float.floatToRawIntBits(y);

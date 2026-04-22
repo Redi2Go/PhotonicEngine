@@ -24,13 +24,12 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
     }
 
     @Override
-    public boolean insert(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
+    public void insertVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
         int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
         MutablePaletteEntry entry = data[voxelIndex];
 
         if (entry != null) {
-            if (getRegion(voxelIndex) != region)
-                return false;
+            if (getRegion(voxelIndex) != region) return;
         } else {
             entry = new MutablePaletteEntry();
             data[voxelIndex] = entry;
@@ -40,7 +39,7 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
 
         isEmpty = false;
 
-        return entry.update(normal, tint, textureData);
+        entry.update(normal, tint, textureData);
     }
 
     @Override
