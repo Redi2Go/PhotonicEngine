@@ -43,21 +43,6 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         hashCode = hashCode * 31 + voxelHash;
         hashCode= hashCode * 31 + tintHash;
 
-//        long hashCode = skylight;
-//
-//        hashCode = hashCode * 31 + palette.length;
-//        for (int i = 0; i < palette.length; i++) {
-//            var entry = palette[i];
-//
-//            hashCode = hashCode * 31 + tint[i];
-//
-//            entry.awaitAllocated();
-//            hashCode = hashCode * 31 + entry.begin();
-//        }
-//
-//        blockVoxel.awaitAllocated();
-//        hashCode = hashCode * 31 + blockVoxel.begin();
-//
         this.hashCode = hashCode;
     }
 
