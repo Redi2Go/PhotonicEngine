@@ -6,6 +6,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 
 // TODO: Check arguments are in the correct order
 public interface BlockBuilder {
@@ -19,7 +20,7 @@ public interface BlockBuilder {
         return useOffset(offset.x, offset.y, offset.z);
     }
 
-    BlockBuilder beginBlock(int blockId, Vector3d blockVoxelPos);
+    BlockBuilder beginBlock(int blockId, Vector3i blockChunkOffset);
 
     BlockBuilder addVertex(float x, float y, float z);
 

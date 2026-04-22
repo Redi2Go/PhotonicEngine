@@ -10,6 +10,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
@@ -85,6 +86,8 @@ public class WorldCompiler implements Runnable, Disposable {
             while (!Thread.interrupted()) {
                 var sections = chunkCompiler.takeSections();
 
+                recenter();
+
                 voxelizeSections(sections);
                 buildSections();
 
@@ -115,11 +118,6 @@ public class WorldCompiler implements Runnable, Disposable {
         origin = new WorldOrigin(iorigin.x, iorigin.y, iorigin.z);
     }
 
-    public WorldOrigin getOrigin() {
-        recenter();
-        return origin;
-    }
-
     private void freeUnusedBlocks() {
         registry.freeUnusedBlocks();
     }
@@ -128,12 +126,23 @@ public class WorldCompiler implements Runnable, Disposable {
 
     }
 
-    private void voxelizeSections(List<BlockBakery> sections) {
-        for (var section : sections) {
-            if (section != null) {
+    private void voxelizeSections(List<Pair<Vector3i, BlockBakery>> sections) {
+        for (var builtSection : sections) {
+            var chunkPos = builtSection.first();
+            var section = builtSection.second();
+
+            if (section == null) continue;
+
+            bake: {
+                chunkPos.sub(iorigin);
+                if (chunkPos.x < 0 || chunkPos.y < 0 || chunkPos.z < 0)
+                    break bake;
+
+                section.setChunkOffset(chunkPos);
                 section.bake(rootVoxel, rootVoxel);
-                chunkCompiler.releaseBakery(section);
             }
+
+            chunkCompiler.releaseBakery(section);
         }
     }
 

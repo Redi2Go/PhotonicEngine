@@ -21,6 +21,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +31,14 @@ public class MinecraftBlockMesher implements BlockMesher {
 
     @Override
     public void meshBlock(
-            WorldOrigin origin,
+            Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter,
             BlockBuilder blockBuilder
     ) {
         meshBlock(
-                origin,
+                blockChunkOffset,
                 (BlockPos) pos,
                 (BlockState) blockState,
                 (BlockAndTintGetter) blockAndTintGetter,
@@ -46,14 +47,14 @@ public class MinecraftBlockMesher implements BlockMesher {
     }
 
     private void meshBlock(
-            WorldOrigin origin,
+            Vector3i blockChunkOffset,
             BlockPos pos,
             BlockState blockState,
             BlockAndTintGetter blockAndTintGetter,
             BlockBuilder builder
     ) {
         var renderer = this.renderer.get();
-        builder.beginBlock(IrisUtil.getBlockId(blockState), origin.applyOffset(pos.toMutable()));
+        builder.beginBlock(IrisUtil.getBlockId(blockState), blockChunkOffset);
 
         FluidState fluidState = blockState.getFluidState();
         if (!fluidState.isEmpty()) renderer.submitFluid(

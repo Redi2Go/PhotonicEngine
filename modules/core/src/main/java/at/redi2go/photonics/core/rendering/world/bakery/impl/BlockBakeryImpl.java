@@ -22,7 +22,6 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
 import org.joml.RoundingMode;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -58,7 +57,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     @Override
     public void submitBlock(
-            WorldOrigin origin,
+            Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter
@@ -69,7 +68,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         if (result == null) return;
 
         result.meshBlock(
-                origin,
+                blockChunkOffset,
                 pos,
                 blockState,
                 blockAndTintGetter,
@@ -80,6 +79,8 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     // Raster variables
 
     private static final float BLOCK_SIZE_INV = 1f / 16f;
+
+    private final Vector3f chunkOffset = new Vector3f();
 
     private final Vector3f ba = new Vector3f();
     private final Vector3f ca = new Vector3f();
@@ -170,17 +171,23 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         }
     }
 
-    private void bakeQuad(int blockId, VoxelConsumer consumer, @Nullable Vector3f blockOffset) {
+    private void bakeQuad(int blockId, VoxelConsumer consumer, @Nullable Vector3i blockOffset) {
         v0.readVertex(this);
         v1.readVertex(this);
         v2.readVertex(this);
         v3.readVertex(this);
 
         if (blockOffset != null) {
-            v0.add(blockOffset);
-            v1.add(blockOffset);
-            v2.add(blockOffset);
-            v3.add(blockOffset);
+            voxelPos.set(
+                    (float) (blockOffset.x + (int) chunkOffset.x),
+                    (float) (blockOffset.y + (int) chunkOffset.y),
+                    (float) (blockOffset.z + (int) chunkOffset.z)
+            );
+
+            v0.add(voxelPos);
+            v1.add(voxelPos);
+            v2.add(voxelPos);
+            v3.add(voxelPos);
         }
 
         int tint = v0.tint();
@@ -199,11 +206,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     private void bakeContainedBlock(BlockConsumer consumer) {
         int blockId = blockModel.blockId;
-        Vector3f blockPos = blockModel.blockPos;
+        Vector3i blockOffset = blockModel.blockOffset;
 
-        int blockPosX = (int) blockPos.x << 4;
-        int blockPosY = (int) blockPos.y << 4;
-        int blockPosZ = (int) blockPos.z << 4;
+        int blockPosX = (blockOffset.x + (int) chunkOffset.x) << 4;
+        int blockPosY = (blockOffset.y + (int) chunkOffset.y) << 4;
+        int blockPosZ = (blockOffset.z + (int) chunkOffset.z) << 4;
 
         int vertexCount = blockModel.vertexCount;
 
@@ -215,11 +222,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             int end = index + (vertexCount * 6);
 
             this.index = end;
-            index+= 3;
+            index += 3;
 
             while (index < end) {
                 tint.add(intAt(index));
-                index+= 6;
+                index += 6;
             }
 
             var block = result.createVariant(tint, 0, region);
@@ -254,7 +261,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     private void bakeBlockModel(VoxelConsumer voxelConsumer) {
         int blockId = blockModel.blockId;
-        Vector3f blockPos = blockModel.blockPos;
+        Vector3i blockPos = blockModel.blockOffset;
         int quadCount = blockModel.vertexCount >> 2;
 
         for (int quad = 0; quad < quadCount; quad++)
@@ -273,6 +280,10 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         }
     }
 
+    @Override
+    public void setChunkOffset(Vector3i chunkOffset) {
+        this.chunkOffset.set(chunkOffset);
+    }
 
     // Block builder impl
 
@@ -288,13 +299,13 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     @Override
     public void reset() {
-            index = 0;
-            size = 0;
-            offsetX = offsetY = offsetZ = 0f;
-            currentTexture = null;
-            vertexIndex = -1;
+        index = 0;
+        size = 0;
+        offsetX = offsetY = offsetZ = 0f;
+        currentTexture = null;
+        vertexIndex = -1;
 
-            stateChanges.clear();
+        stateChanges.clear();
     }
 
     // State handling
@@ -383,11 +394,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     @Override
     public BlockBuilder useOffset(float x, float y, float z) {
-       offsetX = x;
-       offsetY = y;
-       offsetZ = z;
+        offsetX = x;
+        offsetY = y;
+        offsetZ = z;
 
-       return this;
+        return this;
     }
 
     // Vertex building
@@ -397,7 +408,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     private int vertexIndex = -1;
 
     @Override
-    public BlockBuilder beginBlock(int blockId, Vector3d blockVoxelPos) {
+    public BlockBuilder beginBlock(int blockId, Vector3i blockChunkOffset) {
         int index = size;
         size = index + 8;
 
@@ -412,11 +423,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         meshData[index + 2] = 0;
         meshData[index + 3] = 1;
 
-        // Block pos
+        // Block offset
 
-        meshData[index + 4] = (int) blockVoxelPos.x;
-        meshData[index + 5] = (int) blockVoxelPos.y;
-        meshData[index + 6] = (int) blockVoxelPos.z;
+        meshData[index + 4] = blockChunkOffset.x;
+        meshData[index + 5] = blockChunkOffset.y;
+        meshData[index + 6] = blockChunkOffset.z;
 
         // contained
 
@@ -455,9 +466,9 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         vertexIndex = index;
 
         requireCapacity(size);
-        x+= offsetX;
-        y+= offsetY;
-        z+= offsetZ;
+        x += offsetX;
+        y += offsetY;
+        z += offsetZ;
 
         meshData[blockIndex]++;
 
@@ -486,7 +497,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     @Override
     public BlockBuilder setUv(float u, float v) {
         meshData[size - 2] = Float.floatToRawIntBits(u);
-        meshData[size - 1 ] = Float.floatToRawIntBits(v);
+        meshData[size - 1] = Float.floatToRawIntBits(v);
 
         return this;
     }
@@ -509,7 +520,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             builder.currentTexture = texture;
         }
     }
-
 
 
     private static int signBit(float value) {

@@ -29,8 +29,7 @@ public class ChunkCompiler implements Runnable, Disposable {
 
     private final BlockingQueue<Vector3i> queuedSections = new LinkedBlockingQueue<>();
 
-    //TODO: This will need to be a pair of Vector3i and BlockBakery eventually
-    private final BlockingQueue<BlockBakery> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
+    private final BlockingQueue<Pair<Vector3i, BlockBakery>> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
     private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
 
     private final AtlasDownloader atlasDownloader;
@@ -85,8 +84,8 @@ public class ChunkCompiler implements Runnable, Disposable {
                 }
 
                 Vector3i sectionBlockPos = sectionCoord.mul(16, new Vector3i());
+                Vector3i blockChunkOffset = new Vector3i();
                 boolean hasNonAir = false;
-                var origin = compiler.getOrigin();
 
                 for (int px = 0; px < 16; px++) {
                     for (int py = 0; py < 16; py++) {
@@ -100,10 +99,11 @@ public class ChunkCompiler implements Runnable, Disposable {
                             var block = level.getBlockState(blockPos);
                             if (block.isAir()) continue;
 
+                            blockChunkOffset.set(px, py, pz);
 
                             hasNonAir = true;
                             bakery.submitBlock(
-                                    origin,
+                                    blockChunkOffset,
                                     blockPos,
                                     block,
                                     level
@@ -117,7 +117,7 @@ public class ChunkCompiler implements Runnable, Disposable {
                     continue;
                 }
 
-                builtSections.put(bakery);
+                builtSections.put(Pair.of(sectionBlockPos, bakery));
             }
         } catch (InterruptedException e) {
 
@@ -134,8 +134,8 @@ public class ChunkCompiler implements Runnable, Disposable {
         queuedSections.offer(section);
     }
 
-    public List<BlockBakery> takeSections() throws InterruptedException {
-        var result = new ArrayList<BlockBakery>();
+    public List<Pair<Vector3i, BlockBakery>> takeSections() throws InterruptedException {
+        var result = new ArrayList<Pair<Vector3i, BlockBakery>>();
         result.add(builtSections.take());
         builtSections.drainTo(result);
 

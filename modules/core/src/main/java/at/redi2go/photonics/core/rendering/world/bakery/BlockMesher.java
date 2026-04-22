@@ -8,6 +8,7 @@ import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.joml.Vector3i;
 
 import java.util.Optional;
 
@@ -24,7 +25,7 @@ public interface BlockMesher {
      * @apiNote {@code VertexBuilder} only accepts quads
      */
     void meshBlock(
-            WorldOrigin origin,
+            Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter,
