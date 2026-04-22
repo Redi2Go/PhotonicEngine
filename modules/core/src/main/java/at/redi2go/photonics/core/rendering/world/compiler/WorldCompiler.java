@@ -33,6 +33,7 @@ public class WorldCompiler implements Runnable, Disposable {
     private static final ExecutorService THREAD_POOL;
 
     private final Queue<WorldVoxel> uploadQueue;
+    private final SectionQueue sectionQueue;
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
@@ -64,8 +65,9 @@ public class WorldCompiler implements Runnable, Disposable {
         this.registry = registry;
         this.uploadQueue = uploadQueue;
         this.renderDistance = renderDistance;
+        this.sectionQueue = new SectionQueue();
 
-        this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, this);
+        this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, sectionQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.setDaemon(false);
@@ -91,7 +93,7 @@ public class WorldCompiler implements Runnable, Disposable {
                 voxelizeSections(sections);
                 buildSections();
 
-                if (chunkCompiler.pendingSections() < 24 || framesSinceLastUpload >= 10)
+                if (sectionQueue.size() < 24 || framesSinceLastUpload >= 10)
                     awaitUpload();
             }
         } catch (InterruptedException e) {
@@ -100,7 +102,7 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     public void submitSection(Vector3i section) {
-        chunkCompiler.submitSection(section);
+        sectionQueue.submitSection(section);
     }
 
     // compiler steps

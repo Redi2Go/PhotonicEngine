@@ -27,25 +27,24 @@ public class ChunkCompiler implements Runnable, Disposable {
     private static final int THREAD_COUNT = 2;
     private static final int MAX_OUTBOUND_SECTIONS = 24;
 
-    private final BlockingQueue<Vector3i> queuedSections = new LinkedBlockingQueue<>();
+    private final SectionQueue sectionQueue;
 
     private final BlockingQueue<Pair<Vector3i, BlockBakery>> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
     private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
 
     private final AtlasDownloader atlasDownloader;
     private final BlockRegistry blockRegistry;
-    private final WorldCompiler compiler;
 
     private Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
             AtlasDownloader atlasDownloader,
             BlockRegistry blockRegistry,
-            WorldCompiler compiler
+            SectionQueue sectionQueue
     ) {
         this.atlasDownloader = atlasDownloader;
         this.blockRegistry = blockRegistry;
-        this.compiler = compiler;
+        this.sectionQueue = sectionQueue;
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             var thread = new Thread(this, "Photonic Chunk Compiler #" + i);
@@ -74,7 +73,7 @@ public class ChunkCompiler implements Runnable, Disposable {
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                var sectionCoord = queuedSections.take();
+                var sectionCoord = sectionQueue.takeSection();
                 var bakery = nextBakery();
 
                 var level = Minecraft.getLevel();
@@ -124,14 +123,6 @@ public class ChunkCompiler implements Runnable, Disposable {
         } catch (Throwable e) {
             Photonics.LOGGER.warn("An exception was throw during chunk compilation!", e);
         }
-    }
-
-    public int pendingSections() {
-        return queuedSections.size() + builtSections.size();
-    }
-
-    public void submitSection(Vector3i section) {
-        queuedSections.offer(section);
     }
 
     public List<Pair<Vector3i, BlockBakery>> takeSections() throws InterruptedException {
