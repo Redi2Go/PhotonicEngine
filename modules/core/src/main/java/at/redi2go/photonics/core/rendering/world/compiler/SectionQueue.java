@@ -49,7 +49,9 @@ public class SectionQueue {
         lock.lockInterruptibly();
 
         try {
-            awaitNotEmpty();
+            while (pendingSections == 0)
+                awaitNotEmpty();
+
             sortSections();
 
             var top = sections[--pendingSections];
