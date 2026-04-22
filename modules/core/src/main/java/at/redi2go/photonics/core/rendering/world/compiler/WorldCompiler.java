@@ -28,7 +28,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class WorldCompiler implements Runnable, Disposable {
-    private static final int THREAD_POOL_SIZE = 5;
+    private static final int THREAD_POOL_SIZE = 3;
     private static final ExecutorService THREAD_POOL;
 
     private final Queue<WorldVoxel> uploadQueue;
