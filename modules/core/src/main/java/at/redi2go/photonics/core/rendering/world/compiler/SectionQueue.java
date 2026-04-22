@@ -4,6 +4,7 @@ import at.redi2go.photonics.api.mc.Minecraft;
 import org.joml.Vector3i;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,6 +15,8 @@ public class SectionQueue {
     private PendingSection[] sections = new PendingSection[24];
     private int pendingSections = 0;
 
+    private Vector3i lastCameraPos = null;
+    private boolean newPending = false;
 
     private int mod = 0;
 
@@ -28,8 +31,6 @@ public class SectionQueue {
     }
 
     private void sortSections() {
-        mod++;
-
         var cameraPos = Minecraft.getCameraPos();
         var cameraChunkPos = new Vector3i(
                 (int) cameraPos.x >> 4,
@@ -37,6 +38,12 @@ public class SectionQueue {
                 (int) cameraPos.z >> 4
         );
 
+        if (!newPending && Objects.equals(cameraChunkPos, lastCameraPos)) return;
+
+        newPending = false;
+        lastCameraPos = cameraChunkPos;
+
+        mod++;
         Arrays.parallelSort(
                 sections,
                 0,
@@ -71,6 +78,8 @@ public class SectionQueue {
                  sections = Arrays.copyOf(sections, sections.length << 1);
 
              sections[pendingSections++] = new PendingSection(sectionPos);
+             newPending = true;
+
              notEmpty.signalAll();
         } finally {
             lock.unlock();
