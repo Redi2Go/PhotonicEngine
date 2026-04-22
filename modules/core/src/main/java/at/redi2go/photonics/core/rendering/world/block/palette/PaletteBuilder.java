@@ -12,30 +12,32 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class PaletteBuilder {
-    private final Map<MutablePaletteEntry, MutablePaletteEntry> interner = new HashMap<>();
+    private final Map<MutablePaletteEntry, MutablePaletteEntry> interner = new LinkedHashMap<>();
 
     public void add(MutablePaletteEntry data) {
         data.makePaletteWhole();
-        data.computeBuilderHashCode();
+        data.computeHashCode();
 
-        interner.putIfAbsent(data, data);
+        interner.computeIfAbsent(data, e -> e)
+                .addTint(data.tint);
     }
 
     public BlockPalette build() {
         var entries = new ArrayList<MutablePaletteEntry>();
         var tints = new IntArrayList();
-
-        int i = 0;
+        var seen = new HashSet<>();
 
         for (var entry : interner.values()) {
-            if (entry.mergedEntry != null) continue;
+            if (!seen.add(entry)) continue;
 
+            entry.index = entries.size();
             entries.add(entry);
-            entry.index = i++;
             tints.add(entry.tint);
 
             var tintDependencies = entry.tintDependencies;
@@ -43,10 +45,8 @@ public class PaletteBuilder {
                 tintDependencies.defaultReturnValue(entry.index);
 
                 for (var tintEntry : tintDependencies.int2IntEntrySet()) {
-                    if (tintEntry.getIntKey() == entry.tint) continue;
-
+                    tintEntry.setValue(entries.size());
                     entries.add(entry);
-                    tintEntry.setValue(i++);
                     tints.add(tintEntry.getIntKey());
                 }
             }
