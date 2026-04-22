@@ -10,6 +10,7 @@ public interface BlockBakery {
 
     void setRegion(short region);
 
+    //TODO: Make relative to chunk
     void submitBlock(
             WorldOrigin origin,
             IBlockPos pos,

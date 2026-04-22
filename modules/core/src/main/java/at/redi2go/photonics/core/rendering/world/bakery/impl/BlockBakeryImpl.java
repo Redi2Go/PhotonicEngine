@@ -393,7 +393,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
     // Vertex building
     private static final int FP_ZERO = Float.floatToRawIntBits(0);
-    private static final int FP_MAX_VALUE = Float.floatToRawIntBits(Integer.MAX_VALUE);
 
     private int blockIndex = 0;
     private int vertexIndex = -1;
@@ -428,7 +427,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     }
 
     private static int isContained(float value) {
-        return (int) Math.ceil(value);
+        return (value > 1 ? 2 : 0) | (Float.floatToRawIntBits(value) & Integer.MIN_VALUE);
     }
 
     private void hashLastVertex() {

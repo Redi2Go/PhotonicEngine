@@ -28,22 +28,19 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class WorldCompiler implements Runnable, Disposable {
-    private static final int THREAD_POOL_SIZE = 3;
-    private static final int MAX_SECTIONS_PER_RUN = 12;
-
+    private static final int THREAD_POOL_SIZE = 5;
     private static final ExecutorService THREAD_POOL;
 
-    private final BlockingQueue<Vector3i> queuedSections = new LinkedBlockingQueue<>();
     private final Queue<WorldVoxel> uploadQueue;
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean waitingForUpload = false;
+    private int framesSinceLastUpload = 0;
 
     private final WorldVoxel rootVoxel;
     private final BlockRegistry registry;
 
-    private final BlockBakery[] bakeries;
     private final Thread compilerThread;
 
     private WorldOrigin mostRecentOrigin;
@@ -52,6 +49,8 @@ public class WorldCompiler implements Runnable, Disposable {
 
     private Vector3i iorigin = null;
     private WorldOrigin origin = null;
+
+    private final ChunkCompiler chunkCompiler;
 
     public WorldCompiler(
             WorldVoxel rootVoxel,
@@ -65,9 +64,7 @@ public class WorldCompiler implements Runnable, Disposable {
         this.uploadQueue = uploadQueue;
         this.renderDistance = renderDistance;
 
-        this.bakeries = new BlockBakery[MAX_SECTIONS_PER_RUN];
-        for (int i = 0; i < MAX_SECTIONS_PER_RUN; i++)
-            bakeries[i] = new BlockBakeryImpl(atlasDownloader, registry);
+        this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, this);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.setDaemon(false);
@@ -86,24 +83,13 @@ public class WorldCompiler implements Runnable, Disposable {
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                var sections = new ArrayList<Vector3i>();
+                var sections = chunkCompiler.takeSections();
 
-                sections.add(queuedSections.take());
-                if (MAX_SECTIONS_PER_RUN > 1)
-                    queuedSections.drainTo(sections, MAX_SECTIONS_PER_RUN - 1);
-
-                recenter();
-                //freeUnusedBlocks();
-
-                clearPendingSections(sections);
-
-                var meshedSections = meshSections(sections);
-                if (meshedSections == null) continue;
-
-                voxelizeSections(meshedSections);
+                voxelizeSections(sections);
                 buildSections();
 
-                awaitUpload();
+                if (chunkCompiler.pendingSections() < 24 || framesSinceLastUpload >= 10)
+                    awaitUpload();
             }
         } catch (InterruptedException e) {
 
@@ -111,7 +97,7 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     public void submitSection(Vector3i section) {
-        queuedSections.add(section);
+        chunkCompiler.submitSection(section);
     }
 
     // compiler steps
@@ -129,6 +115,11 @@ public class WorldCompiler implements Runnable, Disposable {
         origin = new WorldOrigin(iorigin.x, iorigin.y, iorigin.z);
     }
 
+    public WorldOrigin getOrigin() {
+        recenter();
+        return origin;
+    }
+
     private void freeUnusedBlocks() {
         registry.freeUnusedBlocks();
     }
@@ -137,75 +128,12 @@ public class WorldCompiler implements Runnable, Disposable {
 
     }
 
-    private @Nullable BlockBakery[] meshSections(List<Vector3i> sections) throws InterruptedException {
-        BlockBakery[] result = new BlockBakery[sections.size()];
-        var task = new MultiThreadTask();
-
-        for (int i = 0; i < sections.size(); i++) {
-            final int sectionIndex = i;
-            task.queueJob(() -> {
-                try {
-                    BlockMesher.REGISTRY.setup();
-
-                    var bakery = bakeries[sectionIndex];
-                    bakery.reset();
-
-                    if (meshSection(sections.get(sectionIndex), bakery))
-                        result[sectionIndex] = bakery;
-                } finally {
-                    BlockMesher.REGISTRY.teardown();
-                }
-            });
-        }
-
-        task.awaitPending();
-
-        for (var bakery : result)
-            if (bakery != null) return result;
-
-        return null;
-    }
-
-    private boolean meshSection(
-            Vector3i section,
-            BlockBakery bakery
-    ) {
-        var level = Minecraft.getLevel();
-        if (level == null) return false;
-
-        Vector3i sectionBlockPos = section.mul(16, new Vector3i());
-        boolean hasNonAir = false;
-
-        for (int px = 0; px < 16; px++) {
-            for (int py = 0; py < 16; py++) {
-                for (int pz = 0; pz < 16; pz++) {
-                    var blockPos = IBlockPos.of(
-                            sectionBlockPos.x + px,
-                            sectionBlockPos.y + py,
-                            sectionBlockPos.z + pz
-                    );
-
-                    var block = level.getBlockState(blockPos);
-                    if (block.isAir()) continue;
-
-                    hasNonAir = true;
-                    bakery.submitBlock(
-                            origin,
-                            blockPos,
-                            block,
-                            level
-                    );
-                }
-            }
-        }
-
-        return hasNonAir;
-    }
-
-    private void voxelizeSections(BlockBakery[] sections) {
+    private void voxelizeSections(List<BlockBakery> sections) {
         for (var section : sections) {
-            if (section != null)
+            if (section != null) {
                 section.bake(rootVoxel, rootVoxel);
+                chunkCompiler.releaseBakery(section);
+            }
         }
     }
 
@@ -233,6 +161,7 @@ public class WorldCompiler implements Runnable, Disposable {
         uploadLock.lock();
 
         try {
+            framesSinceLastUpload++;
             return waitingForUpload;
         } finally {
             uploadLock.unlock();
@@ -245,6 +174,7 @@ public class WorldCompiler implements Runnable, Disposable {
         try {
             mostRecentOrigin = origin;
             waitingForUpload = false;
+            framesSinceLastUpload = 0;
 
             uploadDone.signalAll();
         } finally {
@@ -256,6 +186,7 @@ public class WorldCompiler implements Runnable, Disposable {
     @Override
     public void close() {
         compilerThread.interrupt();
+        chunkCompiler.close();
     }
 
     private static int snapToSectionPos(int component, int renderDistance) {

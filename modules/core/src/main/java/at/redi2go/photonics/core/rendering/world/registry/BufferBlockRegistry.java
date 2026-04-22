@@ -160,10 +160,12 @@ public class BufferBlockRegistry implements BlockRegistry {
             int valueMask,
             int skylight,
             PaletteAllocation[] palette,
-            int[] tint
+            int[] tint,
+            long voxelHash,
+            long tintHash
     ) {
         return cacheObject(
-                new ContainedBlockVariant(this, blockVoxel, shift, valueMask, skylight, palette, tint),
+                new ContainedBlockVariant(this, blockVoxel, shift, valueMask, skylight, palette, tint, voxelHash, tintHash),
                 e -> e,
                 AbstractBlockEntry::allocate
         );

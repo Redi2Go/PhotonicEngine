@@ -4,6 +4,7 @@ import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.registry.AbstractHashedObject;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
+import it.unimi.dsi.fastutil.longs.LongLongPair;
 
 import java.nio.IntBuffer;
 
@@ -25,7 +26,9 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
             int valueMask,
             int skylight,
             PaletteAllocation[] palette,
-            int[] tint
+            int[] tint,
+            long voxelHash,
+            long tintHash
     ) {
         super(registry);
 
@@ -37,12 +40,31 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         this.tint = tint;
 
         long hashCode = skylight;
+        hashCode = hashCode * 31 + voxelHash;
+        hashCode= hashCode * 31 + tintHash;
 
-        hashCode = hashCode * 31 + palette.length;
+//        long hashCode = skylight;
+//
+//        hashCode = hashCode * 31 + palette.length;
+//        for (int i = 0; i < palette.length; i++) {
+//            var entry = palette[i];
+//
+//            hashCode = hashCode * 31 + tint[i];
+//
+//            entry.awaitAllocated();
+//            hashCode = hashCode * 31 + entry.begin();
+//        }
+//
+//        blockVoxel.awaitAllocated();
+//        hashCode = hashCode * 31 + blockVoxel.begin();
+//
+        this.hashCode = hashCode;
+    }
+
+    public static long voxelHash(PaletteAllocation[] palette, AbstractBlockVoxel blockVoxel) {
+        long hashCode = palette.length;
         for (int i = 0; i < palette.length; i++) {
             var entry = palette[i];
-
-            hashCode = hashCode * 31 + tint[i];
 
             entry.awaitAllocated();
             hashCode = hashCode * 31 + entry.begin();
@@ -51,7 +73,15 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         blockVoxel.awaitAllocated();
         hashCode = hashCode * 31 + blockVoxel.begin();
 
-        this.hashCode = hashCode;
+        return hashCode;
+    }
+
+    public static long tintHash(int[] tints) {
+        long hashCode = 0;
+        for (int tint : tints)
+            hashCode = hashCode * 31 + tint;
+
+        return hashCode;
     }
 
     @Override
