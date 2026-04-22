@@ -34,6 +34,25 @@ public final class MutablePaletteEntry extends PaletteEntry {
         computeHashCodeImpl();
     }
 
+    public void makePaletteWhole() {
+        TextureData notNullFace = null;
+        for (int i = 0; i < 6; i++) {
+            var face = faces[i];
+            if (face == null) continue;
+
+            if (notNullFace == null)
+                notNullFace = face;
+            else if (face.gt(notNullFace))
+                notNullFace = face;
+        }
+
+        for (int i = 0; i < 6; i++) {
+            if (faces[i] != null) continue;
+
+            faces[i] = notNullFace;
+        }
+    }
+
     public int getIndex(int tint) {
         if (this.tint == tint) return index;
 
