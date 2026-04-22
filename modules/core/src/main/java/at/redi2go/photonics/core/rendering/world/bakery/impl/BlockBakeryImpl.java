@@ -148,7 +148,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
                     voxelPos.sub(vertex, worldPos);
                     var dist = worldPos.dot(normal);
-                    if (dist >= 0.5f) continue;
 
                     voxelPos.sub(normal.mul(dist, worldPos), worldPos);
 
