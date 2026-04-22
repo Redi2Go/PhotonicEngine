@@ -46,6 +46,8 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
             int tint,
             TextureData textureData
     ) {
+        if (!VoxelModel.contains(x, y, z, 16, 16, 16)) return;
+
         isEmpty = false;
 
         int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
