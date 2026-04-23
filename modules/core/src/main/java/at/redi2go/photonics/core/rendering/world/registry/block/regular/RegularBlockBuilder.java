@@ -50,7 +50,7 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
         var regionBuilder = new RegionBuilder();
 
         var result = buildBlockVoxel(palette, regionBuilder);
-        var blockVoxel = registry.allocateRegularBlockVoxel(result.hash(), result.shift(), result.voxelData());
+        var blockVoxel = registry.allocateRegularBlockVoxel(result.hash(), result.voxelData());
 
         PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
         int[] tint = new int[palette.size()];
@@ -62,8 +62,6 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
 
         var variant = registry.allocateRegularBlockVariant(
                 blockVoxel,
-                result.shift(),
-                IntPacking.valueMask(result.shift()),
                 skylight,
                 paletteArray,
                 tint

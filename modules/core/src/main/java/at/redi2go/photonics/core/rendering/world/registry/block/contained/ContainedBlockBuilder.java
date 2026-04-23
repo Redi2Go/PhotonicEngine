@@ -90,8 +90,6 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
 
 
         var blockVoxel = registry.allocateContainedBlockVoxel(
-                result.shift(),
-                IntPacking.valueMask(result.shift()),
                 result.hash(),
                 vertexHash,
                 result.voxelData(),

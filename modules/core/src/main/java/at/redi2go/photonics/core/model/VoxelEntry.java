@@ -30,7 +30,7 @@ public interface VoxelEntry extends Disposable {
     @Nullable VoxelEntry build();
 
     static boolean isAir(int entry) {
-        return (entry & Integer.MAX_VALUE) == 0;
+        return (entry & Integer.MIN_VALUE) == 0;
     }
 
     static int toAir(int value) {

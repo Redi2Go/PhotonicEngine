@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
+import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
@@ -54,40 +55,21 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
         boolean isEmpty = true;
 
         AbstractBlockVoxel voxel = entryData.blockVoxel();
-        int shift = voxel.shift();
-
-        int voxelDataSize = RtVoxel.ENTRIES_SIZE >> shift;
-        int sectionLength = IntPacking.sectionLength(shift);
-
-        int valueShift = 1 << IntPacking.valueShift(shift);
-        int valueMask = IntPacking.valueMask(shift);
-
         var buffer = voxel.buffer();
 
-        for (int o = 0; o < voxelDataSize; o++) {
-            var sectionData = buffer.get(o);
+        for (int voxelIndex = 0; voxelIndex < RtVoxel.ENTRIES_SIZE; voxelIndex++) {
+            int entry = buffer.get(voxelIndex);
+            if (VoxelEntry.isAir(entry)) continue;
 
-            for (int i = 0; i < sectionLength; i++) {
-                moveEntry :
-                {
-                    int entry = (sectionData & valueMask) >> 1;
-                    if (entry == 0)
-                        break moveEntry;
+            if (!clearedRegions.isEmpty() && clearedRegions.contains(getRegion(voxelIndex))) continue;
 
-                    int voxelIndex = o + i;
+            entry = VoxelEntry.getData(entry) >> 1;
 
-                    if (!clearedRegions.isEmpty() && clearedRegions.contains(getRegion(voxelIndex)))
-                        break moveEntry;
-
-                    isEmpty = false;
-                    data[voxelIndex] = new MutablePaletteEntry(
-                            entryData.getPaletteEntry(entry),
-                            entryData.getTint(entry)
-                    );
-                }
-
-                sectionData >>= valueShift;
-            }
+            isEmpty = false;
+            data[voxelIndex] = new MutablePaletteEntry(
+                    entryData.getPaletteEntry(entry),
+                    entryData.getTint(entry)
+            );
         }
 
         return isEmpty;
@@ -136,47 +118,29 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
     }
 
     protected BuildResult buildBlockVoxel(BlockPalette palette, RegionBuilder regionBuilder) {
-        // We need a bit to indicate transparency
-        // Bit 0 is used so that it's unaffected by the int packing
-        // Max element is <size> because index 0 is used for air
-
-        //TODO: FIX ME!
-        //var shift = IntPacking.shiftFactor(palette.size() << 1);
-        var shift = IntPacking.shiftFactor(Integer.MAX_VALUE);
-
-        var voxelData = new int[RtVoxel.ENTRIES_SIZE >> shift];
-        var sectionLength = IntPacking.sectionLength(shift);
+        var voxelData = new int[RtVoxel.ENTRIES_SIZE];
 
         long hash = 0;
+        for (int voxelIndex = 0; voxelIndex < RtVoxel.ENTRIES_SIZE; voxelIndex++) {
+            var paletteEntry = data[voxelIndex];
+            var voxelEntry = palette.getIndex(paletteEntry) << 1;
 
-        for (int o = 0; o < voxelData.length; o++) {
-            int entry = 0;
+            hash = hash * 31 + (((long) voxelEntry << 14) | voxelIndex);
 
-            for (int i = 0; i < sectionLength; i++) {
-                int voxelIndex = (o << shift) + i;
+            handleEntry: {
+                if (paletteEntry == null) break handleEntry;
 
-                var paletteEntry = data[voxelIndex];
-                var voxelEntry = palette.getIndex(paletteEntry) << 1;
+                if (paletteEntry.hasTransparentFace())
+                    voxelEntry |= 1;
 
-                hash = hash * 31 + (((long) voxelEntry << 14) | voxelIndex);
-
-                handleEntry: {
-                    if (paletteEntry == null) break handleEntry;
-
-                    if (paletteEntry.hasTransparentFace())
-                        voxelEntry |= 1;
-
-                    // TODO: Maybe? passive shrinkage
-                    regionBuilder.set(voxelIndex);
-                }
-
-                entry = IntPacking.setValue(entry, i, voxelEntry, shift);
+                // TODO: Maybe? passive shrinkage
+                regionBuilder.set(voxelIndex);
             }
 
-            voxelData[o] = entry;
+            voxelData[voxelIndex] = paletteEntry == null ? VoxelModel.makeAirEntry(voxelIndex) : VoxelEntry.toData(voxelEntry);
         }
 
-        return new BuildResult(hash, shift, voxelData);
+        return new BuildResult(hash, voxelData);
     }
 
     @Override
@@ -184,7 +148,7 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
         //not used
     }
 
-    protected  record BuildResult(long hash, int shift, int[] voxelData) {}
+    protected  record BuildResult(long hash, int[] voxelData) {}
 
     protected interface RegionBuilder {
         void set(int voxelIndex);

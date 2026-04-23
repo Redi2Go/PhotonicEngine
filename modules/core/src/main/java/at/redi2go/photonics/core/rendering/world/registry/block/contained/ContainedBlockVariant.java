@@ -8,14 +8,12 @@ public class ContainedBlockVariant extends AbstractBlockEntry<ContainedBlockVoxe
     public ContainedBlockVariant(
             BufferBlockRegistry registry,
             ContainedBlockVoxelImpl blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint,
             long voxelHash,
             long tintHash
     ) {
-        super(registry, blockVoxel, shift, valueMask, skylight, palette, tint, voxelHash, tintHash);
+        super(registry, blockVoxel, skylight, palette, tint, voxelHash, tintHash);
     }
 }

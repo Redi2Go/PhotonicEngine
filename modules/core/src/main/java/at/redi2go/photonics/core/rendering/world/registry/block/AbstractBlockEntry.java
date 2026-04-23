@@ -11,8 +11,6 @@ import java.nio.IntBuffer;
 public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends AbstractHashedObject {
     private final T blockVoxel;
 
-    private final int shift;
-    private final int valueMask;
     private final int skylight;
     private final PaletteAllocation[] palette;
     private final int[] tint;
@@ -22,8 +20,6 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
     public AbstractBlockEntry(
             BufferBlockRegistry registry,
             T blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint,
@@ -33,8 +29,6 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         super(registry);
 
         this.blockVoxel = blockVoxel;
-        this.shift = shift;
-        this.valueMask = valueMask;
         this.skylight = skylight;
         this.palette = palette;
         this.tint = tint;
@@ -87,8 +81,6 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
 
         buffer.put(skylight);
         buffer.put(blockVoxel.begin());
-        buffer.put(shift);
-        buffer.put(valueMask);
         buffer.put(palette.length);
         for (int i = 0; i < palette.length; i++) {
             buffer.put(tint[i]);

@@ -21,6 +21,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,6 +33,9 @@ public class BufferBlockRegistry implements BlockRegistry {
     private final ConcurrentLong2ObjectMap<ContainedBlockEntry.Factory> containedBlocks = new ConcurrentLong2ObjectMap<>(8);
     private final ConcurrentHashMap<Object, HashedObject> hashedObjectCache = new ConcurrentHashMap<>();
     private final Set<HashedObject> freeQueue = ConcurrentHashMap.newKeySet();
+
+    private final ExecutorService optimizationService =
+            Executors.newSingleThreadExecutor((r) -> new Thread(r, "Photonics Optimization Thread"));
 
     public BufferBlockRegistry(
             IGpuBufferHeap heap,
@@ -103,6 +108,11 @@ public class BufferBlockRegistry implements BlockRegistry {
         freeQueue.clear();
     }
 
+    @Override
+    public void scheduleOptimization(Runnable runnable) {
+        optimizationService.execute(runnable);
+    }
+
     // Allocation methods
 
     public PaletteAllocation allocatePalette(PaletteEntry entry) {
@@ -115,17 +125,15 @@ public class BufferBlockRegistry implements BlockRegistry {
         );
     }
 
-    public RegularBlockVoxel allocateRegularBlockVoxel(long hashCode, int shift, int[] data) {
+    public RegularBlockVoxel allocateRegularBlockVoxel(long hashCode, int[] data) {
         return cacheObject(
-            new RegularBlockVoxel(this, shift, hashCode),
+            new RegularBlockVoxel(this, hashCode),
             e -> e,
             e -> e.allocate(data)
         );
     }
 
     public ContainedBlockVoxelImpl allocateContainedBlockVoxel(
-            int shift,
-            int valueMask,
             long hashCode,
             long vertexHash,
             int[] data,
@@ -133,7 +141,7 @@ public class BufferBlockRegistry implements BlockRegistry {
             PaletteAllocation[] palette
     ) {
         return cacheObject(
-                new ContainedBlockVoxelImpl(this, shift, valueMask, hashCode, vertexHash, tintMappings, palette),
+                new ContainedBlockVoxelImpl(this, hashCode, vertexHash, tintMappings, palette),
                 e -> e,
                 e -> e.allocate(data)
         );
@@ -141,14 +149,12 @@ public class BufferBlockRegistry implements BlockRegistry {
 
     public RegularBlockVariant allocateRegularBlockVariant(
             RegularBlockVoxel blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint
     ) {
         return cacheObject(
-                new RegularBlockVariant(this, blockVoxel, shift, valueMask, skylight, palette, tint),
+                new RegularBlockVariant(this, blockVoxel, skylight, palette, tint),
                 e -> e,
                 AbstractBlockEntry::allocate
         );
@@ -156,8 +162,6 @@ public class BufferBlockRegistry implements BlockRegistry {
 
     public ContainedBlockVariant allocateContainedBlockVariant(
             ContainedBlockVoxelImpl blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint,
@@ -165,7 +169,7 @@ public class BufferBlockRegistry implements BlockRegistry {
             long tintHash
     ) {
         return cacheObject(
-                new ContainedBlockVariant(this, blockVoxel, shift, valueMask, skylight, palette, tint, voxelHash, tintHash),
+                new ContainedBlockVariant(this, blockVoxel, skylight, palette, tint, voxelHash, tintHash),
                 e -> e,
                 AbstractBlockEntry::allocate
         );
@@ -175,5 +179,10 @@ public class BufferBlockRegistry implements BlockRegistry {
     // Local methods
     public MemoryView allocate(int byteSize) {
         return heap.allocateOrThrow(byteSize);
+    }
+
+    @Override
+    public void close() {
+        optimizationService.shutdownNow();
     }
 }

@@ -138,7 +138,6 @@ public class ChunkCompiler implements Runnable, Disposable {
         for (var thread : threads)
             thread.interrupt();
     }
-
 //    private final ReentrantLock lock = new ReentrantLock();
 //
 //    private List<>

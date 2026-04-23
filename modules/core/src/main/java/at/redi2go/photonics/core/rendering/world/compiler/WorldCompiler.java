@@ -38,7 +38,6 @@ public class WorldCompiler implements Runnable, Disposable {
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean waitingForUpload = false;
-    private int framesSinceLastUpload = 0;
 
     private final WorldVoxel rootVoxel;
     private final BlockRegistry registry;
@@ -70,7 +69,6 @@ public class WorldCompiler implements Runnable, Disposable {
         this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, sectionQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
-        this.compilerThread.setDaemon(false);
         this.compilerThread.start();
     }
 
@@ -93,8 +91,7 @@ public class WorldCompiler implements Runnable, Disposable {
                 voxelizeSections(sections);
                 buildSections();
 
-                if (sectionQueue.size() < 24 || framesSinceLastUpload >= 10)
-                    awaitUpload();
+                awaitUpload();
             }
         } catch (InterruptedException e) {
 
@@ -135,7 +132,8 @@ public class WorldCompiler implements Runnable, Disposable {
 
             if (section == null) continue;
 
-            bake: {
+            bake:
+            {
                 chunkPos.sub(iorigin);
                 if (chunkPos.x < 0 || chunkPos.y < 0 || chunkPos.z < 0)
                     break bake;
@@ -168,24 +166,14 @@ public class WorldCompiler implements Runnable, Disposable {
         }
     }
 
-    public boolean isWaitingForUpload() {
-        uploadLock.lock();
-
-        try {
-            framesSinceLastUpload++;
-            return waitingForUpload;
-        } finally {
-            uploadLock.unlock();
-        }
-    }
-
     public void clearUpload() {
         uploadLock.lock();
 
         try {
-            mostRecentOrigin = origin;
-            waitingForUpload = false;
-            framesSinceLastUpload = 0;
+            if (waitingForUpload) {
+                mostRecentOrigin = origin;
+                waitingForUpload = false;
+            }
 
             uploadDone.signalAll();
         } finally {
@@ -244,11 +232,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
     static {
         AtomicInteger count = new AtomicInteger(0);
-        THREAD_POOL = Executors.newFixedThreadPool(THREAD_POOL_SIZE, (r) -> {
-            var thread = new Thread(r, "Photonics World Worker #" + count.getAndIncrement());
-            thread.setDaemon(false);
-
-            return thread;
-        });
+        THREAD_POOL = Executors.newFixedThreadPool(THREAD_POOL_SIZE, (r) ->
+                new Thread(r, "Photonics World Worker #" + count.getAndIncrement()));
     }
 }

@@ -14,8 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class ContainedBlockVoxelImpl extends AbstractBlockVoxel implements ContainedBlockVoxel {
     private final long vertexHash;
-    private final int valueMask;
-
     private boolean voxelHashReady = false;
     private long voxelHash = 0;
 
@@ -27,17 +25,14 @@ public class ContainedBlockVoxelImpl extends AbstractBlockVoxel implements Conta
 
     public ContainedBlockVoxelImpl(
             BufferBlockRegistry registry,
-            int shift,
-            int valueMask,
             long hashCode,
             long vertexHash,
             int[] tintMappings,
             PaletteAllocation[] palette
     ) {
-        super(registry, shift, hashCode);
+        super(registry, hashCode);
 
         this.vertexHash = vertexHash;
-        this.valueMask = valueMask;
 
         this.tintMappings = tintMappings;
         this.palette = palette;
@@ -81,8 +76,6 @@ public class ContainedBlockVoxelImpl extends AbstractBlockVoxel implements Conta
                 region,
                 registry.allocateContainedBlockVariant(
                         this,
-                        shift,
-                        valueMask,
                         skylight,
                         palette,
                         paletteTint,

@@ -13,19 +13,16 @@ import org.joml.Vector3ic;
 import java.nio.IntBuffer;
 
 public abstract class AbstractBlockVoxel extends AbstractHashedObject implements BlockVoxel {
-    protected final int shift;
     private final long hashCode;
 
     private IntBuffer buffer = null;
 
     protected AbstractBlockVoxel(
             BufferBlockRegistry registry,
-            int shift,
             long hashCode
     ) {
         super(registry);
 
-        this.shift = shift;
         this.hashCode = hashCode;
     }
 
@@ -37,14 +34,16 @@ public abstract class AbstractBlockVoxel extends AbstractHashedObject implements
     public void allocate(int[] data) {
         initMemory(data.length * 4);
         buffer = memory.buffer().asIntBuffer();
-
         buffer.put(data);
 
         memory.upload();
-    }
 
-    public int shift() {
-        return shift;
+        registry.scheduleOptimization(() -> {
+            var wrapper = new ModelWrapper();
+            wrapper.optimize();
+
+            memory.upload();
+        });
     }
 
     public IntBuffer buffer() {
@@ -63,21 +62,44 @@ public abstract class AbstractBlockVoxel extends AbstractHashedObject implements
 
     @Override
     public int get(int x, int y, int z) {
-        int realIndex = VoxelModel.toVoxelIndex(x, y, z);
-
-        int offset = IntPacking.dataOffset(realIndex, shift);
-        int sectionIndex = IntPacking.sectionIndex(realIndex, shift);
-
-        return IntPacking.getValue(buffer.get(offset), sectionIndex, shift);
+        return buffer.get(VoxelModel.toVoxelIndex(x, y, z));
     }
 
     @Override
     protected void dispose() {
+        buffer = null;
         // Nothing to release
     }
 
     @Override
     public boolean equals(Object obj) {
         return obj instanceof AbstractBlockVoxel other && hashCode == other.hashCode;
+    }
+
+    private class ModelWrapper extends AbstractVoxelModel {
+        public ModelWrapper() {
+            super(RtVoxel.SIZE_3);
+        }
+
+        @Override
+        protected int get(int index) {
+            var buffer = AbstractBlockVoxel.this.buffer;
+            if (buffer == null) return VoxelModel.makeAirEntry(index);
+
+            return buffer.get(index);
+        }
+
+        @Override
+        protected void set(int index, int value) {
+            var buffer = AbstractBlockVoxel.this.buffer;
+            if (buffer == null) return;
+
+            buffer.put(index, value);
+        }
+
+        @Override
+        public void optimize() {
+            super.optimize();
+        }
     }
 }

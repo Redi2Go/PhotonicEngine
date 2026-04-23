@@ -4,7 +4,7 @@ import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockVoxel;
 
 public class RegularBlockVoxel extends AbstractBlockVoxel {
-    public RegularBlockVoxel(BufferBlockRegistry registry, int shift, long hashCode) {
-        super(registry, shift, hashCode);
+    public RegularBlockVoxel(BufferBlockRegistry registry, long hashCode) {
+        super(registry, hashCode);
     }
 }

@@ -10,8 +10,6 @@ public class RegularBlockVariant extends AbstractBlockEntry<RegularBlockVoxel> {
     private RegularBlockVariant(
             BufferBlockRegistry registry,
             RegularBlockVoxel blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint,
@@ -20,8 +18,6 @@ public class RegularBlockVariant extends AbstractBlockEntry<RegularBlockVoxel> {
         super(
                 registry,
                 blockVoxel,
-                shift,
-                valueMask,
                 skylight,
                 palette,
                 tint,
@@ -33,8 +29,6 @@ public class RegularBlockVariant extends AbstractBlockEntry<RegularBlockVoxel> {
     public RegularBlockVariant(
             BufferBlockRegistry registry,
             RegularBlockVoxel blockVoxel,
-            int shift,
-            int valueMask,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint
@@ -42,8 +36,6 @@ public class RegularBlockVariant extends AbstractBlockEntry<RegularBlockVoxel> {
         this(
                 registry,
                 blockVoxel,
-                shift,
-                valueMask,
                 skylight,
                 palette,
                 tint,
