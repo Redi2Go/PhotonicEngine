@@ -272,6 +272,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     public void bake(VoxelConsumer voxelConsumer, BlockConsumer blockConsumer) {
         while (hasNext()) {
             blockModel.readBlock(this);
+            if (blockModel.vertexCount == 0) continue;
 
             if ((blockModel.contained & ~1) == 0)
                 bakeContainedBlock(blockConsumer);
