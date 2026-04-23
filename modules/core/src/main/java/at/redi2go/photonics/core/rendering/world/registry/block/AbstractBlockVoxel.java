@@ -32,16 +32,20 @@ public abstract class AbstractBlockVoxel extends AbstractHashedObject implements
     }
 
     public void allocate(int[] data) {
-        initMemory(data.length * 4);
+        initMemory(data.length << 2);
         buffer = memory.buffer().asIntBuffer();
         buffer.put(data);
 
         memory.upload();
 
         registry.scheduleOptimization(() -> {
-            var wrapper = new ModelWrapper();
+            var wrapper = new ModelWrapper(data);
             wrapper.optimize();
 
+            var buffer = this.buffer;
+            if (buffer == null) return;
+
+            buffer.put(0, wrapper.data);
             memory.upload();
         });
     }
@@ -76,25 +80,23 @@ public abstract class AbstractBlockVoxel extends AbstractHashedObject implements
         return obj instanceof AbstractBlockVoxel other && hashCode == other.hashCode;
     }
 
-    private class ModelWrapper extends AbstractVoxelModel {
-        public ModelWrapper() {
+    private static class ModelWrapper extends AbstractVoxelModel {
+        int[] data;
+
+        public ModelWrapper(int[] data) {
             super(RtVoxel.SIZE_3);
+
+            this.data = data;
         }
 
         @Override
         protected int get(int index) {
-            var buffer = AbstractBlockVoxel.this.buffer;
-            if (buffer == null) return VoxelModel.makeAirEntry(index);
-
-            return buffer.get(index);
+            return data[index];
         }
 
         @Override
         protected void set(int index, int value) {
-            var buffer = AbstractBlockVoxel.this.buffer;
-            if (buffer == null) return;
-
-            buffer.put(index, value);
+            data[index] = value;
         }
 
         @Override

@@ -13,10 +13,13 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3ic;
 
 import java.util.Queue;
 
 public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxel, BlockConsumer, VoxelConsumer {
+    private static final ThreadLocal<int[]> UPLOAD_ARRAYS = ThreadLocal.withInitial(() -> new int[RtVoxel.ENTRIES_SIZE]);
+
     private final int depth;
     protected final BlockRegistry blockRegistry;
     protected final IGpuBufferHeap heap;
@@ -145,7 +148,8 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     }
 
     public void upload() {
-        var buffer = memory.buffer().asIntBuffer();
+        int[] data = UPLOAD_ARRAYS.get();
+
         for (int i = 0; i < voxelData.length; i++) {
             var entry = voxelData[i];
 
@@ -164,13 +168,15 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
                 }
             }
 
-            buffer.put(i, entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entry.entryData()));
+            data[i] = entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entry.entryData());
         }
 
         if (!optimized) {
-            optimize();
+            new ModelWrapper(data).optimize();
             optimized = true;
         }
+
+        memory.buffer().asIntBuffer().put(0, data);
 
         memory.upload();
         updateRequested = false;
@@ -213,5 +219,30 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     @Override
     public void acceptVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
         insertVoxel(x, y, z, region, normal, tint, textureData);
+    }
+
+    private static class ModelWrapper extends AbstractVoxelModel {
+        private final int[] data;
+
+        public ModelWrapper(int[] data) {
+            super(RtVoxel.SIZE_3);
+
+            this.data = data;
+        }
+
+        @Override
+        protected int get(int index) {
+            return data[index];
+        }
+
+        @Override
+        protected void set(int index, int value) {
+            data[index] = value;
+        }
+
+        @Override
+        public void optimize() {
+            super.optimize();
+        }
     }
 }
