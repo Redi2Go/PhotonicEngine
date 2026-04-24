@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.IntSupplier;
 
 public class SectionQueue {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
+    private final IntSupplier renderDistanceSupplier;
 
     private PendingSection[] sections = new PendingSection[24];
     private int pendingSections = 0;
@@ -19,6 +21,10 @@ public class SectionQueue {
     private boolean newPending = false;
 
     private int mod = 0;
+
+    public SectionQueue(IntSupplier renderDistanceSupplier) {
+        this.renderDistanceSupplier = renderDistanceSupplier;
+    }
 
     public int size() {
         return pendingSections;
@@ -30,18 +36,32 @@ public class SectionQueue {
         notEmpty.await();
     }
 
-    private void sortSections() {
-        var cameraPos = Minecraft.getCameraPos();
-        var cameraChunkPos = new Vector3i(
-                (int) cameraPos.x >> 4,
-                (int) cameraPos.y >> 4,
-                (int) cameraPos.z >> 4
-        );
+    private void removeDistantSections(Vector3i cameraChunkPos) {
+        double rd = (double) renderDistanceSupplier.getAsInt() * 1.5;
 
+        int newSize = 0;
+
+        for (int i = 0; i < pendingSections; i++) {
+            var entry = sections[i];
+
+            if (entry.distance(cameraChunkPos) > rd) {
+                sections[i] = null;
+                continue;
+            }
+
+            sections[newSize++] = entry;
+        }
+
+        pendingSections = newSize;
+    }
+
+    private void sortSections(Vector3i cameraChunkPos) {
         if (!newPending && Objects.equals(cameraChunkPos, lastCameraPos)) return;
 
         newPending = false;
         lastCameraPos = cameraChunkPos;
+
+        removeDistantSections(cameraChunkPos);
 
         mod++;
         Arrays.parallelSort(
@@ -59,7 +79,14 @@ public class SectionQueue {
             while (pendingSections == 0)
                 awaitNotEmpty();
 
-            sortSections();
+            var cameraPos = Minecraft.getCameraPos();
+            var cameraChunkPos = new Vector3i(
+                    (int) cameraPos.x >> 4,
+                    (int) cameraPos.y >> 4,
+                    (int) cameraPos.z >> 4
+            );
+
+            sortSections(cameraChunkPos);
 
             var top = sections[--pendingSections];
             sections[pendingSections] = null;

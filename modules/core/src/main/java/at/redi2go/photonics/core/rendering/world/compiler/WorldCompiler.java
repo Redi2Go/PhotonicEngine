@@ -1,29 +1,28 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
+import at.redi2go.photonics.core.rendering.world.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.WorldVoxel;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
-import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
-import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import it.unimi.dsi.fastutil.Pair;
-import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,6 +37,7 @@ public class WorldCompiler implements Runnable, Disposable {
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean waitingForUpload = false;
+    private boolean movingCenter = true;
 
     private final WorldVoxel rootVoxel;
     private final BlockRegistry registry;
@@ -52,25 +52,32 @@ public class WorldCompiler implements Runnable, Disposable {
     private WorldOrigin origin = null;
 
     private final ChunkCompiler chunkCompiler;
+    private final Set<ChunkVoxel> chunks = new HashSet<>();
 
     public WorldCompiler(
-            WorldVoxel rootVoxel,
+            int depth,
+            IGpuBufferHeap heap,
             BlockRegistry registry,
             AtlasDownloader atlasDownloader,
-            Queue<WorldVoxel> uploadQueue,
             int renderDistance
     ) {
-        this.rootVoxel = rootVoxel;
         this.registry = registry;
-        this.uploadQueue = uploadQueue;
+        this.uploadQueue = new ConcurrentLinkedQueue<>();
         this.renderDistance = renderDistance;
         this.sectionQueue = new SectionQueue();
 
+        this.rootVoxel = new WorldVoxel(depth, this, registry, heap, uploadQueue);
         this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, sectionQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
     }
+
+    private void setOrigin(Vector3i origin) {
+        this.iorigin = origin;
+        this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
+    }
+
 
     public WorldOrigin origin() {
         return mostRecentOrigin;
@@ -98,23 +105,63 @@ public class WorldCompiler implements Runnable, Disposable {
         }
     }
 
+    public void addChunk(ChunkVoxel chunk) {
+        chunks.add(chunk);
+    }
+
+    public void removeChunk(ChunkVoxel chunk) {
+        chunks.remove(chunk);
+    }
+
     public void submitSection(Vector3i section) {
         sectionQueue.submitSection(section);
     }
 
     // compiler steps
 
-    private void recenter() {
-        if (origin != null) return;
+    private void recenter() throws InterruptedException {
+        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistance);
+        if (iorigin == null) {
+            setOrigin(newOrigin);
+            return;
+        }
 
-        var cameraPos = Minecraft.getCameraPos();
-        iorigin = new Vector3i(
-                snapToSectionPos((int) cameraPos.x, renderDistance),
-                snapToSectionPos((int) cameraPos.y, renderDistance),
-                snapToSectionPos((int) cameraPos.z, renderDistance)
-        );
+        if (iorigin.equals(newOrigin)) return;
 
-        origin = new WorldOrigin(iorigin.x, iorigin.y, iorigin.z);
+        uploadLock.lockInterruptibly();
+
+        try {
+            movingCenter = true;
+        } finally {
+            uploadLock.unlock();
+        }
+
+        var chunks = new ArrayList<>(this.chunks);
+        for (var chunk : chunks)
+            rootVoxel.removeChunk(chunk.x(), chunk.y(), chunk.z());
+
+        var offset = iorigin.sub(newOrigin, new Vector3i());
+        offset.x = offset.x << 4;
+        offset.y = offset.y << 4;
+        offset.z = offset.z << 4;
+
+        for (var chunk : chunks) {
+            int newX = chunk.x() + offset.x;
+            int newY = chunk.y() + offset.y;
+            int newZ = chunk.z() + offset.z;
+
+            if (!rootVoxel.containsChunk(newX, newY, newZ)) {
+                chunk.close();
+                continue;
+            }
+
+            rootVoxel.insertChunk(newX, newY, newZ, chunk);
+            chunk.updatePos(newX, newY, newZ);
+        }
+
+        rootVoxel.removeEmptyVoxels();
+
+        setOrigin(newOrigin);
     }
 
     private void freeUnusedBlocks() {
@@ -135,7 +182,7 @@ public class WorldCompiler implements Runnable, Disposable {
             bake:
             {
                 chunkPos.sub(iorigin);
-                if (chunkPos.x < 0 || chunkPos.y < 0 || chunkPos.z < 0)
+                if (!rootVoxel.containsChunk(chunkPos))
                     break bake;
 
                 section.setChunkOffset(chunkPos);
@@ -166,19 +213,25 @@ public class WorldCompiler implements Runnable, Disposable {
         }
     }
 
-    public void clearUpload() {
+    public boolean clearUpload() {
         uploadLock.lock();
 
         try {
-            if (waitingForUpload) {
+            if (movingCenter) {
+                if (!waitingForUpload) return false;
+
                 mostRecentOrigin = origin;
-                waitingForUpload = false;
+                movingCenter = false;
             }
+
+            waitingForUpload = false;
 
             uploadDone.signalAll();
         } finally {
             uploadLock.unlock();
         }
+
+        return true;
     }
 
 
@@ -190,6 +243,14 @@ public class WorldCompiler implements Runnable, Disposable {
 
     private static int snapToSectionPos(int component, int renderDistance) {
         return ((component >> 4) - renderDistance) << 4;
+    }
+
+    private static Vector3i getWorldOrigin(Vector3d cameraPos, int renderDistance) {
+        return new Vector3i(
+                snapToSectionPos((int) cameraPos.x, renderDistance),
+                snapToSectionPos((int) cameraPos.y, renderDistance),
+                snapToSectionPos((int) cameraPos.z, renderDistance)
+        );
     }
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {
