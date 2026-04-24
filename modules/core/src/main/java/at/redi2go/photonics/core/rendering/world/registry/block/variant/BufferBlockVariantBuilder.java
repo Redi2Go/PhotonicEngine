@@ -1,36 +1,33 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.contained;
+package at.redi2go.photonics.core.rendering.world.registry.block.variant;
 
 import at.redi2go.photonics.core.model.VoxelModel;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
+import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
+import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
-import at.redi2go.photonics.core.util.IntPacking;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
 
-public class ContainedBlockBuilder extends AbstractBlockBuilder implements ContainedBlockEntry.Builder, ContainedBlockEntry.Factory {
+public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements BlockVariantBuilder {
     private final long vertexHash;
-    private final ContainedBlockFuture future;
+    private final BufferBlockVariantFuture future;
 
     private final Int2IntMap tintIndexes = new Int2IntOpenHashMap();
 
-    private boolean isEmpty = true;
-
-    public ContainedBlockBuilder(BufferBlockRegistry registry, long vertexHash, ContainedBlockFuture future) {
+    public BufferBlockVariantBuilder(
+            BufferBlockRegistry registry,
+            long vertexHash,
+            BufferBlockVariantFuture future
+    ) {
         super(registry);
 
         this.vertexHash = vertexHash;
         this.future = future;
-    }
-
-    @Override
-    public void propagateException(Throwable ex) {
-        future.completeExceptionally(ex);
     }
 
     @Override
@@ -39,13 +36,12 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
     }
 
     @Override
-    public void insertVoxel(
-            int x, int y, int z,
-            short region,
-            int normal,
-            int tint,
-            TextureData textureData
-    ) {
+    public void propagateException(Throwable ex) {
+        future.completeExceptionally(ex);
+    }
+
+    @Override
+    public void insertVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
         if (!VoxelModel.contains(x, y, z, 16, 16, 16)) return;
 
         isEmpty = false;
@@ -68,9 +64,10 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
     }
 
     @Override
-    public @Nullable ContainedBlockEntry build() {
+    public @Nullable BlockEntry build() {
         if (isEmpty) {
             future.complete(null);
+            return null;
         }
 
         var palette = buildPalette();
@@ -88,24 +85,27 @@ public class ContainedBlockBuilder extends AbstractBlockBuilder implements Conta
             tintMappings[i] = tintIndexes.get(tint);
         }
 
-
-        var blockVoxel = registry.allocateContainedBlockVoxel(
+        var blockVoxel = registry.allocateBlockVoxel(
                 result.hash(),
+                result.voxelData()
+        );
+
+        var variant = blockVoxel.newVariant(
                 vertexHash,
-                result.voxelData(),
                 tintMappings,
                 paletteArray
         );
 
-        future.complete(blockVoxel);
+        future.complete(variant);
 
-        return blockVoxel.createVariant(tints, skylight, singleGetRegion());
+        return variant.createVariant(tints, skylight, singleGetRegion());
     }
 
     @Override
-    public ContainedBlockEntry createVariant(IntArraySet tint, int skylight, short region) {
+    public @Nullable BlockEntry createVariant(IntArraySet tint, int skylight, short region) {
         throw new UnsupportedOperationException("createVariant");
     }
+
 
     private static class EmptyRegionBuilder implements RegionBuilder {
         static final EmptyRegionBuilder INSTANCE = new EmptyRegionBuilder();

@@ -1,33 +1,33 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.contained;
+package at.redi2go.photonics.core.rendering.world.registry.block.variant;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
 import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockBuilder;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-public class ContainedBlockEntryImpl implements ContainedBlockEntry {
+public class ContainedBlockEntry implements BlockEntry {
     private final short region;
-    private final ContainedBlockVariant variant;
+    private final BufferBlockHeader header;
 
-    public ContainedBlockEntryImpl(short region, ContainedBlockVariant variant) {
+    public ContainedBlockEntry(short region, BufferBlockHeader header) {
         this.region = region;
-        this.variant = variant;
+        this.header = header;
 
-        variant.acquire();
+        header.acquire();
     }
 
     @Override
     public int skylight() {
-        return variant.skylight();
+        return header.skylight();
     }
 
     @Override
     public int entryData() {
-        variant.awaitAllocated();
-        return variant.begin();
+        return header.begin();
     }
 
     @Override
@@ -49,9 +49,9 @@ public class ContainedBlockEntryImpl implements ContainedBlockEntry {
 
     @Override
     public VoxelEntry toMutableEntry() {
-        var builder = new RegularBlockBuilder(variant.registry());
+        var builder = new RegularBlockBuilder(header.registry());
         builder.initRegion(region);
-        builder.load(variant, ShortSet.of());
+        builder.load(header, ShortSet.of());
 
         return builder;
     }
@@ -63,6 +63,6 @@ public class ContainedBlockEntryImpl implements ContainedBlockEntry {
 
     @Override
     public void close() {
-        variant.close();
+        header.close();
     }
 }

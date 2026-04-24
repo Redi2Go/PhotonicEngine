@@ -8,13 +8,10 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockVoxel;
-import at.redi2go.photonics.core.util.IntPacking;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
 import org.jetbrains.annotations.Nullable;
 
 public class RegularBlockBuilder extends AbstractBlockBuilder {
-    private boolean isEmpty = true;
-
     public RegularBlockBuilder(BufferBlockRegistry registry, RegionMapping mapping) {
         super(registry, mapping);
     }
@@ -50,7 +47,7 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
         var regionBuilder = new RegionBuilder();
 
         var result = buildBlockVoxel(palette, regionBuilder);
-        var blockVoxel = registry.allocateRegularBlockVoxel(result.hash(), result.voxelData());
+        var blockVoxel = registry.allocateBlockVoxel(result.hash(), result.voxelData());
 
         PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
         int[] tint = new int[palette.size()];
@@ -60,19 +57,20 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
             tint[i] = palette.getTint(i);
         }
 
-        var variant = registry.allocateRegularBlockVariant(
-                blockVoxel,
-                skylight,
-                paletteArray,
-                tint
+        return new RegularBlockEntry(
+                regionBuilder,
+                registry.allocateBlockHeader(
+                        blockVoxel,
+                        skylight,
+                        paletteArray,
+                        tint,
+                        BufferBlockHeader.voxelHash(paletteArray, blockVoxel),
+                        BufferBlockHeader.tintHash(tint)
+                )
         );
-
-        variant.acquire();
-
-        return new RegularBlockEntry(regionBuilder, variant);
     }
 
-    private class RegionBuilder extends RegionMapping  implements AbstractBlockBuilder.RegionBuilder {
+    private class RegionBuilder extends RegionMapping implements AbstractBlockBuilder.RegionBuilder {
         public void set(int voxelIndex) {
             setRegion(
                     voxelIndex,

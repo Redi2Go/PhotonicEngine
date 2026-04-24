@@ -8,10 +8,9 @@ import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.BlockPalette;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
-import at.redi2go.photonics.core.util.IntPacking;
-import it.unimi.dsi.fastutil.ints.IntObjectPair;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +19,7 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
 
     protected int skylight = 0;
     protected final MutablePaletteEntry[] data;
+    protected boolean isEmpty = true;
 
     public AbstractBlockBuilder(BufferBlockRegistry registry, RegionMapping mapping) {
         super(mapping);
@@ -42,7 +42,7 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
      *
      * @return {@code true} if this builder is empty
      */
-    public boolean load(AbstractBlockEntry<?> entryData, ShortSet clearedRegions) {
+    public boolean load(BufferBlockHeader entryData, ShortSet clearedRegions) {
         if (!entryData.isAllocated()) throw new IllegalStateException();
 
         int regionCount = regionCount();
@@ -52,9 +52,7 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
             clearedRegions = ShortSet.of();
         } else if (regionCount == 0) clearedRegions = ShortSet.of();
 
-        boolean isEmpty = true;
-
-        AbstractBlockVoxel voxel = entryData.blockVoxel();
+        BufferBlockVoxel voxel = entryData.blockVoxel();
         var buffer = voxel.buffer();
 
         for (int voxelIndex = 0; voxelIndex < RtVoxel.ENTRIES_SIZE; voxelIndex++) {
@@ -74,6 +72,7 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
 
         return isEmpty;
     }
+
 
     @Override
     public int skylight() {

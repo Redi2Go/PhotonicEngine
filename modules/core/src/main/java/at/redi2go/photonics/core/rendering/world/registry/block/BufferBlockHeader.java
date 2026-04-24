@@ -1,15 +1,17 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
-import at.redi2go.photonics.core.rendering.world.registry.AbstractHashedObject;
+import at.redi2go.photonics.core.rendering.world.registry.AbstractBufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
-import it.unimi.dsi.fastutil.longs.LongLongPair;
 
 import java.nio.IntBuffer;
+import java.util.HashSet;
+import java.util.Set;
 
-public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends AbstractHashedObject {
-    private final T blockVoxel;
+public class BufferBlockHeader extends AbstractBufferObject {
+    private final BufferBlockVoxel blockVoxel;
+    private Set<BufferBlockVoxel.Variant> variants;
 
     private final int skylight;
     private final PaletteAllocation[] palette;
@@ -17,9 +19,9 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
 
     private final long hashCode;
 
-    public AbstractBlockEntry(
+    public BufferBlockHeader(
             BufferBlockRegistry registry,
-            T blockVoxel,
+            BufferBlockVoxel blockVoxel,
             int skylight,
             PaletteAllocation[] palette,
             int[] tint,
@@ -35,16 +37,29 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
 
         long hashCode = skylight;
         hashCode = hashCode * 31 + voxelHash;
-        hashCode= hashCode * 31 + tintHash;
+        hashCode = hashCode * 31 + tintHash;
 
         this.hashCode = hashCode;
     }
 
-    public static long voxelHash(PaletteAllocation[] palette, AbstractBlockVoxel blockVoxel) {
-        long hashCode = palette.length;
-        for (int i = 0; i < palette.length; i++) {
-            var entry = palette[i];
+    public void addVariant(BufferBlockVoxel.Variant variant) {
+        synchronized (this) {
+            if (!isOpen) return;
 
+            var variants = this.variants;
+            if (variants == null) {
+                variants = new HashSet<>();
+                this.variants = variants;
+            }
+
+            if (variants.add(variant))
+                variant.acquire();
+        }
+    }
+
+    public static long voxelHash(PaletteAllocation[] palette, BufferBlockVoxel blockVoxel) {
+        long hashCode = palette.length;
+        for (PaletteAllocation entry : palette) {
             entry.awaitAllocated();
             hashCode = hashCode * 31 + entry.begin();
         }
@@ -60,11 +75,6 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         for (int tint : tints)
             hashCode = hashCode * 31 + tint;
 
-        return hashCode;
-    }
-
-    @Override
-    protected long hash() {
         return hashCode;
     }
 
@@ -101,7 +111,7 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
         return registry;
     }
 
-    public T blockVoxel() {
+    public BufferBlockVoxel blockVoxel() {
         return blockVoxel;
     }
 
@@ -114,14 +124,20 @@ public abstract class AbstractBlockEntry<T extends AbstractBlockVoxel> extends A
     }
 
     @Override
-    protected void dispose() {
-        blockVoxel.close();
-        for (var entry : palette)
-            entry.close();
+    protected long hash() {
+        return hashCode;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instanceof AbstractBlockEntry<?> other && hashCode == other.hashCode;
+    protected void dispose() {
+        super.dispose();
+
+        blockVoxel.close();
+        for (var entry : palette) entry.close();
+
+        synchronized (this) {
+            for (var variant : variants)
+                variant.close();
+        }
     }
 }

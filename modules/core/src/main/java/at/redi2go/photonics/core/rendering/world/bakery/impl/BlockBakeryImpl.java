@@ -15,7 +15,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
+import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
@@ -214,8 +214,8 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
         int vertexCount = blockModel.vertexCount;
 
-        var result = registry.newContainedEntry(blockModel.vertexHash);
-        if (!(result instanceof ContainedBlockEntry.Builder builder)) {
+        var result = registry.getBlockProvider(blockModel.vertexHash);
+        if (!(result instanceof BlockVariantBuilder builder)) {
             IntArraySet tint = new IntArraySet();
 
             int index = this.index;

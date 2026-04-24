@@ -3,29 +3,29 @@ package at.redi2go.photonics.core.rendering.world.registry.block.regular;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
 public class RegularBlockEntry extends RegionMapping implements BlockEntry {
-    private final RegularBlockVariant variant;
+    private final BufferBlockHeader header;
 
-    public RegularBlockEntry(RegionMapping regions, RegularBlockVariant variant) {
+    public RegularBlockEntry(RegionMapping regions, BufferBlockHeader header) {
         super(regions);
 
-        this.variant = variant;
+        this.header = header;
+        header.acquire();
     }
 
     @Override
     public int skylight() {
-        return variant.skylight();
+        return header.skylight();
     }
 
     @Override
     public int entryData() {
-        variant.awaitAllocated();
-        return variant.begin();
+        return header.begin();
     }
 
     @Override
@@ -40,25 +40,25 @@ public class RegularBlockEntry extends RegionMapping implements BlockEntry {
 
     @Override
     public @Nullable VoxelEntry removeRegions(ShortSet regions) {
-        var builder = new RegularBlockBuilder(variant.registry(), this);
-        return builder.load(variant, regions) ? null : builder;
+        var builder = new RegularBlockBuilder(header.registry(), this);
+        return builder.load(header, regions) ? null : builder;
     }
 
     @Override
     public VoxelEntry toMutableEntry() {
-        var builder = new RegularBlockBuilder(variant.registry(), this);
-        builder.load(variant, ShortSet.of());
+                var builder = new RegularBlockBuilder(header.registry(), this);
+        builder.load(header, ShortSet.of());
 
         return builder;
     }
 
     @Override
     public @Nullable VoxelEntry build() {
-        return this;
+        return null;
     }
 
     @Override
     public void close() {
-        variant.close();
+
     }
 }

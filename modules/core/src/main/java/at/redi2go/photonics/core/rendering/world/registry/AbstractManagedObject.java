@@ -1,17 +1,15 @@
 package at.redi2go.photonics.core.rendering.world.registry;
 
-import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
-
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public abstract class AbstractHashedObject implements HashedObject {
+public abstract class AbstractManagedObject implements ManagedObject {
     private volatile int count = 0;
     protected final BufferBlockRegistry registry;
 
-    protected MemoryView memory;
+    protected boolean isOpen = false;
 
-    protected AbstractHashedObject(BufferBlockRegistry registry) {
+    protected AbstractManagedObject(BufferBlockRegistry registry) {
         this.registry = registry;
     }
 
@@ -20,20 +18,6 @@ public abstract class AbstractHashedObject implements HashedObject {
     @Override
     public int count() {
         return count;
-    }
-
-    @Override
-    public boolean isAllocated() {
-        return memory != null;
-    }
-
-    @Override
-    public int begin() {
-        return MemoryView.intBufferBegin(memory);
-    }
-
-    protected void initMemory(int byteSize) {
-        memory = registry.allocate(byteSize);
     }
 
     @Override
@@ -64,9 +48,9 @@ public abstract class AbstractHashedObject implements HashedObject {
 
     @Override
     public void free() {
-        if (memory == null) return;
+        if (!isOpen) return;
 
-        memory.close();
+        isOpen = false;
         dispose();
     }
 
@@ -77,7 +61,7 @@ public abstract class AbstractHashedObject implements HashedObject {
 
     @Override
     public boolean equals(Object obj) {
-        return getClass() == obj.getClass() && hash() == ((AbstractHashedObject) obj).hash();
+        return getClass() == obj.getClass() && hash() == ((AbstractManagedObject) obj).hash();
     }
 
     private static final VarHandle HANDLE;
@@ -85,7 +69,7 @@ public abstract class AbstractHashedObject implements HashedObject {
     static {
         try {
             HANDLE = MethodHandles.lookup()
-                    .findVarHandle(AbstractHashedObject.class, "count", int.class);
+                    .findVarHandle(AbstractManagedObject.class, "count", int.class);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

@@ -23,6 +23,10 @@ public class ConcurrentLong2ObjectMap<V> extends PrimitiveConcurrentMap implemen
         }
     }
 
+    public ConcurrentLong2ObjectMap() {
+        this(8);
+    }
+
     @Override
     public int size() {
         return super.size(maps);

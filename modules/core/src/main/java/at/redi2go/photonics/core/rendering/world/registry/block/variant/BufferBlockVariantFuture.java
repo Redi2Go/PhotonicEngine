@@ -1,18 +1,17 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.contained;
+package at.redi2go.photonics.core.rendering.world.registry.block.variant;
 
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.ContainedBlockVoxel;
+import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class ContainedBlockFuture extends CompletableFuture<@Nullable ContainedBlockVoxel> implements ContainedBlockEntry.Factory {
+public class BufferBlockVariantFuture extends CompletableFuture<BufferBlockVoxel.@Nullable Variant> implements BlockProvider {
     @Override
-    public ContainedBlockEntry createVariant(IntArraySet tint, int skylight, short region) {
+    public BlockEntry createVariant(IntArraySet tint, int skylight, short region) {
         try {
             var result = get();
             if (result == null) return null;

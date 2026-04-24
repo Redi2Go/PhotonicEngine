@@ -3,13 +3,12 @@ package at.redi2go.photonics.core.rendering.world.registry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import org.joml.Vector4i;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
-public class PaletteAllocation extends PaletteEntry implements HashedObject {
+public class PaletteAllocation extends PaletteEntry implements BufferObject {
     private volatile int count = 0;
     protected final BufferBlockRegistry registry;
 
