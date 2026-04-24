@@ -16,6 +16,10 @@ import java.util.function.Supplier;
 public interface PhotonicsExtension extends Disposable {
     void onFrameBegin();
 
+    void onSectionLoad(int x, int y, int z);
+
+    void onSectionUnload(int x, int y, int z);
+
     void registerUniforms(IUniformHolder uniforms);
 
     void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms);
@@ -37,6 +41,16 @@ public interface PhotonicsExtension extends Disposable {
     class Disabled implements PhotonicsExtension {
         @Override
         public void onFrameBegin() {
+
+        }
+
+        @Override
+        public void onSectionLoad(int x, int y, int z) {
+
+        }
+
+        @Override
+        public void onSectionUnload(int x, int y, int z) {
 
         }
 

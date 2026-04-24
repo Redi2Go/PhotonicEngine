@@ -33,6 +33,10 @@ public interface VoxelEntry extends Disposable {
         return (entry & Integer.MIN_VALUE) == 0;
     }
 
+    static int entryDiff(int previousEntry, int newEntry) {
+        return (previousEntry & Integer.MIN_VALUE) ^ (newEntry & Integer.MIN_VALUE);
+    }
+
     static int toAir(int value) {
         if ((value & Integer.MIN_VALUE) != 0)
             throw new IllegalArgumentException("Air must be positive");

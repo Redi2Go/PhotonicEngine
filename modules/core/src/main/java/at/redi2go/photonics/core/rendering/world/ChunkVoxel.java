@@ -64,6 +64,7 @@ public class ChunkVoxel extends WorldVoxel {
     @Override
     public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
         initPos(x, y, z);
+        containedRegions.add(region);
 
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
         var entry = voxelData[index];

@@ -6,6 +6,7 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
+import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import it.unimi.dsi.fastutil.Pair;
@@ -14,6 +15,7 @@ import org.joml.Vector3i;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -24,7 +26,7 @@ public class ChunkCompiler implements Runnable, Disposable {
 
     private final SectionQueue sectionQueue;
 
-    private final BlockingQueue<Pair<Vector3i, BlockBakery>> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
+    private final BlockingQueue<BuildResult> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
     private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
 
     private final AtlasDownloader atlasDownloader;
@@ -59,10 +61,9 @@ public class ChunkCompiler implements Runnable, Disposable {
         return bakery;
     }
 
-    public void releaseBakery(BlockBakery bakery) {
+    private void releaseBakery(BlockBakery bakery) {
         bakeryQueue.offer(bakery);
     }
-
 
     @Override
     public void run() {
@@ -111,7 +112,7 @@ public class ChunkCompiler implements Runnable, Disposable {
                     continue;
                 }
 
-                builtSections.put(Pair.of(sectionBlockPos, bakery));
+                builtSections.put(new BuildResult(new Vector3i(sectionCoord), sectionBlockPos, bakery));
             }
         } catch (InterruptedException e) {
 
@@ -120,8 +121,8 @@ public class ChunkCompiler implements Runnable, Disposable {
         }
     }
 
-    public List<Pair<Vector3i, BlockBakery>> takeSections() throws InterruptedException {
-        var result = new ArrayList<Pair<Vector3i, BlockBakery>>();
+    public List<BuildResult> takeSections() throws InterruptedException {
+        var result = new ArrayList<BuildResult>();
         result.add(builtSections.take());
         builtSections.drainTo(result);
 
@@ -132,6 +133,35 @@ public class ChunkCompiler implements Runnable, Disposable {
     public void close() {
         for (var thread : threads)
             thread.interrupt();
+    }
+
+    public class BuildResult implements Disposable{
+        private final Vector3i chunkPos;
+        private final Vector3i chunkBlockPos;
+        private final BlockBakery bakery;
+
+        public BuildResult(Vector3i chunkPos, Vector3i chunkBlockPos, BlockBakery bakery) {
+            this.chunkPos = chunkPos;
+            this.chunkBlockPos = chunkBlockPos;
+            this.bakery = bakery;
+        }
+
+        public Vector3i chunkPos() {
+            return chunkPos;
+        }
+
+        public Vector3i chunkBlockPos() {
+            return chunkBlockPos;
+        }
+
+        public BlockBakery bakery() {
+            return bakery;
+        }
+
+        @Override
+        public void close() {
+            releaseBakery(bakery);
+        }
     }
 //    private final ReentrantLock lock = new ReentrantLock();
 //

@@ -22,6 +22,16 @@ public class TestingExtension implements PhotonicsExtension {
     }
 
     @Override
+    public void onSectionLoad(int x, int y, int z) {
+
+    }
+
+    @Override
+    public void onSectionUnload(int x, int y, int z) {
+
+    }
+
+    @Override
     public void registerUniforms(IUniformHolder uniforms) {
 
     }

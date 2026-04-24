@@ -1,4 +1,4 @@
-package at.redi2go.photonics.common.mixins.mc.client.renderer;
+package at.redi2go.photonics.common.mixins.iris.extension;
 
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;

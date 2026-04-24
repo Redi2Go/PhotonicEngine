@@ -7,15 +7,16 @@
     "iris.ShaderPackMixin",
     "iris.IncludeGraphMixin",
     "iris.pipeline.PipelineManagerMixin",
+    "iris.extension.RenderSectionManagerMixin",
     "iris.pipeline.IrisRenderingPipelineMixin",
     "iris.pipeline.passes.GlProgramMixin",
     "iris.pipeline.passes.ShadowCompositeRendererMixin",
     "iris.pipeline.passes.CompositeRendererMixin",
     "iris.pipeline.passes.FinalPassRendererMixin",
     "iris.pipeline.uniforms.CommonUniformsMixin",
-    "mc.client.renderer.LevelRendererMixin",
+    "iris.extension.LevelRendererMixin",
     "rendering.world.bakery.VertexBuilderMixin",
-    "mc.client.renderer.block.BlockRenderDispatcherMixin"
+    "BlockRenderDispatcherMixin"
   ],
   "mixins": [
 

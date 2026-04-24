@@ -37,22 +37,22 @@ public class SectionQueue {
     }
 
     private void removeDistantSections(Vector3i cameraChunkPos) {
-        double rd = (double) renderDistanceSupplier.getAsInt() * 1.5;
-
-        int newSize = 0;
-
-        for (int i = 0; i < pendingSections; i++) {
-            var entry = sections[i];
-
-            if (entry.distance(cameraChunkPos) > rd) {
-                sections[i] = null;
-                continue;
-            }
-
-            sections[newSize++] = entry;
-        }
-
-        pendingSections = newSize;
+//        double rd = renderDistanceSupplier.getAsInt() * 1.5;
+//
+//        int newSize = 0;
+//
+//        for (int i = 0; i < pendingSections; i++) {
+//            var entry = sections[i];
+//
+//            if (entry.distance(cameraChunkPos) > rd) {
+//                sections[i] = null;
+//                continue;
+//            }
+//
+//            sections[newSize++] = entry;
+//        }
+//
+//        pendingSections = newSize;
     }
 
     private void sortSections(Vector3i cameraChunkPos) {
@@ -76,8 +76,11 @@ public class SectionQueue {
         lock.lockInterruptibly();
 
         try {
-            while (pendingSections == 0)
-                awaitNotEmpty();
+            while (true) {
+                if (pendingSections == 0) {
+                    awaitNotEmpty();
+                    continue;
+                }
 
             var cameraPos = Minecraft.getCameraPos();
             var cameraChunkPos = new Vector3i(
@@ -87,11 +90,13 @@ public class SectionQueue {
             );
 
             sortSections(cameraChunkPos);
+            if (pendingSections == 0) continue;
 
             var top = sections[--pendingSections];
             sections[pendingSections] = null;
 
             return top;
+            }
         } finally {
             lock.unlock();
         }
@@ -101,13 +106,13 @@ public class SectionQueue {
         lock.lock();
 
         try {
-             if (pendingSections == sections.length)
-                 sections = Arrays.copyOf(sections, sections.length << 1);
+            if (pendingSections == sections.length)
+                sections = Arrays.copyOf(sections, sections.length << 1);
 
-             sections[pendingSections++] = new PendingSection(sectionPos);
-             newPending = true;
+            sections[pendingSections++] = new PendingSection(sectionPos);
+            newPending = true;
 
-             notEmpty.signalAll();
+            notEmpty.signalAll();
         } finally {
             lock.unlock();
         }

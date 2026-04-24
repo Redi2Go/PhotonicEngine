@@ -4,6 +4,7 @@ import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
 import at.redi2go.photonics.common.MinecraftBlockMesher;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
+import at.redi2go.photonics.common.test.VoxelizationTestExtension;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import net.irisshaders.iris.Iris;
@@ -35,10 +36,16 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         if (shaderPack == null) return;
 
         var properties = shaderPack.properties();
-        photonics = PhotonicsExtension.create(
-                properties,
-                AtlasDownloaderImpl::new
-        );
+        photonics = new VoxelizationTestExtension(properties, new AtlasDownloaderImpl());
+//        if (!properties.isPhotonicsEnabled()) {
+//            photonics = new PhotonicsExtension.Disabled();
+//        } else {
+//            photonics = new VoxelizationTestExtension(properties, new AtlasDownloaderImpl());
+//        }
+//        photonics = PhotonicsExtension.create(
+//                properties,
+//                AtlasDownloaderImpl::new
+//        );
     }
 
     @Override

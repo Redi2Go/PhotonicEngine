@@ -7,9 +7,9 @@ import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.WorldVoxel;
-import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import it.unimi.dsi.fastutil.Pair;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.joml.Vector3d;
 import org.joml.Vector3i;
 
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +33,8 @@ public class WorldCompiler implements Runnable, Disposable {
     private static final ExecutorService THREAD_POOL;
 
     private final Queue<WorldVoxel> uploadQueue;
+
+    private final Queue<Vector3i> unloadQueue = new ConcurrentLinkedQueue<>();
     private final SectionQueue sectionQueue;
 
     private final ReentrantLock uploadLock = new ReentrantLock();
@@ -52,6 +55,8 @@ public class WorldCompiler implements Runnable, Disposable {
     private WorldOrigin origin = null;
 
     private final ChunkCompiler chunkCompiler;
+
+    private final Set<Vector3i> loadedChunks = ConcurrentHashMap.newKeySet();
     private final Set<ChunkVoxel> chunks = new HashSet<>();
 
     public WorldCompiler(
@@ -64,7 +69,7 @@ public class WorldCompiler implements Runnable, Disposable {
         this.registry = registry;
         this.uploadQueue = new ConcurrentLinkedQueue<>();
         this.renderDistance = renderDistance;
-        this.sectionQueue = new SectionQueue();
+        this.sectionQueue = new SectionQueue(() -> this.renderDistance);
 
         this.rootVoxel = new WorldVoxel(depth, this, registry, heap, uploadQueue);
         this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, sectionQueue);
@@ -93,7 +98,12 @@ public class WorldCompiler implements Runnable, Disposable {
             while (!Thread.interrupted()) {
                 var sections = chunkCompiler.takeSections();
 
+                //freeUnusedBlocks();
+
+                unloadSections();
                 recenter();
+
+                clearPendingSections(sections);
 
                 voxelizeSections(sections);
                 buildSections();
@@ -114,10 +124,33 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     public void submitSection(Vector3i section) {
+        loadedChunks.add(section);
         sectionQueue.submitSection(section);
     }
 
+    public void unloadSection(Vector3i section) {
+        loadedChunks.remove(section);
+        unloadQueue.add(section);
+    }
+
     // compiler steps
+
+    private void unloadSections() {
+        while (!unloadQueue.isEmpty()) {
+            var sectionCoord = unloadQueue.remove();
+            Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
+                    .sub(iorigin)
+                    .mul(16);
+
+            rootVoxel.removeChunk(
+                    sectionVoxelPos.x,
+                    sectionVoxelPos.y,
+                    sectionVoxelPos.z,
+                    toRegion(sectionCoord),
+                    true
+            );
+        }
+    }
 
     private void recenter() throws InterruptedException {
         var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistance);
@@ -138,7 +171,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
         var chunks = new ArrayList<>(this.chunks);
         for (var chunk : chunks)
-            rootVoxel.removeChunk(chunk.x(), chunk.y(), chunk.z());
+            rootVoxel.removeChunk(chunk.x(), chunk.y(), chunk.z(), (short) 0, false);
 
         var offset = iorigin.sub(newOrigin, new Vector3i());
         offset.x = offset.x << 4;
@@ -168,28 +201,28 @@ public class WorldCompiler implements Runnable, Disposable {
         registry.freeUnusedBlocks();
     }
 
-    private void clearPendingSections(List<Vector3i> section) {
+    private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
+        ShortSet regions = new ShortOpenHashSet();
+        for (var section : sections) regions.add(toRegion(section.chunkPos()));
 
+        rootVoxel.removeRegions(regions);
     }
 
-    private void voxelizeSections(List<Pair<Vector3i, BlockBakery>> sections) {
+    private void voxelizeSections(List<ChunkCompiler.BuildResult> sections) {
         for (var builtSection : sections) {
-            var chunkPos = builtSection.first();
-            var section = builtSection.second();
+            try (builtSection) {
+                if (!loadedChunks.contains(builtSection.chunkPos())) continue;
 
-            if (section == null) continue;
+                var chunkBlockPos = builtSection.chunkBlockPos();
+                var sectionBakery = builtSection.bakery();
 
-            bake:
-            {
-                chunkPos.sub(iorigin);
-                if (!rootVoxel.containsChunk(chunkPos))
-                    break bake;
+                chunkBlockPos.sub(iorigin);
+                if (!rootVoxel.containsChunk(chunkBlockPos)) continue;
 
-                section.setChunkOffset(chunkPos);
-                section.bake(rootVoxel, rootVoxel);
+                sectionBakery.setRegion(toRegion(builtSection.chunkPos()));
+                sectionBakery.setChunkOffset(chunkBlockPos);
+                sectionBakery.bake(rootVoxel, rootVoxel);
             }
-
-            chunkCompiler.releaseBakery(section);
         }
     }
 
@@ -239,6 +272,11 @@ public class WorldCompiler implements Runnable, Disposable {
     public void close() {
         compilerThread.interrupt();
         chunkCompiler.close();
+    }
+
+    private static short toRegion(Vector3i chunkPos) {
+        int hash = chunkPos.hashCode();
+        return (short) (hash ^ (hash >>> 16));
     }
 
     private static int snapToSectionPos(int component, int renderDistance) {
