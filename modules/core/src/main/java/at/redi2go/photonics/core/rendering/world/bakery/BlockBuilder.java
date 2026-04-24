@@ -20,7 +20,7 @@ public interface BlockBuilder {
         return useOffset(offset.x, offset.y, offset.z);
     }
 
-    BlockBuilder beginBlock(int blockId, Vector3i blockChunkOffset);
+    BlockBuilder beginBlock(int blockId, @BlockLod int lod, Vector3i blockChunkOffset);
 
     BlockBuilder addVertex(float x, float y, float z);
 

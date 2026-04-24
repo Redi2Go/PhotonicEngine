@@ -6,6 +6,7 @@ import org.joml.Vector3i;
 
 public class BlockModel {
     int blockId = -1;
+    int lod = 0;
     int vertexCount = 0;
     long vertexHash;
 
@@ -18,30 +19,13 @@ public class BlockModel {
 
         vertexCount = builder.intAt(index);
         blockId = builder.intAt(index + 1);
-        vertexHash = builder.longAt(index + 2);
+        lod = builder.intAt(index + 2);
+        vertexHash = builder.longAt(index + 3);
 
-        blockOffset.x = builder.intAt(index + 4);
-        blockOffset.y = builder.intAt(index + 5);
-        blockOffset.z = builder.intAt(index + 6);
+        blockOffset.x = builder.intAt(index + 5);
+        blockOffset.y = builder.intAt(index + 6);
+        blockOffset.z = builder.intAt(index + 7);
 
-        contained = builder.intAt(index + 7);
-    }
-
-    public long hashVertices(BlockBakeryImpl builder, Vertex vertex, IntArraySet tint) {
-        long hash = 1;
-
-        for (int i = 0; i < vertexCount; i++) {
-            vertex.readVertex(builder);
-            if ((i & 3) == 0) tint.add(vertex.tint());
-
-            hash = hash * 31 + Float.hashCode(vertex.x);
-            hash = hash * 31 + Float.hashCode(vertex.y);
-            hash = hash * 31 + Float.hashCode(vertex.z);
-
-            hash = hash * 31 + Float.hashCode(vertex.u());
-            hash = hash * 31 + Float.hashCode(vertex.v());
-        }
-
-        return hash;
+        contained = builder.intAt(index + 8);
     }
 }

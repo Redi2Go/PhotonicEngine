@@ -10,6 +10,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.BaryPos;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockConsumer;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockLod;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
@@ -274,10 +275,12 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             blockModel.readBlock(this);
             if (blockModel.vertexCount == 0) continue;
 
-            if ((blockModel.contained & ~1) == 0)
+            if ((blockModel.contained & ~1) == 0 || (blockModel.lod & BlockLod.CONTAINED) != 0) {
                 bakeContainedBlock(blockConsumer);
-            else
+            } else {
+                pollState();
                 bakeBlockModel(voxelConsumer);
+            }
         }
     }
 
@@ -409,7 +412,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     private int vertexIndex = -1;
 
     @Override
-    public BlockBuilder beginBlock(int blockId, Vector3i blockChunkOffset) {
+    public BlockBuilder beginBlock(int blockId, @BlockLod int lod, Vector3i blockChunkOffset) {
         int index = size;
         size = index + 8;
 
@@ -419,20 +422,21 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
         meshData[index] = 0; // Vertex count
         meshData[index + 1] = blockId;
+        meshData[index + 2] = lod;
 
         // Vertex hash
-        meshData[index + 2] = 0;
-        meshData[index + 3] = 1;
+        meshData[index + 3] = 0;
+        meshData[index + 4] = 1;
 
         // Block offset
 
-        meshData[index + 4] = blockChunkOffset.x;
-        meshData[index + 5] = blockChunkOffset.y;
-        meshData[index + 6] = blockChunkOffset.z;
+        meshData[index + 5] = blockChunkOffset.x;
+        meshData[index + 6] = blockChunkOffset.y;
+        meshData[index + 7] = blockChunkOffset.z;
 
         // contained
 
-        meshData[index + 7] = 0;
+        meshData[index + 8] = 0;
 
         return this;
     }
@@ -445,7 +449,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         int index = vertexIndex;
         if (index == -1) return;
 
-        long hash = longAt(blockIndex + 2);
+        long hash = longAt(blockIndex + 3);
 
         hash = hash * 31 + intAt(vertexIndex);
         hash = hash * 31 + intAt(vertexIndex + 1);
@@ -454,7 +458,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         hash = hash * 31 + intAt(vertexIndex + 4);
         hash = hash * 31 + intAt(vertexIndex + 5);
 
-        putLong(blockIndex + 2, hash);
+        putLong(blockIndex + 3, hash);
     }
 
     @Override
@@ -472,8 +476,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         z += offsetZ;
 
         meshData[blockIndex]++;
-
-        meshData[blockIndex + 7] |= isContained(x) | isContained(y) | isContained(z);
+        meshData[blockIndex + 8] |= isContained(x) | isContained(y) | isContained(z);
 
         meshData[index] = Float.floatToRawIntBits(x);
         meshData[index + 1] = Float.floatToRawIntBits(y);
