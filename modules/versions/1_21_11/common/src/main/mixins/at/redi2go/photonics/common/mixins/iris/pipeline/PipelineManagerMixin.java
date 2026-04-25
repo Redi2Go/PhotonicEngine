@@ -36,16 +36,15 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         if (shaderPack == null) return;
 
         var properties = shaderPack.properties();
-        photonics = new VoxelizationTestExtension(properties, new AtlasDownloaderImpl());
-//        if (!properties.isPhotonicsEnabled()) {
-//            photonics = new PhotonicsExtension.Disabled();
-//        } else {
-//            photonics = new VoxelizationTestExtension(properties, new AtlasDownloaderImpl());
-//        }
-//        photonics = PhotonicsExtension.create(
-//                properties,
-//                AtlasDownloaderImpl::new
-//        );
+        if (!properties.isPhotonicsEnabled()) {
+            photonics = new PhotonicsExtension.Disabled();
+        } else {
+            photonics = new VoxelizationTestExtension(properties, new AtlasDownloaderImpl());
+        }
+        photonics = PhotonicsExtension.create(
+                properties,
+                AtlasDownloaderImpl::new
+        );
     }
 
     @Override

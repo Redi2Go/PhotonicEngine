@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.rendering.world;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.model.AbstractVoxelModel;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
@@ -10,6 +11,8 @@ import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
@@ -31,11 +34,13 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     protected final Queue<WorldVoxel> uploadQueue;
 
     protected final VoxelEntry[] voxelData = new VoxelEntry[RtVoxel.ENTRIES_SIZE];
+    protected final ShortSet containedRegions = new ShortOpenHashSet();
     private int voxelCount = 0;
 
+    private boolean firstUpload = true;
+    private boolean closed = false;
     private final MemoryView memory;
     private boolean updateRequested = false;
-    protected boolean optimized = false;
 
     public WorldVoxel(
             int depth,
@@ -68,12 +73,10 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
 
     protected void incVoxelCount() {
         voxelCount++;
-        optimized = false;
     }
 
     protected void decVoxelCount() {
         voxelCount--;
-        optimized = false;
     }
 
     // Voxel entry methods
@@ -123,6 +126,8 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
             int tint,
             TextureData textureData
     ) {
+        containedRegions.add(region);
+
         getMutableEntry(x, y, z, region)
                 .insertVoxel(x, y, z, region, normal, tint, textureData);
     }
@@ -133,6 +138,8 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
             short region,
             BlockEntry block
     ) {
+        containedRegions.add(region);
+
         getMutableEntry(x, y, z, region)
                 .insertBlock(x, y, z, region, block);
     }
@@ -156,6 +163,15 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
         }
     }
 
+    private boolean containsAnyRegion(ShortSet regions) {
+        for (IntIterator it = regions.intIterator(); it.hasNext(); ) {
+            if (containedRegions.contains((short) it.nextInt()))
+                return true;
+        }
+
+        return false;
+    }
+
     public boolean containsChunk(int x, int y, int z) {
         return containsVoxel(x, y, z) && containsVoxel(x + 15, y + 15, z + 15);
     }
@@ -169,42 +185,96 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
         var entry = voxelData[index];
 
         if (depth == CHUNK_CONTAINER_DEPTH) {
+            if (entry == chunk) {
+                Photonics.LOGGER.warn("set chunk twice");
+
+                containedRegions.addAll(chunk.containedRegions);
+                return;
+            }
+
             if (entry != null)
                 throw new IllegalStateException("Duplicate chunk");
 
             voxelData[index] = chunk;
+
             incVoxelCount();
             requestUpload();
         } else {
             if (entry == null) {
                 entry = newMutableEntry(depth - 1);
                 voxelData[index] = entry;
-                incVoxelCount();
 
+                incVoxelCount();
                 requestUpload();
             }
 
             ((WorldVoxel) entry).insertChunk(x, y, z, chunk);
         }
+
+        containedRegions.addAll(chunk.containedRegions);
     }
 
-    public void removeChunk(int x, int y, int z) {
+    public void removeChunk(
+            int x,
+            int y,
+            int z,
+            short region,
+            boolean freeEmptyVoxels
+    ) {
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
         var entry = voxelData[index];
 
         if (depth == CHUNK_CONTAINER_DEPTH) {
-            if (entry != null)
-                decVoxelCount();
-
             voxelData[index] = null;
-        } else {
-            ((WorldVoxel) entry).removeChunk(x, y, z);
+
+            if (entry != null) {
+                decVoxelCount();
+                requestUpload();
+
+                if (freeEmptyVoxels)
+                    entry.close();
+            }
+        } else if (entry != null) {
+            var worldVoxel = ((WorldVoxel) entry);
+
+            worldVoxel.removeChunk(x, y, z, region, freeEmptyVoxels);
+            if (freeEmptyVoxels && worldVoxel.voxelCount == 0) {
+                worldVoxel.close();
+                voxelData[index] = null;
+
+                decVoxelCount();
+                requestUpload();
+            }
         }
+
+        containedRegions.remove(region);
     }
 
     @Override
     public @Nullable VoxelEntry removeRegions(ShortSet regions) {
-        // TODO
+        for (int i = 0; i < RtVoxel.ENTRIES_SIZE; i++) {
+            var entry = voxelData[i];
+            if (entry == null) continue;
+            if (entry instanceof BlockEntry.Builder) {
+                Photonics.LOGGER.warn("HOW");
+            }
+
+            if (entry instanceof WorldVoxel worldVoxel && !worldVoxel.containsAnyRegion(regions))
+                continue;
+
+            var newEntry = entry.removeRegions(regions);
+            if (entry != newEntry) {
+                entry.close();
+
+                voxelData[i] = newEntry;
+
+                if (newEntry == null) decVoxelCount();
+
+                requestUpload();
+            }
+        }
+
+        containedRegions.removeAll(regions);
 
         return this;
     }
@@ -220,12 +290,18 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     }
 
     public void upload() {
+        if (closed) return;
+
+        int optimized = firstUpload ? 1 : 0;
+        var intBuffer = memory.buffer().asIntBuffer();
+
         int[] data = UPLOAD_ARRAYS.get();
 
         for (int i = 0; i < voxelData.length; i++) {
             var entry = voxelData[i];
 
-            buildEntry: {
+            buildEntry:
+            {
                 if (entry == null) break buildEntry;
 
                 var previous = entry;
@@ -240,22 +316,29 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
                 }
             }
 
-            data[i] = entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entry.entryData());
+            var previousEntry = intBuffer.get(i);
+            var newEntry = entry == null ? VoxelModel.makeAirEntry(i) : VoxelEntry.toData(entry.entryData());
+
+            int diff = VoxelEntry.entryDiff(previousEntry, newEntry);
+
+            optimized |= diff;
+            data[i] = !firstUpload && (diff == 0 && entry == null) ? previousEntry : newEntry;
         }
 
-        if (!optimized) {
+        if (optimized != 0)
             new ModelWrapper(data).optimize();
-            optimized = true;
-        }
 
-        memory.buffer().asIntBuffer().put(0, data);
+        intBuffer.put(0, data);
 
         memory.upload();
+
         updateRequested = false;
+        firstUpload = false;
     }
 
     @Override
     public void close() {
+        closed = true;
         memory.close();
     }
 
