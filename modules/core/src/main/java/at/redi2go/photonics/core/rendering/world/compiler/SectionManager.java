@@ -229,9 +229,10 @@ public class SectionManager {
 
             for (int i = 0; i < pendingSections; i++) {
                 var entry = queue[i];
+                queue[i] = null;
 
                 if (!loadedSections.contains(entry.pos)) {
-                    queue[i] = null;
+                    values.remove(entry.pos);
                     continue;
                 }
 
