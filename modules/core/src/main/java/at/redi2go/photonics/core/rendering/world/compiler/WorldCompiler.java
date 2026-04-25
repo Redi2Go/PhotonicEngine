@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -27,52 +26,47 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.IntSupplier;
 
 public class WorldCompiler implements Runnable, Disposable {
+    public static final int MAX_SECTIONS_PER_RUN = 12;
+
     private static final int THREAD_POOL_SIZE = 3;
     private static final ExecutorService THREAD_POOL;
 
-    private final Queue<WorldVoxel> uploadQueue;
+    private final IntSupplier renderDistanceSupplier;
+    private final SectionManager sectionManager;
+    private final BlockRegistry registry;
 
-    private final Queue<Vector3i> unloadQueue = new ConcurrentLinkedQueue<>();
-    private final SectionQueue sectionQueue;
+    private final Queue<WorldVoxel> uploadQueue;
+    private final WorldVoxel rootVoxel;
+    private final Set<ChunkVoxel> chunks = new HashSet<>();
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean waitingForUpload = false;
     private boolean movingCenter = true;
 
-    private final WorldVoxel rootVoxel;
-    private final BlockRegistry registry;
-
-    private final Thread compilerThread;
-
-    private WorldOrigin mostRecentOrigin;
-
-    private final int renderDistance;
-
     private Vector3i iorigin = null;
     private WorldOrigin origin = null;
 
-    private final ChunkCompiler chunkCompiler;
+    private WorldOrigin mostRecentOrigin;
 
-    private final Set<Vector3i> loadedChunks = ConcurrentHashMap.newKeySet();
-    private final Set<ChunkVoxel> chunks = new HashSet<>();
+    private final Thread compilerThread;
 
     public WorldCompiler(
             int depth,
-            IGpuBufferHeap heap,
-            BlockRegistry registry,
-            AtlasDownloader atlasDownloader,
-            int renderDistance
+            IntSupplier renderDistanceSupplier,
+            SectionManager sectionManager,
+            BlockRegistry blockRegistry,
+            IGpuBufferHeap heap
     ) {
-        this.registry = registry;
-        this.uploadQueue = new ConcurrentLinkedQueue<>();
-        this.renderDistance = renderDistance;
-        this.sectionQueue = new SectionQueue(() -> this.renderDistance);
+        this.renderDistanceSupplier = renderDistanceSupplier;
+        this.sectionManager = sectionManager;
+        this.registry = blockRegistry;
 
+        this.uploadQueue = new ConcurrentLinkedQueue<>();
         this.rootVoxel = new WorldVoxel(depth, this, registry, heap, uploadQueue);
-        this.chunkCompiler = new ChunkCompiler(this, atlasDownloader, registry, sectionQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -83,24 +77,17 @@ public class WorldCompiler implements Runnable, Disposable {
         this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
     }
 
-
     public WorldOrigin origin() {
         return mostRecentOrigin;
-    }
-
-    public int renderDistance() {
-        return renderDistance;
     }
 
     @Override
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                var sections = chunkCompiler.takeSections();
-
-                //freeUnusedBlocks();
-
                 unloadSections();
+
+                var sections = sectionManager.builtSections().drain(MAX_SECTIONS_PER_RUN);
                 recenter();
 
                 clearPendingSections(sections);
@@ -115,34 +102,14 @@ public class WorldCompiler implements Runnable, Disposable {
         }
     }
 
-    public void addChunk(ChunkVoxel chunk) {
-        chunks.add(chunk);
-    }
-
-    public void removeChunk(ChunkVoxel chunk) {
-        chunks.remove(chunk);
-    }
-
-    public void submitSection(Vector3i section) {
-        loadedChunks.add(section);
-        sectionQueue.submitSection(section);
-    }
-
-    public void unloadSection(Vector3i section) {
-        loadedChunks.remove(section);
-        unloadQueue.add(section);
-        chunkCompiler.unloadSection(section);
-    }
-
-    // compiler steps
+    // Compiler Steps
 
     private void unloadSections() {
         if (iorigin == null) return;
 
+        var unloadQueue = sectionManager.unloadedSections();
         while (!unloadQueue.isEmpty()) {
             var sectionCoord = unloadQueue.remove();
-            if (loadedChunks.contains(sectionCoord)) continue;
-
             Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
                     .sub(iorigin)
                     .mul(16);
@@ -158,7 +125,7 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     private void recenter() throws InterruptedException {
-        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistance);
+        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt());
         if (iorigin == null) {
             setOrigin(newOrigin);
             return;
@@ -215,19 +182,15 @@ public class WorldCompiler implements Runnable, Disposable {
 
     private void voxelizeSections(List<ChunkCompiler.BuildResult> sections) {
         for (var builtSection : sections) {
-            try (builtSection) {
-                if (!loadedChunks.contains(builtSection.chunkPos())) continue;
+            var chunkBlockPos = builtSection.chunkBlockPos();
+            var sectionBakery = builtSection.bakery();
 
-                var chunkBlockPos = builtSection.chunkBlockPos();
-                var sectionBakery = builtSection.bakery();
+            chunkBlockPos.sub(iorigin);
+            if (!rootVoxel.containsChunk(chunkBlockPos)) continue;
 
-                chunkBlockPos.sub(iorigin);
-                if (!rootVoxel.containsChunk(chunkBlockPos)) continue;
-
-                sectionBakery.setRegion(toRegion(builtSection.chunkPos()));
-                sectionBakery.setChunkOffset(chunkBlockPos);
-                sectionBakery.bake(rootVoxel, rootVoxel);
-            }
+            sectionBakery.setRegion(toRegion(builtSection.chunkPos()));
+            sectionBakery.setChunkOffset(chunkBlockPos);
+            sectionBakery.bake(rootVoxel, rootVoxel);
         }
     }
 
@@ -239,6 +202,8 @@ public class WorldCompiler implements Runnable, Disposable {
 
         task.awaitPending();
     }
+
+    // Uploading
 
     private void awaitUpload() throws InterruptedException {
         uploadLock.lockInterruptibly();
@@ -273,11 +238,24 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
 
+    // Chunk management
+
+    public void addChunk(ChunkVoxel chunk) {
+        chunks.add(chunk);
+    }
+
+    public void removeChunk(ChunkVoxel chunk) {
+        chunks.remove(chunk);
+    }
+
+
     @Override
     public void close() {
         compilerThread.interrupt();
-        chunkCompiler.close();
     }
+
+
+    // Util
 
     private static short toRegion(Vector3i chunkPos) {
         int hash = chunkPos.hashCode();
@@ -295,6 +273,9 @@ public class WorldCompiler implements Runnable, Disposable {
                 snapToSectionPos((int) cameraPos.z, renderDistance)
         );
     }
+
+
+    // Tasks
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {
         private final AtomicInteger PENDING_TASKS = new AtomicInteger();

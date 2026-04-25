@@ -16,9 +16,9 @@ import java.util.function.Supplier;
 public interface PhotonicsExtension extends Disposable {
     void onFrameBegin();
 
-    void onSectionLoad(int x, int y, int z);
+    void onSectionAdded(int x, int y, int z);
 
-    void onSectionUnload(int x, int y, int z);
+    void onSectionChanged(int x, int y, int z);
 
     void registerUniforms(IUniformHolder uniforms);
 
@@ -45,14 +45,15 @@ public interface PhotonicsExtension extends Disposable {
         }
 
         @Override
-        public void onSectionLoad(int x, int y, int z) {
+        public void onSectionAdded(int x, int y, int z) {
 
         }
 
         @Override
-        public void onSectionUnload(int x, int y, int z) {
+        public void onSectionChanged(int x, int y, int z) {
 
         }
+
 
         @Override
         public void registerUniforms(IUniformHolder uniforms) {

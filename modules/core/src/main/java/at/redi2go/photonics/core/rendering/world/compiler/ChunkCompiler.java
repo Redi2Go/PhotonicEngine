@@ -3,55 +3,40 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
+import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
-import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import it.unimi.dsi.fastutil.Pair;
 import org.joml.Vector3i;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.Vector;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class ChunkCompiler implements Runnable, Disposable {
     private static final int THREAD_COUNT = 2;
-    private static final int MAX_OUTBOUND_SECTIONS = 24;
 
-    private final WorldCompiler compiler;
-    private final SectionQueue sectionQueue;
-
-    private final BlockingQueue<BuildResult> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
-
-    private final ConcurrentMap<Vector3i, Long> sectionHash = new ConcurrentHashMap<>();
-    private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
-
+    private final SectionManager sectionManager;
     private final AtlasDownloader atlasDownloader;
     private final BlockRegistry blockRegistry;
 
-    private Thread[] threads = new Thread[THREAD_COUNT];
+    private final ConcurrentMap<Vector3i, Long> sectionHashes = new ConcurrentHashMap<>();
+    private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
+
+    private final Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
-            WorldCompiler compiler,
+            SectionManager sectionManager,
             AtlasDownloader atlasDownloader,
-            BlockRegistry blockRegistry,
-            SectionQueue sectionQueue
+            BlockRegistry blockRegistry
     ) {
-        this.compiler = compiler;
+        this.sectionManager = sectionManager;
         this.atlasDownloader = atlasDownloader;
         this.blockRegistry = blockRegistry;
-        this.sectionQueue = sectionQueue;
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             var thread = new Thread(this, "Photonic Chunk Compiler #" + i);
@@ -79,20 +64,19 @@ public class ChunkCompiler implements Runnable, Disposable {
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                var sectionCoord = sectionQueue.takeSection();
+                var section = sectionManager.sectionMeshQueue().take();
                 var bakery = nextBakery();
 
-                var level = Minecraft.getLevel();
+                Vector3i sectionBlockPos = section.pos().mul(16, new Vector3i());
+                Vector3i blockChunkOffset = new Vector3i();
+
+                long hash = 0;
+
+                ILevel level = Minecraft.getLevel();
                 if (level == null) {
                     releaseBakery(bakery);
                     continue;
                 }
-
-                Vector3i sectionBlockPos = sectionCoord.mul(16, new Vector3i());
-                Vector3i blockChunkOffset = new Vector3i();
-                boolean hasNonAir = false;
-
-                long hash = 0;
 
                 for (int px = 0; px < 16; px++) {
                     for (int py = 0; py < 16; py++) {
@@ -103,14 +87,13 @@ public class ChunkCompiler implements Runnable, Disposable {
                                     sectionBlockPos.z + pz
                             );
 
-                            var block = level.getBlockState(blockPos);
+                            var block = section.getBlockState(px, py, pz);
                             hash = hash * 31 + block.hashCode();
 
                             if (block.isAir()) continue;
 
                             blockChunkOffset.set(px, py, pz);
 
-                            hasNonAir = true;
                             bakery.submitBlock(
                                     blockChunkOffset,
                                     blockPos,
@@ -121,19 +104,12 @@ public class ChunkCompiler implements Runnable, Disposable {
                     }
                 }
 
-                if (!hasNonAir) {
-                    releaseBakery(bakery);
-                    compiler.unloadSection(sectionCoord);
-
-                    continue;
-                }
-
-                if (Objects.equals(sectionHash.put(sectionCoord, hash), hash)) {
+                if (Objects.equals(sectionHashes.put(section.pos(), hash), hash)) {
                     releaseBakery(bakery);
                     continue;
                 }
 
-                builtSections.put(new BuildResult(new Vector3i(sectionCoord), sectionBlockPos, bakery));
+                sectionManager.builtSections().offer(section.pos(), new BuildResult(section.pos(), sectionBlockPos, bakery));
             }
         } catch (InterruptedException e) {
 
@@ -142,25 +118,13 @@ public class ChunkCompiler implements Runnable, Disposable {
         }
     }
 
-    public List<BuildResult> takeSections() throws InterruptedException {
-        var result = new ArrayList<BuildResult>();
-        result.add(builtSections.take());
-        builtSections.drainTo(result);
-
-        return result;
-    }
-
-    public void unloadSection(Vector3i section) {
-        sectionHash.remove(section);
-    }
-
     @Override
     public void close() {
         for (var thread : threads)
             thread.interrupt();
     }
 
-    public class BuildResult implements Disposable{
+    public class BuildResult implements Disposable {
         private final Vector3i chunkPos;
         private final Vector3i chunkBlockPos;
         private final BlockBakery bakery;

@@ -22,12 +22,12 @@ public class TestingExtension implements PhotonicsExtension {
     }
 
     @Override
-    public void onSectionLoad(int x, int y, int z) {
+    public void onSectionAdded(int x, int y, int z) {
 
     }
 
     @Override
-    public void onSectionUnload(int x, int y, int z) {
+    public void onSectionChanged(int x, int y, int z) {
 
     }
 

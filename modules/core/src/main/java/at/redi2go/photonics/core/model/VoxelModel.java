@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.model;
 
+import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 public interface VoxelModel {
@@ -66,6 +67,12 @@ public interface VoxelModel {
                 (y >> magnitude) & 15,
                 (z >> magnitude) & 15
         );
+    }
+
+    static void fromVoxelIndex(int index, Vector3i out) {
+        out.x = shrinkBits(index);
+        out.y = shrinkBits(index >> 1);
+        out.z = shrinkBits(index >> 2);
     }
 
     static int makeAirEntry(int index) {

@@ -12,18 +12,12 @@ public abstract class RenderSectionManagerMixin {
     @Inject(method = "onSectionAdded", at = @At("HEAD"))
     private void onSectionAdded(int x, int y, int z, CallbackInfo ci) {
         IrisUtil.getPhotonics()
-                .ifPresent(photonics -> photonics.onSectionLoad(x, y, z));
+                .ifPresent(photonics -> photonics.onSectionAdded(x, y, z));
     }
-
-    @Inject(method = "onSectionRemoved", at = @At("HEAD"))
-    private void onSectionRemoved(int x, int y, int z, CallbackInfo ci) {
-        IrisUtil.getPhotonics()
-                .ifPresent(photonics -> photonics.onSectionUnload(x, y, z));
-    }
-
+    
     @Inject(method = "scheduleRebuild", at = @At("HEAD"))
     private void scheduleRebuild(int x, int y, int z, boolean playerChanged, CallbackInfo ci) {
         IrisUtil.getPhotonics()
-                .ifPresent(photonics -> photonics.onSectionLoad(x, y, z));
+                .ifPresent(photonics -> photonics.onSectionChanged(x, y, z));
     }
 }
