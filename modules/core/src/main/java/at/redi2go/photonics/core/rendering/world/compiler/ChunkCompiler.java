@@ -65,6 +65,8 @@ public class ChunkCompiler implements Runnable, Disposable {
         try {
             while (!Thread.interrupted()) {
                 var section = sectionManager.sectionMeshQueue().take();
+                unloadChunks();
+
                 var bakery = nextBakery();
 
                 Vector3i sectionBlockPos = section.pos().mul(16, new Vector3i());
@@ -115,6 +117,16 @@ public class ChunkCompiler implements Runnable, Disposable {
 
         } catch (Throwable e) {
             Photonics.LOGGER.warn("An exception was throw during chunk compilation!", e);
+        }
+    }
+
+    private void unloadChunks() {
+        var unloadQueue = sectionManager.chunkUnloadedSections();
+        while (!unloadQueue.isEmpty()) {
+            var section = unloadQueue.poll();
+            if (section == null) continue;
+
+            sectionHashes.remove(section);
         }
     }
 

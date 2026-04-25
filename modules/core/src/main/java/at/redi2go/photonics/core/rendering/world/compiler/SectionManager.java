@@ -3,6 +3,7 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
+import at.redi2go.photonics.core.Photonics;
 import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NonNls;
 import org.joml.Vector3i;
@@ -26,7 +27,8 @@ import java.util.function.IntSupplier;
 public class SectionManager {
     private final Set<Vector3i> loadedSections = ConcurrentHashMap.newKeySet();
 
-    private final Queue<Vector3i> unloadSections = new ConcurrentLinkedQueue<>();
+    private final Queue<Vector3i> worldCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<Vector3i> chunkCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
 
     private final TaskQueue<SectionCopy> sectionMeshQueue = new TaskQueue<>(-1);
     private final TaskQueue<ChunkCompiler.BuildResult> builtSections = new TaskQueue<>(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
@@ -94,13 +96,19 @@ public class SectionManager {
         }
 
         loadedSections.addAll(discoveredSections);
-        unloadSections.addAll(unloadedSections);
+
+        worldCompilerUnloadQueue.addAll(unloadedSections);
+        chunkCompilerUnloadQueue.addAll(unloadedSections);
 
         sectionMeshQueue.offerMany(sectionsToMesh);
     }
 
-    public Queue<Vector3i> unloadedSections() {
-        return unloadSections;
+    public Queue<Vector3i> worldUnloadedSections() {
+        return worldCompilerUnloadQueue;
+    }
+
+    public Queue<Vector3i> chunkUnloadedSections() {
+        return chunkCompilerUnloadQueue;
     }
 
     public TaskQueue<ChunkCompiler.BuildResult> builtSections() {
@@ -136,7 +144,7 @@ public class SectionManager {
         var copyResult = createCopy(sectionPos, level);
         if (copyResult.isEmpty()) {
             if (loadedSections.remove(sectionPos))
-                unloadSections.add(sectionPos);
+                worldCompilerUnloadQueue.add(sectionPos);
 
             return;
         }

@@ -3,11 +3,11 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.WorldVoxel;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.joml.Vector3d;
@@ -107,7 +107,7 @@ public class WorldCompiler implements Runnable, Disposable {
     private void unloadSections() {
         if (iorigin == null) return;
 
-        var unloadQueue = sectionManager.unloadedSections();
+        var unloadQueue = sectionManager.worldUnloadedSections();
         while (!unloadQueue.isEmpty()) {
             var sectionCoord = unloadQueue.remove();
             Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
