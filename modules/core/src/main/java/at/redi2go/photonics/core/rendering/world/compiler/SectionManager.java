@@ -29,7 +29,7 @@ public class SectionManager {
     private final Queue<Vector3i> unloadSections = new ConcurrentLinkedQueue<>();
 
     private final TaskQueue<SectionCopy> sectionMeshQueue = new TaskQueue<>(-1);
-    private final TaskQueue<ChunkCompiler.BuildResult> buildSections = new TaskQueue<>(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
+    private final TaskQueue<ChunkCompiler.BuildResult> builtSections = new TaskQueue<>(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
 
     private final IntSupplier renderDistanceSupplier;
 
@@ -104,7 +104,7 @@ public class SectionManager {
     }
 
     public TaskQueue<ChunkCompiler.BuildResult> builtSections() {
-        return buildSections;
+        return builtSections;
     }
 
     public TaskQueue<SectionCopy> sectionMeshQueue() {
