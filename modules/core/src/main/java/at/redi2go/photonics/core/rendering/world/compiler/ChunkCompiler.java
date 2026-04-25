@@ -14,11 +14,15 @@ import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 public class ChunkCompiler implements Runnable, Disposable {
     private static final int THREAD_COUNT = 2;
@@ -26,6 +30,7 @@ public class ChunkCompiler implements Runnable, Disposable {
 
     private final SectionQueue sectionQueue;
 
+    private final ConcurrentMap<Vector3i, Long> sectionHash = new ConcurrentHashMap<>();
     private final BlockingQueue<BuildResult> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
     private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
 
@@ -82,6 +87,8 @@ public class ChunkCompiler implements Runnable, Disposable {
                 Vector3i blockChunkOffset = new Vector3i();
                 boolean hasNonAir = false;
 
+                long hash = 0;
+
                 for (int px = 0; px < 16; px++) {
                     for (int py = 0; py < 16; py++) {
                         for (int pz = 0; pz < 16; pz++) {
@@ -92,6 +99,8 @@ public class ChunkCompiler implements Runnable, Disposable {
                             );
 
                             var block = level.getBlockState(blockPos);
+                            hash = hash * 31 + block.hashCode();
+
                             if (block.isAir()) continue;
 
                             blockChunkOffset.set(px, py, pz);
@@ -107,7 +116,7 @@ public class ChunkCompiler implements Runnable, Disposable {
                     }
                 }
 
-                if (!hasNonAir) {
+                if (!hasNonAir || Objects.equals(sectionHash.put(sectionCoord, hash), hash)) {
                     releaseBakery(bakery);
                     continue;
                 }
@@ -127,6 +136,10 @@ public class ChunkCompiler implements Runnable, Disposable {
         builtSections.drainTo(result);
 
         return result;
+    }
+
+    public void unloadSection(Vector3i section) {
+        sectionHash.remove(section);
     }
 
     @Override
@@ -163,23 +176,4 @@ public class ChunkCompiler implements Runnable, Disposable {
             releaseBakery(bakery);
         }
     }
-//    private final ReentrantLock lock = new ReentrantLock();
-//
-//    private List<>
-//
-//    private class QueuedSection extends Vector3i implements Comparable<QueuedSection> {
-//        private float distance = Integer.MAX_VALUE;
-//        private int distMod = mod - 1;
-//
-//        private float getDistance() {
-//            if (mod == distMod) return distance;
-//
-//            return (float) distance(cameraChunkPos);
-//        }
-//
-//        @Override
-//        public int compareTo(@NotNull ChunkCompiler.QueuedSection o) {
-//            return Float.compare(o.getDistance(), getDistance());
-//        }
-//    }
 }

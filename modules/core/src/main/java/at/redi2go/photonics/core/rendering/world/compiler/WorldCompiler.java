@@ -131,6 +131,7 @@ public class WorldCompiler implements Runnable, Disposable {
     public void unloadSection(Vector3i section) {
         loadedChunks.remove(section);
         unloadQueue.add(section);
+        chunkCompiler.unloadSection(section);
     }
 
     // compiler steps
