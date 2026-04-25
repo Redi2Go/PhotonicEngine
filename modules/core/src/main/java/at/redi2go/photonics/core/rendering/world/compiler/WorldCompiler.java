@@ -72,7 +72,7 @@ public class WorldCompiler implements Runnable, Disposable {
         this.sectionQueue = new SectionQueue(() -> this.renderDistance);
 
         this.rootVoxel = new WorldVoxel(depth, this, registry, heap, uploadQueue);
-        this.chunkCompiler = new ChunkCompiler(atlasDownloader, registry, sectionQueue);
+        this.chunkCompiler = new ChunkCompiler(this, atlasDownloader, registry, sectionQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -137,8 +137,12 @@ public class WorldCompiler implements Runnable, Disposable {
     // compiler steps
 
     private void unloadSections() {
+        if (iorigin == null) return;
+
         while (!unloadQueue.isEmpty()) {
             var sectionCoord = unloadQueue.remove();
+            if (loadedChunks.contains(sectionCoord)) continue;
+
             Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
                     .sub(iorigin)
                     .mul(16);

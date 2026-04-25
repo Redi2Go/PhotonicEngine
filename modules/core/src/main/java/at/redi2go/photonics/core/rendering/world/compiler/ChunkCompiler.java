@@ -23,15 +23,18 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ChunkCompiler implements Runnable, Disposable {
     private static final int THREAD_COUNT = 2;
     private static final int MAX_OUTBOUND_SECTIONS = 24;
 
+    private final WorldCompiler compiler;
     private final SectionQueue sectionQueue;
 
-    private final ConcurrentMap<Vector3i, Long> sectionHash = new ConcurrentHashMap<>();
     private final BlockingQueue<BuildResult> builtSections = new ArrayBlockingQueue<>(MAX_OUTBOUND_SECTIONS);
+
+    private final ConcurrentMap<Vector3i, Long> sectionHash = new ConcurrentHashMap<>();
     private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
 
     private final AtlasDownloader atlasDownloader;
@@ -40,10 +43,12 @@ public class ChunkCompiler implements Runnable, Disposable {
     private Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
+            WorldCompiler compiler,
             AtlasDownloader atlasDownloader,
             BlockRegistry blockRegistry,
             SectionQueue sectionQueue
     ) {
+        this.compiler = compiler;
         this.atlasDownloader = atlasDownloader;
         this.blockRegistry = blockRegistry;
         this.sectionQueue = sectionQueue;
@@ -116,7 +121,14 @@ public class ChunkCompiler implements Runnable, Disposable {
                     }
                 }
 
-                if (!hasNonAir || Objects.equals(sectionHash.put(sectionCoord, hash), hash)) {
+                if (!hasNonAir) {
+                    releaseBakery(bakery);
+                    compiler.unloadSection(sectionCoord);
+
+                    continue;
+                }
+
+                if (Objects.equals(sectionHash.put(sectionCoord, hash), hash)) {
                     releaseBakery(bakery);
                     continue;
                 }
