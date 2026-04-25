@@ -65,4 +65,17 @@ public final class MutablePaletteEntry extends PaletteEntry {
 
         return true;
     }
+
+    public void update(int tint, PaletteEntry entry) {
+        this.tint = tint;
+
+        for (int i = 0; i < 6; i++) {
+            var newFace = entry.faces[i];
+            if (newFace == null) continue;
+
+            faces[i] = newFace;
+        }
+
+        hasTransparent |= entry.hasTransparent;
+    }
 }

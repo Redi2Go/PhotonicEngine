@@ -78,8 +78,14 @@ public class ChunkVoxel extends WorldVoxel {
             requestUpload();
         } else if (entry != block) {
             entry.close();
+            block.close();
 
-            voxelData[index] = block;
+            entry = entry.toMutableEntry();
+            entry.insertBlock(x, y, z, region, block);
+
+            voxelData[index] = entry;
+
+
             requestUpload();
         }
     }

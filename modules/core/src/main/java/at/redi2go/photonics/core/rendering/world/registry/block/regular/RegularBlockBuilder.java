@@ -1,14 +1,18 @@
 package at.redi2go.photonics.core.rendering.world.registry.block.regular;
 
+import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
+import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
 import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
 import org.jetbrains.annotations.Nullable;
 
 public class RegularBlockBuilder extends AbstractBlockBuilder {
@@ -20,13 +24,11 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
         super(registry);
     }
 
-    @Override
-    public void insertVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
-        int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
+    private @Nullable MutablePaletteEntry insertEntry(int voxelIndex, short region) {
         MutablePaletteEntry entry = data[voxelIndex];
 
         if (entry != null) {
-            if (getRegion(voxelIndex) != region) return;
+            if (getRegion(voxelIndex) != region) return null;
         } else {
             entry = new MutablePaletteEntry();
             data[voxelIndex] = entry;
@@ -36,7 +38,41 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
 
         isEmpty = false;
 
+        return entry;
+    }
+
+    @Override
+    public void insertVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
+        int voxelIndex = VoxelModel.toVoxelIndex(x & 15, y & 15, z & 15);
+
+        var entry = insertEntry(voxelIndex, region);
+        if (entry == null) return;
+
         entry.update(normal, tint, textureData);
+    }
+
+    @Override
+    public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
+        var header = ((BufferBlockEntry) block).header();
+        if (!header.isAllocated()) throw new IllegalStateException();
+
+        BufferBlockVoxel voxel = header.blockVoxel();
+        var buffer = voxel.buffer();
+
+        for (int voxelIndex = 0; voxelIndex < RtVoxel.ENTRIES_SIZE; voxelIndex++) {
+            int voxelEntry = buffer.get(voxelIndex);
+            if (VoxelEntry.isAir(voxelEntry)) continue;
+
+            voxelEntry = VoxelEntry.getData(voxelEntry) >> 1;
+
+            var paletteEntry = header.getPaletteEntry(voxelEntry);
+            var tint = header.getTint(voxelEntry);
+
+            var entry = insertEntry(voxelIndex, region);
+            if (entry == null) continue;
+
+            entry.update(tint, paletteEntry);
+        }
     }
 
     @Override

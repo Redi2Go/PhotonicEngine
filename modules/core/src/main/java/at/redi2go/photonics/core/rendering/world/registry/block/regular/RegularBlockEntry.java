@@ -4,11 +4,12 @@ import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-public class RegularBlockEntry extends RegionMapping implements BlockEntry {
+public class RegularBlockEntry extends RegionMapping implements BufferBlockEntry {
     private final BufferBlockHeader header;
 
     public RegularBlockEntry(RegionMapping regions, BufferBlockHeader header) {
@@ -16,6 +17,11 @@ public class RegularBlockEntry extends RegionMapping implements BlockEntry {
 
         this.header = header;
         header.acquire();
+    }
+
+    @Override
+    public BufferBlockHeader header() {
+        return header;
     }
 
     @Override
@@ -46,7 +52,7 @@ public class RegularBlockEntry extends RegionMapping implements BlockEntry {
 
     @Override
     public VoxelEntry toMutableEntry() {
-                var builder = new RegularBlockBuilder(header.registry(), this);
+        var builder = new RegularBlockBuilder(header.registry(), this);
         builder.load(header, ShortSet.of());
 
         return builder;

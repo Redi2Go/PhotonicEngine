@@ -3,13 +3,14 @@ package at.redi2go.photonics.core.rendering.world.registry.block.variant;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
 import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
 import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockBuilder;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
-public class ContainedBlockEntry implements BlockEntry {
+public class ContainedBlockEntry implements BufferBlockEntry {
     private final short region;
     private final BufferBlockHeader header;
 
@@ -18,6 +19,11 @@ public class ContainedBlockEntry implements BlockEntry {
         this.header = header;
 
         header.acquire();
+    }
+
+    @Override
+    public BufferBlockHeader header() {
+        return header;
     }
 
     @Override
