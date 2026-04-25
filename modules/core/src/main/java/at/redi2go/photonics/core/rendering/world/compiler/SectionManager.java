@@ -54,6 +54,8 @@ public class SectionManager {
         Set<Vector3i> unloadedSections = new HashSet<>();
         List<Pair<Vector3i, SectionCopy>> sectionsToMesh = new ArrayList<>();
 
+        rd+= 2;
+
         for (int px = -rd; px <= rd; px++) {
             for (int pz = -rd; pz <= rd; pz++) {
                 int sectionX = cameraPos.x + px;

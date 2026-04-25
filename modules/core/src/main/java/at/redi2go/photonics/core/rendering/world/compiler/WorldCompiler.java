@@ -125,7 +125,7 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     private void recenter() throws InterruptedException {
-        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt());
+        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt() + 3);
         if (iorigin == null) {
             setOrigin(newOrigin);
             return;
