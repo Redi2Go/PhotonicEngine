@@ -15,7 +15,7 @@ public class BlockModel {
     int contained;
 
     public void readBlock(BlockBakeryImpl builder) {
-        int index = builder.read(8);
+        int index = builder.read(9);
 
         vertexCount = builder.intAt(index);
         blockId = builder.intAt(index + 1);

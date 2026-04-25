@@ -414,7 +414,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     @Override
     public BlockBuilder beginBlock(int blockId, @BlockLod int lod, Vector3i blockChunkOffset) {
         int index = size;
-        size = index + 8;
+        size = index + 9;
 
         requireCapacity(size);
 
