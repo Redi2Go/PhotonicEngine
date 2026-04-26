@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.block;
+package at.redi2go.photonics.core.rendering.world.registry.buffer.block;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
@@ -8,9 +8,7 @@ import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.BlockPalette;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +70,6 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
 
         return isEmpty;
     }
-
 
     @Override
     public int skylight() {
@@ -140,11 +137,6 @@ public abstract class AbstractBlockBuilder extends RegionMapping implements Bloc
         }
 
         return new BuildResult(hash, voxelData);
-    }
-
-    @Override
-    public void close() {
-        //not used
     }
 
     protected  record BuildResult(long hash, int[] voxelData) {}

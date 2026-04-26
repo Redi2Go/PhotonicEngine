@@ -1,22 +1,24 @@
-package at.redi2go.photonics.core.rendering.world.registry;
+package at.redi2go.photonics.core.rendering.world.registry.buffer;
 
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
-import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
-import at.redi2go.photonics.core.rendering.world.registry.block.regular.RegularBlockBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.block.variant.BufferBlockVariantBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.block.variant.BufferBlockVariantFuture;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockVoxel;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.regular.RegularBlockBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant.BufferBlockVariantBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant.BufferBlockVariantFuture;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -28,8 +30,8 @@ public class BufferBlockRegistry implements BlockRegistry {
     private final PaletteTexture paletteTexture;
 
     private final ConcurrentLong2ObjectMap<BlockProvider> blockVariants = new ConcurrentLong2ObjectMap<>();
-    private final ConcurrentHashMap<Object, ManagedObject> hashedObjectCache = new ConcurrentHashMap<>();
-    private final Set<ManagedObject> freeQueue = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<Object, BufferObject<?, ?>> hashedObjectCache = new ConcurrentHashMap<>();
+    final Queue<Disposable> freeQueue = new ConcurrentLinkedQueue<>();
 
     private final ExecutorService optimizationService =
             Executors.newSingleThreadExecutor((r) -> new Thread(r, "Photonics Optimization Thread"));
@@ -42,9 +44,37 @@ public class BufferBlockRegistry implements BlockRegistry {
         this.paletteTexture = paletteTexture;
     }
 
-    @Override
-    public BlockEntry.Builder newBlockBuilder() {
-        return new RegularBlockBuilder(this);
+    public int size() {
+        return hashedObjectCache.size();
+    }
+
+    // Hashed objects
+
+    @SuppressWarnings("unchecked")
+    private <T extends BufferObject<U, ?>, K, U> BufferObject.ManagedRef<U> cacheObject(
+            K key,
+            Function<K, T> supplier,
+            Consumer<T> allocator
+    ) {
+        var value = hashedObjectCache.get(key);
+        if (value != null) return (BufferObject.ManagedRef<U>) value.makeManagedRef();
+
+        var newValue = supplier.apply(key);
+        var result = hashedObjectCache.putIfAbsent(newValue, newValue);
+        if (result == null) {
+            allocator.accept(newValue);
+            return newValue.makeManagedRef();
+        }
+
+        return (BufferObject.ManagedRef<U>) result.makeManagedRef();
+    }
+
+    void removeObject(BufferObject<?, ?> obj) {
+        hashedObjectCache.remove(obj);
+    }
+
+    public void removeBlockVariant(long vertexHash) {
+        blockVariants.remove(vertexHash);
     }
 
     @Override
@@ -62,69 +92,43 @@ public class BufferBlockRegistry implements BlockRegistry {
         return builderResult[0] == null ? result : builderResult[0];
     }
 
-    // Hashed objects
-
-        @SuppressWarnings("unchecked")
-    private <T extends ManagedObject, K> T cacheObject(
-            K key,
-            Function<K, T> supplier,
-            Consumer<T> allocator
-    ) {
-        var value = hashedObjectCache.get(key);
-        if (value != null) return (T) value;
-
-        var newValue = supplier.apply(key);
-        var result = hashedObjectCache.putIfAbsent(newValue, newValue);
-        if (result == null) {
-            allocator.accept(newValue);
-            return newValue;
-        }
-
-        return (T) result;
-    }
-
-    public void freeObject(ManagedObject object) {
-        freeQueue.add(object);
-    }
-
-    public void freeBlockVariant(long vertexHash) {
-        blockVariants.remove(vertexHash);
+    @Override
+    public BlockEntry.Builder newBlockBuilder() {
+        return new RegularBlockBuilder(this);
     }
 
     @Override
     public void freeUnusedBlocks() {
-        for (var obj : freeQueue) {
-            if (obj.count() > 0) continue;
+        while (!freeQueue.isEmpty()) {
+            var handle = freeQueue.poll();
+            if (handle == null) return;
 
-            obj.free();
-            hashedObjectCache.remove(obj);
+            handle.close();
         }
-
-        freeQueue.clear();
     }
 
     @Override
     public void scheduleOptimization(Runnable runnable) {
         try {
             optimizationService.execute(runnable);
-        } catch(RejectedExecutionException e) {
+        } catch (RejectedExecutionException e) {
             // Nothing
         }
     }
 
     // Allocation methods
 
-    public PaletteAllocation allocatePalette(PaletteEntry entry) {
+    public BufferObject.ManagedRef<BufferPaletteObject.Entry> allocatePalette(PaletteEntry entry) {
         entry.computeHashCode();
 
         return cacheObject(
                 entry,
-                e -> new PaletteAllocation(e, this),
+                e -> new BufferPaletteObject(e, this),
                 e -> e.allocate(paletteTexture)
         );
     }
 
-    public BufferBlockVoxel allocateBlockVoxel(long hashCode, int[] data) {
+    public BufferObject.ManagedRef<BufferBlockVoxel> allocateBlockVoxel(long hashCode, int[] data) {
         return cacheObject(
                 new BufferBlockVoxel(this, hashCode),
                 e -> e,
@@ -132,10 +136,10 @@ public class BufferBlockRegistry implements BlockRegistry {
         );
     }
 
-    public BufferBlockHeader allocateBlockHeader(
-            BufferBlockVoxel blockVoxel,
+    public BufferObject.ManagedRef<BufferBlockHeader> allocateBlockHeader(
+            BufferObject.ManagedRef<BufferBlockVoxel> blockVoxel,
             int skylight,
-            PaletteAllocation[] palette,
+            List<BufferObject.ManagedRef<BufferPaletteObject.Entry>> palette,
             int[] tint,
             long voxelHash,
             long tintHash
@@ -147,10 +151,10 @@ public class BufferBlockRegistry implements BlockRegistry {
         );
     }
 
-    // Local methods
     public MemoryView allocate(int byteSize) {
         return heap.allocateOrThrow(byteSize);
     }
+
 
     @Override
     public void close() {

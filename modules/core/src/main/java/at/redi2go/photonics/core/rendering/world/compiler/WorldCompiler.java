@@ -5,9 +5,10 @@ import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
-import at.redi2go.photonics.core.rendering.world.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
-import at.redi2go.photonics.core.rendering.world.WorldVoxel;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.tree.ChunkVoxel;
+import at.redi2go.photonics.core.rendering.world.tree.WorldVoxel;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.joml.Vector3d;
@@ -66,7 +67,7 @@ public class WorldCompiler implements Runnable, Disposable {
         this.registry = blockRegistry;
 
         this.uploadQueue = new ConcurrentLinkedQueue<>();
-        this.rootVoxel = new WorldVoxel(depth, this, registry, heap, uploadQueue);
+        this.rootVoxel = WorldVoxel.create(depth, this, registry, heap, uploadQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -86,6 +87,9 @@ public class WorldCompiler implements Runnable, Disposable {
         try {
             while (!Thread.interrupted()) {
                 unloadSections();
+                rootVoxel.pruneEmptyVoxels();
+
+                registry.freeUnusedBlocks();
 
                 var sections = sectionManager.builtSections().drain(MAX_SECTIONS_PER_RUN);
                 recenter();
@@ -118,8 +122,7 @@ public class WorldCompiler implements Runnable, Disposable {
                     sectionVoxelPos.x,
                     sectionVoxelPos.y,
                     sectionVoxelPos.z,
-                    toRegion(sectionCoord),
-                    true
+                    toRegion(sectionCoord)
             );
         }
     }
@@ -143,7 +146,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
         var chunks = new ArrayList<>(this.chunks);
         for (var chunk : chunks)
-            rootVoxel.removeChunk(chunk.x(), chunk.y(), chunk.z(), (short) 0, false);
+            rootVoxel.removeChunkUnsafe(chunk.x(), chunk.y(), chunk.z());
 
         var offset = iorigin.sub(newOrigin, new Vector3i());
         offset.x = offset.x << 4;
@@ -161,16 +164,11 @@ public class WorldCompiler implements Runnable, Disposable {
             }
 
             rootVoxel.insertChunk(newX, newY, newZ, chunk);
-            chunk.updatePos(newX, newY, newZ);
         }
 
-        rootVoxel.removeEmptyVoxels();
+        rootVoxel.pruneEmptyVoxels();
 
         setOrigin(newOrigin);
-    }
-
-    private void freeUnusedBlocks() {
-        registry.freeUnusedBlocks();
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {

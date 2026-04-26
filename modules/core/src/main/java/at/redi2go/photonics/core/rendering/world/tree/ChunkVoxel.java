@@ -1,11 +1,14 @@
-package at.redi2go.photonics.core.rendering.world;
+package at.redi2go.photonics.core.rendering.world.tree;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
+import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Queue;
 
@@ -43,7 +46,7 @@ public class ChunkVoxel extends WorldVoxel {
         compiler.addChunk(this);
     }
 
-    public void updatePos(int x, int y, int z) {
+    void updatePos(int x, int y, int z) {
         this.x = x & -16;
         this.y = y & -16;
         this.z = z & -16;
@@ -67,27 +70,35 @@ public class ChunkVoxel extends WorldVoxel {
         containedRegions.add(region);
 
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
-        var entry = voxelData[index];
+        final var entry = getEntry(index);
+        VoxelEntry newEntry;
 
-        initPos(x, y, z);
+        if (entry != null) {
+            newEntry = entry.toMutableEntry();
+            newEntry.insertBlock(x, y, z, region, block);
+        } else newEntry = block;
 
-        if (entry == null) {
-            voxelData[index] = block;
-            incVoxelCount();
+        setEntry(index, entry, newEntry);
+    }
 
-            requestUpload();
-        } else if (entry != block) {
-            entry.close();
-            block.close();
+    @Override
+    public void pruneEmptyVoxels() {
+        // Nothing to prune
+    }
 
-            entry = entry.toMutableEntry();
-            entry.insertBlock(x, y, z, region, block);
+    @Override
+    public void insertChunk(int x, int y, int z, ChunkVoxel chunk) {
+        throw new UnsupportedOperationException("insertChunk");
+    }
 
-            voxelData[index] = entry;
+    @Override
+    public void removeChunk(int x, int y, int z, short region) {
+        throw new UnsupportedOperationException("removeChunk");
+    }
 
-
-            requestUpload();
-        }
+    @Override
+    public void removeChunkUnsafe(int x, int y, int z) {
+        throw new UnsupportedOperationException("removeChunkUnsafe");
     }
 
     @Override

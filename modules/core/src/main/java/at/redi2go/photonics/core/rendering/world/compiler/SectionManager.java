@@ -3,9 +3,9 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
-import at.redi2go.photonics.core.Photonics;
 import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NonNls;
+import org.joml.Vector2i;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
@@ -25,7 +25,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntSupplier;
 
 public class SectionManager {
-    private final Set<Vector3i> loadedSections = ConcurrentHashMap.newKeySet();
+    private Set<Vector2i> loadedChunks = Set.of();
+    private final Set<Vector3i> notEmptySections = ConcurrentHashMap.newKeySet();
 
     private final Queue<Vector3i> worldCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
     private final Queue<Vector3i> chunkCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
@@ -48,20 +49,17 @@ public class SectionManager {
 
         if (rd == lastRenderDistance && Objects.equals(lastCameraPos, cameraPos)) return;
 
-        lastCameraPos = cameraPos;
-        lastRenderDistance = rd;
-
-
+        Set<Vector2i> discoveredChunks = new HashSet<>();
         Set<Vector3i> discoveredSections = new HashSet<>();
         Set<Vector3i> unloadedSections = new HashSet<>();
         List<Pair<Vector3i, SectionCopy>> sectionsToMesh = new ArrayList<>();
-
-        rd+= 2;
 
         for (int px = -rd; px <= rd; px++) {
             for (int pz = -rd; pz <= rd; pz++) {
                 int sectionX = cameraPos.x + px;
                 int sectionZ = cameraPos.z + pz;
+
+                discoveredChunks.add(new Vector2i(sectionX, sectionZ));
 
                 var chunk = level.getChunkOrNull(sectionX, sectionZ);
                 if (chunk == null) continue;
@@ -81,13 +79,13 @@ public class SectionManager {
 
                     discoveredSections.add(sectionCoord);
 
-                    if (!loadedSections.contains(sectionCoord))
+                    if (!notEmptySections.contains(sectionCoord))
                         sectionsToMesh.add(Pair.of(sectionCoord, new SectionCopy(sectionCoord, section)));
                 }
             }
         }
 
-        for (var itr = loadedSections.iterator(); itr.hasNext(); ) {
+        for (var itr = notEmptySections.iterator(); itr.hasNext(); ) {
             var section = itr.next();
             if (discoveredSections.contains(section)) continue;
 
@@ -95,7 +93,12 @@ public class SectionManager {
             unloadedSections.add(section);
         }
 
-        loadedSections.addAll(discoveredSections);
+        notEmptySections.addAll(discoveredSections);
+
+        loadedChunks = discoveredChunks;
+
+        lastCameraPos = cameraPos;
+        lastRenderDistance = rd;
 
         worldCompilerUnloadQueue.addAll(unloadedSections);
         chunkCompilerUnloadQueue.addAll(unloadedSections);
@@ -139,11 +142,11 @@ public class SectionManager {
         ILevel level = Minecraft.getLevel();
         if (level == null) return;
 
-        if (!loadedSections.contains(sectionPos)) return;
+        if (!notEmptySections.contains(sectionPos)) return;
 
         var copyResult = createCopy(sectionPos, level);
         if (copyResult.isEmpty()) {
-            if (loadedSections.remove(sectionPos))
+            if (notEmptySections.remove(sectionPos))
                 worldCompilerUnloadQueue.add(sectionPos);
 
             return;
@@ -158,13 +161,14 @@ public class SectionManager {
         if (level == null) return;
 
         refreshSections(level);
-        if (loadedSections.contains(sectionPos)) return;
+        if (!loadedChunks.contains(new Vector2i(sectionPos.x, sectionPos.z))) return;
+        if (notEmptySections.contains(sectionPos)) return;
 
         var copyResult = createCopy(sectionPos, level);
         if (copyResult.isEmpty()) return;
 
         var section = copyResult.get();
-        loadedSections.add(section.pos());
+        notEmptySections.add(section.pos());
         sectionMeshQueue.offer(section.pos(), section);
     }
 
@@ -198,6 +202,8 @@ public class SectionManager {
         private final int maxCapacity;
 
         private Vector3i lastCameraPos = null;
+        private int lastRenderDistance = 0;
+
         private boolean newPending = false;
 
         private int mod = 0;
@@ -239,7 +245,7 @@ public class SectionManager {
                 var entry = queue[i];
                 queue[i] = null;
 
-                if (!loadedSections.contains(entry.pos)) {
+                if (!notEmptySections.contains(entry.pos)) {
                     values.remove(entry.pos);
                     continue;
                 }
@@ -247,15 +253,24 @@ public class SectionManager {
                 queue[newSize++] = entry;
             }
 
+            if (pendingSections != newSize)
+                notFull.signalAll();
+
             pendingSections = newSize;
         }
 
         private void sortSections() {
             var cameraChunkPos = getCameraChunkPos();
-            if (!newPending && Objects.equals(cameraChunkPos, lastCameraPos)) return;
+
+            if (
+                    !newPending &&
+                            SectionManager.this.lastRenderDistance == lastRenderDistance &&
+                            Objects.equals(cameraChunkPos, lastCameraPos)
+            ) return;
 
             newPending = false;
             lastCameraPos = cameraChunkPos;
+            lastRenderDistance = SectionManager.this.lastRenderDistance;
 
             removeUnloadedSections();
 
@@ -332,7 +347,7 @@ public class SectionManager {
                 while (pendingSections == queue.length)
                     awaitNotFull();
 
-                if (!loadedSections.contains(sectionCoord)) return;
+                if (!notEmptySections.contains(sectionCoord)) return;
 
                 var previousValue = values.put(sectionCoord, element);
                 if (previousValue != null) return;
@@ -361,7 +376,7 @@ public class SectionManager {
                     var sectionCoord = pair.left();
                     var element = pair.right();
 
-                    if (!loadedSections.contains(sectionCoord)) continue;
+                    if (!notEmptySections.contains(sectionCoord)) continue;
 
                     var previousValue = values.put(sectionCoord, element);
                     if (previousValue != null) continue;

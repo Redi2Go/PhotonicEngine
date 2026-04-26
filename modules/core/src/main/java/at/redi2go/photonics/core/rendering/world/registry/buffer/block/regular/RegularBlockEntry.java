@@ -1,37 +1,42 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.regular;
+package at.redi2go.photonics.core.rendering.world.registry.buffer.block.regular;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.RegionMapping;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockEntry;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockEntry;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockVoxel;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 public class RegularBlockEntry extends RegionMapping implements BufferBlockEntry {
-    private final BufferBlockHeader header;
+    private final BufferObject.Ref<BufferBlockHeader> header;
 
-    public RegularBlockEntry(RegionMapping regions, BufferBlockHeader header) {
+    public RegularBlockEntry(
+            RegionMapping regions,
+            @NonNls BufferObject.Ref<BufferBlockHeader> header
+    ) {
         super(regions);
 
         this.header = header;
-        header.acquire();
     }
 
     @Override
     public BufferBlockHeader header() {
-        return header;
+        return header.get();
     }
 
     @Override
     public int skylight() {
-        return header.skylight();
+        return header().skylight();
     }
 
     @Override
     public int entryData() {
-        return header.begin();
+        return header().begin();
     }
 
     @Override
@@ -46,14 +51,14 @@ public class RegularBlockEntry extends RegionMapping implements BufferBlockEntry
 
     @Override
     public @Nullable VoxelEntry removeRegions(ShortSet regions) {
-        var builder = new RegularBlockBuilder(header.registry(), this);
-        return builder.load(header, regions) ? null : builder;
+        var builder = new RegularBlockBuilder(header().registry(), this);
+        return builder.load(header(), regions) ? null : builder;
     }
 
     @Override
     public VoxelEntry toMutableEntry() {
-        var builder = new RegularBlockBuilder(header.registry(), this);
-        builder.load(header, ShortSet.of());
+        var builder = new RegularBlockBuilder(header().registry(), this);
+        builder.load(header(), ShortSet.of());
 
         return builder;
     }
@@ -65,6 +70,6 @@ public class RegularBlockEntry extends RegionMapping implements BufferBlockEntry
 
     @Override
     public void close() {
-
+        header.close();
     }
 }

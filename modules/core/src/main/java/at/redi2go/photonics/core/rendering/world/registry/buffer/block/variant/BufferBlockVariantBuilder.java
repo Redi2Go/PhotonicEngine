@@ -1,17 +1,20 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.variant;
+package at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant;
 
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
-import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
-import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteObject;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.AbstractBlockBuilder;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements BlockVariantBuilder {
     private final long vertexHash;
@@ -64,6 +67,7 @@ public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements B
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public @Nullable BlockEntry build() {
         if (isEmpty) {
             future.complete(null);
@@ -73,7 +77,7 @@ public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements B
         var palette = buildPalette();
         var result = buildBlockVoxel(palette, EmptyRegionBuilder.INSTANCE);
 
-        PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
+        BufferObject.ManagedRef<BufferPaletteObject.Entry>[] paletteArray = new BufferObject.ManagedRef[palette.size()];
         int[] tintMappings = new int[palette.size()];
         IntArraySet tints = new IntArraySet();
 
@@ -90,20 +94,25 @@ public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements B
                 result.voxelData()
         );
 
-        var variant = blockVoxel.newVariant(
+        var variant = blockVoxel.get().newVariant(
                 vertexHash,
-                tintMappings,
-                paletteArray
+                List.of(paletteArray),
+                tintMappings
         );
 
         future.complete(variant);
 
-        return variant.createVariant(tints, skylight, singleGetRegion());
+        return variant.get().createVariant(tints, skylight, singleGetRegion());
     }
 
     @Override
     public @Nullable BlockEntry createVariant(IntArraySet tint, int skylight, short region) {
         throw new UnsupportedOperationException("createVariant");
+    }
+
+    @Override
+    public void close() {
+
     }
 
 

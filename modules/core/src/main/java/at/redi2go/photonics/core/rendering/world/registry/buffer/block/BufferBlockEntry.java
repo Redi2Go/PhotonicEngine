@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.block;
+package at.redi2go.photonics.core.rendering.world.registry.buffer.block;
 
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 

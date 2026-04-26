@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.regular;
+package at.redi2go.photonics.core.rendering.world.registry.buffer.block.regular;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
@@ -7,13 +7,16 @@ import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import at.redi2go.photonics.core.rendering.world.registry.BufferBlockRegistry;
-import at.redi2go.photonics.core.rendering.world.registry.PaletteAllocation;
-import at.redi2go.photonics.core.rendering.world.registry.block.AbstractBlockBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockEntry;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockHeader;
-import at.redi2go.photonics.core.rendering.world.registry.block.BufferBlockVoxel;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteObject;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.AbstractBlockBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockEntry;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockVoxel;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class RegularBlockBuilder extends AbstractBlockBuilder {
     public RegularBlockBuilder(BufferBlockRegistry registry, RegionMapping mapping) {
@@ -76,6 +79,7 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public @Nullable BlockEntry build() {
         if (isEmpty) return null;
 
@@ -85,7 +89,7 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
         var result = buildBlockVoxel(palette, regionBuilder);
         var blockVoxel = registry.allocateBlockVoxel(result.hash(), result.voxelData());
 
-        PaletteAllocation[] paletteArray = new PaletteAllocation[palette.size()];
+        BufferObject.ManagedRef<BufferPaletteObject.Entry>[] paletteArray = new BufferObject.ManagedRef[palette.size()];
         int[] tint = new int[palette.size()];
 
         for (int i = 0; i < palette.size(); i++) {
@@ -93,17 +97,24 @@ public class RegularBlockBuilder extends AbstractBlockBuilder {
             tint[i] = palette.getTint(i);
         }
 
+        var paletteList = List.of(paletteArray);
+
         return new RegularBlockEntry(
                 regionBuilder,
                 registry.allocateBlockHeader(
                         blockVoxel,
                         skylight,
-                        paletteArray,
+                        paletteList,
                         tint,
-                        BufferBlockHeader.voxelHash(paletteArray, blockVoxel),
+                        BufferBlockHeader.voxelHash(paletteList, blockVoxel.get()),
                         BufferBlockHeader.tintHash(tint)
-                )
+                ).elevate()
         );
+    }
+
+    @Override
+    public void close() {
+
     }
 
     private class RegionBuilder extends RegionMapping implements AbstractBlockBuilder.RegionBuilder {
