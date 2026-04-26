@@ -419,6 +419,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
         requireCapacity(size);
 
         blockIndex = index;
+        vertexIndex = -1;
 
         meshData[index] = 0; // Vertex count
         meshData[index + 1] = blockId;
