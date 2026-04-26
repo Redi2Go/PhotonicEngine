@@ -55,8 +55,8 @@ public class WorldCompiler implements Runnable, Disposable {
     private final Vector3i maxVoxel = new Vector3i();
 
     private WorldOrigin mostRecentOrigin;
-    private Vector3f mostRecentMinVoxel;
-    private Vector3f mostRecentMaxVoxel;
+    private Vector3f mostRecentMinVoxel = new Vector3f();
+    private Vector3f mostRecentMaxVoxel = new Vector3f();
 
     private final Thread compilerThread;
 
