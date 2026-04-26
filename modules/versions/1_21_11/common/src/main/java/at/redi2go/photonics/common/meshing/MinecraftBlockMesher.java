@@ -1,9 +1,10 @@
-package at.redi2go.photonics.common;
+package at.redi2go.photonics.common.meshing;
 
 import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.common.BlockRenderDispatcherExt;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockLod;
@@ -11,21 +12,34 @@ import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.SpawnerRenderer;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.state.LevelRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MinecraftBlockMesher implements BlockMesher {
     private final ThreadLocal<Renderer> renderer = ThreadLocal.withInitial(Renderer::new);
@@ -75,7 +89,13 @@ public class MinecraftBlockMesher implements BlockMesher {
                 fluidState
         );
 
-        //TODO: Block entities (VERY FUN!!!!)
+        if (blockState.hasBlockEntity()) {
+            renderer.submitBlockState(
+                    blockState,
+                    blockAndTintGetter,
+                    builder
+            );
+        }
 
         if (blockState.getRenderShape() == RenderShape.MODEL) {
             renderer.submitBlock(
@@ -93,6 +113,30 @@ public class MinecraftBlockMesher implements BlockMesher {
         private final List<BlockModelPart> parts = new ArrayList<>();
         private final BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
         private final PoseStack poseStack = new PoseStack();
+
+        private final BlockBuilderBufferSource bufferSource = new BlockBuilderBufferSource();
+
+        private final LevelRenderState levelRenderState = new LevelRenderState();
+        private final SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
+        private final FeatureRenderDispatcher featureRenderDispatcher = new FeatureRenderDispatcher(
+                submitNodeStorage,
+                blockRenderer,
+                bufferSource,
+                Minecraft.getInstance().getAtlasManager(),
+                EmptyOutlineBufferSource.INSTANCE,
+                EmptyBufferSource.INSTANCE,
+                Minecraft.getInstance().font
+        );
+
+        public Renderer() {
+            var featureRenderer = (FeatureRendererExt) featureRenderDispatcher;
+
+            featureRenderer.setRenderShadows(false);
+            featureRenderer.setRenderFlames(false);
+            featureRenderer.setRenderNametags(false);
+            featureRenderer.setRenderText(false);
+            featureRenderer.setRenderParticles(false);
+        }
 
         private static final Id BLOCK_ATLAS = (Id) (Object) TextureAtlas.LOCATION_BLOCKS;
 
@@ -133,6 +177,46 @@ public class MinecraftBlockMesher implements BlockMesher {
                     .tesselateWithoutAO(blockAndTintGetter, parts, blockState, pos, poseStack, (VertexConsumer) builder, false, OverlayTexture.NO_OVERLAY);
 
             poseStack.popPose();
+        }
+
+        private static final Set<Block> LEVEL_REQUIRED_FOR = Set.of(
+                Blocks.CHEST
+        );
+
+        private void submitBlockState(
+                BlockState blockState,
+                BlockAndTintGetter blockAndTintGetter,
+                BlockBuilder builder
+        ) {
+            builder.useOffset(0f, 0f, 0f);
+            bufferSource.setBlockBuilder(builder);
+
+            levelRenderState.reset();
+
+            try {
+                EntityBlock entityBlock = (EntityBlock) blockState.getBlock();
+                BlockEntity entity = entityBlock.newBlockEntity(new BlockPos(0, 0, 0), blockState);
+                if (entity == null) return;
+
+                if (LEVEL_REQUIRED_FOR.contains(blockState.getBlock()))
+                    entity.setLevel((Level) blockAndTintGetter);
+
+                BlockEntityRenderer<BlockEntity, BlockEntityRenderState> renderer =
+                        Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(entity);
+
+                if (renderer == null) return;
+
+                var renderState = renderer.createRenderState();
+                renderer.extractRenderState(entity, renderState, 0.8f, levelRenderState.cameraRenderState.pos, null);
+
+                poseStack.pushPose();
+                renderer.submit(renderState, poseStack, submitNodeStorage, levelRenderState.cameraRenderState);
+                poseStack.popPose();
+
+                featureRenderDispatcher.renderAllFeatures();
+            } finally {
+                bufferSource.setBlockBuilder(null);
+            }
         }
     }
 }

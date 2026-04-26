@@ -16,7 +16,12 @@
     "iris.pipeline.passes.GlProgramMixin",
     "iris.pipeline.passes.ShadowCompositeRendererMixin",
     "iris.pipeline.uniforms.CommonUniformsMixin",
-    "rendering.world.bakery.VertexBuilderMixin"
+    "rendering.world.bakery.VertexBuilderMixin",
+    "meshing.RenderTypeAccessor",
+    "meshing.RenderSetupAccessor",
+    "meshing.TextureSetupAccessor",
+    "meshing.ReloadableTextureMixin",
+    "meshing.FeatureRenderDispatcherMixin"
   ],
   "mixins": [
 

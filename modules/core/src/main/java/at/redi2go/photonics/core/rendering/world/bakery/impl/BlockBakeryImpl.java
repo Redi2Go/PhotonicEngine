@@ -172,6 +172,8 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
     }
 
     private void bakeQuad(int blockId, VoxelConsumer consumer, @Nullable Vector3i blockOffset) {
+        pollState();
+
         v0.readVertex(this);
         v1.readVertex(this);
         v2.readVertex(this);
@@ -277,7 +279,6 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             if ((blockModel.contained & ~1) == 0 || (blockModel.lod & BlockLod.CONTAINED) != 0) {
                 bakeContainedBlock(blockConsumer);
             } else {
-                pollState();
                 bakeBlockModel(voxelConsumer);
             }
         }

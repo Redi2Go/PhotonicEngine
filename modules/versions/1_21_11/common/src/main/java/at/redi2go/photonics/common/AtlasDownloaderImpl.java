@@ -10,6 +10,7 @@ import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.TextureFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 
@@ -39,47 +40,59 @@ public class AtlasDownloaderImpl implements AtlasDownloader, Runnable {
 
     private CompletableFuture<CpuTexture> downloadTexture(Id atlasId) {
         return cache.computeIfAbsent(atlasId, (id) -> {
-            var future = new CompletableFuture<CpuTexture>();
+            var future = new CompletableFuture<AbstractTexture>();
 
-            try {
-                var texture = textureManager.getTexture((Identifier) (Object) atlasId).getTexture();
+            Minecraft.getInstance().execute(() -> {
+                try {
+                    future.complete(textureManager.getTexture((Identifier) (Object) atlasId));
+                } catch (Throwable ex) {
+                    future.completeExceptionally(ex);
+                }
+            });
 
-                CpuTexture.Factory textureFormat = textureFormats.get(texture.getFormat());
-                if (textureFormat == null)
-                    throw new IllegalArgumentException("Unsupported texture format: " + texture.getFormat());
+            return future.thenCompose((texture) -> {
+                var result = new CompletableFuture<CpuTexture>();
 
-                int width = texture.getWidth(0);
-                int height = texture.getHeight(0);
+                try {
+                    var gpuTexture = texture.getTexture();
 
-                int byteSize = texture.getFormat().pixelSize() * width * height;
+                    CpuTexture.Factory textureFormat = textureFormats.get(gpuTexture.getFormat());
+                    if (textureFormat == null)
+                        throw new IllegalArgumentException("Unsupported texture format: " + gpuTexture.getFormat());
 
-                var device = RenderSystem.getDevice();
+                    int width = gpuTexture.getWidth(0);
+                    int height = gpuTexture.getHeight(0);
 
-                Minecraft.getInstance().execute(() -> {
-                    GpuBuffer outputBuffer = device.createBuffer(() -> "Photonics voxelization texture output", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, byteSize);
-                    CommandEncoder commandEncoder = device.createCommandEncoder();
+                    int byteSize = gpuTexture.getFormat().pixelSize() * width * height;
 
-                    commandEncoder.copyTextureToBuffer(texture, outputBuffer, 0, () -> {
-                        try (GpuBuffer.MappedView mappedView = commandEncoder.mapBuffer(outputBuffer, true, false)) {
-                            IntBuffer buffer = mappedView.data().asIntBuffer();
-                            int[] data = new int[byteSize >> 2];
+                    var device = RenderSystem.getDevice();
 
-                            buffer.rewind();
-                            buffer.get(data, 0, buffer.remaining());
+                    Minecraft.getInstance().execute(() -> {
+                        GpuBuffer outputBuffer = device.createBuffer(() -> "Photonics voxelization texture output", GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ, byteSize);
+                        CommandEncoder commandEncoder = device.createCommandEncoder();
 
-                            future.complete(textureFormat.create(width, height, data));
-                        } catch (Throwable e) {
-                            future.completeExceptionally(e);
-                        } finally {
-                            outputBuffer.close();
-                        }
-                    }, 0);
-                });
-            } catch (Throwable e) {
-                future.completeExceptionally(e);
-            }
+                        commandEncoder.copyTextureToBuffer(gpuTexture, outputBuffer, 0, () -> {
+                            try (GpuBuffer.MappedView mappedView = commandEncoder.mapBuffer(outputBuffer, true, false)) {
+                                IntBuffer buffer = mappedView.data().asIntBuffer();
+                                int[] data = new int[byteSize >> 2];
 
-            return future;
+                                buffer.rewind();
+                                buffer.get(data, 0, buffer.remaining());
+
+                                result.complete(textureFormat.create(width, height, data));
+                            } catch (Throwable e) {
+                                result.completeExceptionally(e);
+                            } finally {
+                                outputBuffer.close();
+                            }
+                        }, 0);
+                    });
+                } catch (Throwable e) {
+                    result.completeExceptionally(e);
+                }
+
+                return result;
+            });
         });
     }
 
