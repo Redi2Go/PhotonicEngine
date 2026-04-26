@@ -45,8 +45,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
-    private boolean waitingForUpload = false;
-    private boolean movingCenter = true;
+    private boolean canUpload = true;
 
     private Vector3i iorigin = null;
     private WorldOrigin origin = null;
@@ -110,8 +109,9 @@ public class WorldCompiler implements Runnable, Disposable {
                 clearPendingSections(sections);
 
                 voxelizeSections(sections);
-                buildSections();
 
+                stopUpload();
+                buildSections();
                 awaitUpload();
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
@@ -149,13 +149,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
         if (iorigin.equals(newOrigin)) return;
 
-        uploadLock.lockInterruptibly();
-
-        try {
-            movingCenter = true;
-        } finally {
-            uploadLock.unlock();
-        }
+        stopUpload();
 
         var chunks = new ArrayList<>(this.chunks);
         for (var chunk : chunks)
@@ -229,29 +223,36 @@ public class WorldCompiler implements Runnable, Disposable {
 
     // Uploading
 
+    private void stopUpload() throws InterruptedException {
+        uploadLock.lockInterruptibly();
+
+        try {
+            canUpload = false;
+        } finally {
+            uploadLock.unlock();
+        }
+    }
+
     private void awaitUpload() throws InterruptedException {
         uploadLock.lockInterruptibly();
 
         try {
-            waitingForUpload = true;
+            canUpload = true;
             uploadDone.await();
         } finally {
             uploadLock.unlock();
         }
     }
 
-    public boolean clearUpload() {
+    public void doUpload(Runnable uploadRunnable) {
         uploadLock.lock();
 
         try {
-            if (movingCenter) {
-                if (!waitingForUpload) return false;
+            if (!canUpload) return;
 
-                mostRecentOrigin = origin;
-                movingCenter = false;
-            }
+            uploadRunnable.run();
 
-            waitingForUpload = false;
+            mostRecentOrigin = origin;
 
             mostRecentMinVoxel = new Vector3f(minVoxel);
             mostRecentMaxVoxel = new Vector3f(maxVoxel);
@@ -260,10 +261,7 @@ public class WorldCompiler implements Runnable, Disposable {
         } finally {
             uploadLock.unlock();
         }
-
-        return true;
     }
-
 
     // Chunk management
 
