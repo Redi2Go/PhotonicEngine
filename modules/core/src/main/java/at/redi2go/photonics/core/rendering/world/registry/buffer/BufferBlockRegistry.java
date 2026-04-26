@@ -3,7 +3,6 @@ package at.redi2go.photonics.core.rendering.world.registry.buffer;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
-import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
@@ -14,6 +13,8 @@ import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlo
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.regular.RegularBlockBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant.BufferBlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant.BufferBlockVariantFuture;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.util.List;
 import java.util.Queue;
@@ -24,12 +25,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.LongFunction;
 
 public class BufferBlockRegistry implements BlockRegistry {
     private final IGpuBufferHeap heap;
     private final PaletteTexture paletteTexture;
 
-    private final ConcurrentLong2ObjectMap<BlockProvider> blockVariants = new ConcurrentLong2ObjectMap<>();
+    private final Long2ObjectMap<BlockProvider> blockVariants = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectMap<BufferBlockHeader> variantHeaderCache = new Long2ObjectOpenHashMap<>();
+
+
     private final ConcurrentHashMap<Object, BufferObject<?, ?>> hashedObjectCache = new ConcurrentHashMap<>();
     final Queue<Disposable> freeQueue = new ConcurrentLinkedQueue<>();
 
@@ -155,6 +160,19 @@ public class BufferBlockRegistry implements BlockRegistry {
         return heap.allocateOrThrow(byteSize);
     }
 
+    // Variants
+
+    public BufferObject.ManagedRef<BufferBlockHeader> cacheVariantHeader(
+            long variantHash,
+            LongFunction<BufferBlockHeader> supplier
+    ) {
+        return variantHeaderCache.computeIfAbsent(variantHash, supplier)
+                .makeManagedRef();
+    }
+
+    public void removeVariantHeader(long variantHash, BufferBlockHeader value) {
+        variantHeaderCache.remove(variantHash, value);
+    }
 
     @Override
     public void close() {

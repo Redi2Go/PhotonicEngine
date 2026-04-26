@@ -5,11 +5,11 @@ import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteObject;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 import java.nio.IntBuffer;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class BufferBlockHeader extends BufferObject<BufferBlockHeader, MemoryView> {
     private final ManagedRef<BufferBlockVoxel> blockVoxel;
@@ -19,6 +19,8 @@ public class BufferBlockHeader extends BufferObject<BufferBlockHeader, MemoryVie
     private final int[] tint;
 
     private final long hashCode;
+
+    private final LongSet variants = new LongOpenHashSet();
 
     public BufferBlockHeader(
             BufferBlockRegistry registry,
@@ -96,6 +98,10 @@ public class BufferBlockHeader extends BufferObject<BufferBlockHeader, MemoryVie
         return palette.get(index - 1).get();
     }
 
+    public void addVariant(long variant) {
+        variants.add(variant);
+    }
+
     public int getTint(int index) {
         return tint[index - 1];
     }
@@ -108,6 +114,17 @@ public class BufferBlockHeader extends BufferObject<BufferBlockHeader, MemoryVie
     @Override
     public boolean equals(Object obj) {
         return obj instanceof BufferBlockHeader other && hashCode == other.hashCode;
+    }
+
+    @Override
+    protected boolean dispose() {
+        var closed = super.dispose();
+        if (closed) {
+            for (var itr = variants.longIterator(); itr.hasNext(); )
+                registry.removeVariantHeader(itr.nextLong(), this);
+        }
+
+        return closed;
     }
 
     public static long voxelHash(List<ManagedRef<BufferPaletteObject.Entry>> palette, BufferBlockVoxel blockVoxel) {

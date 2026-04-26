@@ -10,6 +10,7 @@ import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
 import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteObject;
@@ -172,28 +173,41 @@ public class BufferBlockVoxel extends BufferObject<BufferBlockVoxel, MemoryView>
         }
 
         @Override
-        public @Nullable BlockEntry createVariant(IntArraySet tint, int skylight, short region) {
-            int[] tintArray = tint.toIntArray();
-
-            long tintHash = 0;
-            int[] paletteTint = new int[palette.size()];
-
-            for (int i = 0; i < palette.size(); i++) {
-                int tintValue = tintArray[tintMappings[i]];
-
-                tintHash = tintHash * 31 + tintValue;
-                paletteTint[i] = tintValue;
-            }
+        public @Nullable BlockEntry createVariant(TintBuilder.Result tintInfo, int skylight, short region) {
+            long variantHash = vertexHash;
+            variantHash = variantHash * 31 + tintInfo.hash();
+            variantHash = variantHash * 31 + skylight;
 
             return new ContainedBlockEntry(
                     region,
-                    registry.allocateBlockHeader(
-                            blockVoxel,
-                            skylight,
-                            palette,
-                            paletteTint,
-                            getVoxelHash(),
-                            tintHash
+                    registry.cacheVariantHeader(
+                            variantHash,
+                            (k) -> {
+                                int[] tintArray = tintInfo.tints().toIntArray();
+
+                                long tintHash = 0;
+                                int[] paletteTint = new int[palette.size()];
+
+                                for (int i = 0; i < palette.size(); i++) {
+                                    int tintValue = tintArray[tintMappings[i]];
+
+                                    tintHash = tintHash * 31 + tintValue;
+                                    paletteTint[i] = tintValue;
+                                }
+
+                                var result = registry.allocateBlockHeader(
+                                        blockVoxel,
+                                        skylight,
+                                        palette,
+                                        paletteTint,
+                                        getVoxelHash(),
+                                        tintHash
+                                ).get();
+
+                                result.addVariant(k);
+
+                                return result;
+                            }
                     ).elevate(),
                     makeRef()
             );

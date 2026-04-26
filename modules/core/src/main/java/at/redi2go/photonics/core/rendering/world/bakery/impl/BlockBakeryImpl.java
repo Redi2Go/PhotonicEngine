@@ -20,6 +20,7 @@ import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
 import org.joml.RoundingMode;
@@ -217,7 +218,7 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
 
         var result = registry.getBlockProvider(blockModel.vertexHash);
         if (!(result instanceof BlockVariantBuilder builder)) {
-            IntArraySet tint = new IntArraySet();
+            TintBuilder tintBuilder = new TintBuilder();
 
             int index = this.index;
             int end = index + (vertexCount * 6);
@@ -226,11 +227,11 @@ public class BlockBakeryImpl implements BlockBakery, BlockBuilder {
             index += 3;
 
             while (index < end) {
-                tint.add(intAt(index));
+                tintBuilder.add(intAt(index));
                 index += 6;
             }
 
-            var block = result.createVariant(tint, 0, region);
+            var block = result.createVariant(tintBuilder.build(), 0, region);
             if (block == null) return;
 
             consumer.acceptBlock(

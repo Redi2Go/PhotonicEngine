@@ -5,6 +5,7 @@ import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockVariantBuilder;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteObject;
@@ -79,13 +80,13 @@ public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements B
 
         BufferObject.ManagedRef<BufferPaletteObject.Entry>[] paletteArray = new BufferObject.ManagedRef[palette.size()];
         int[] tintMappings = new int[palette.size()];
-        IntArraySet tints = new IntArraySet();
+        TintBuilder tintBuilder = new TintBuilder();
 
         for (int i = 0; i < palette.size(); i++) {
             paletteArray[i] = registry.allocatePalette(palette.get(i));
             int tint = palette.getTint(i);
 
-            tints.add(tint);
+            tintBuilder.add(tint);
             tintMappings[i] = tintIndexes.get(tint);
         }
 
@@ -102,11 +103,11 @@ public class BufferBlockVariantBuilder extends AbstractBlockBuilder implements B
 
         future.complete(variant);
 
-        return variant.get().createVariant(tints, skylight, singleGetRegion());
+        return variant.get().createVariant(tintBuilder.build(), skylight, singleGetRegion());
     }
 
     @Override
-    public @Nullable BlockEntry createVariant(IntArraySet tint, int skylight, short region) {
+    public @Nullable BlockEntry createVariant(TintBuilder.Result tintInfo, int skylight, short region) {
         throw new UnsupportedOperationException("createVariant");
     }
 
