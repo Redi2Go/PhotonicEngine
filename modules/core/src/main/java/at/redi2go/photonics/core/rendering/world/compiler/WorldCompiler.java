@@ -5,6 +5,7 @@ import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.ChunkVoxel;
@@ -101,7 +102,7 @@ public class WorldCompiler implements Runnable, Disposable {
 
                 awaitUpload();
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IgnoredInterruptedException e) {
 
         }
     }

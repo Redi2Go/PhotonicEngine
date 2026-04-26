@@ -1,6 +1,7 @@
 package at.redi2go.photonics.common;
 
 import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.Rgba8Texture;
@@ -91,7 +92,9 @@ public class AtlasDownloaderImpl implements AtlasDownloader, Runnable {
     public CpuTexture get(Id textureId) {
         try {
             return downloadTexture(textureId).get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw new IgnoredInterruptedException();
+        } catch (ExecutionException e) {
             throw new IllegalArgumentException(e);
         }
     }

@@ -6,6 +6,7 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
@@ -113,7 +114,7 @@ public class ChunkCompiler implements Runnable, Disposable {
 
                 sectionManager.builtSections().offer(section.pos(), new BuildResult(section.pos(), sectionBlockPos, bakery));
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IgnoredInterruptedException e) {
 
         } catch (Throwable e) {
             Photonics.LOGGER.warn("An exception was throw during chunk compilation!", e);
