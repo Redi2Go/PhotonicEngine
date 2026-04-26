@@ -9,6 +9,10 @@ public interface MemorySlice {
 
     long end();
 
+    default long length() {
+        return end() - begin();
+    }
+
     static List<? extends MemorySlice> mergeNeighbors(Iterable<? extends MemorySlice> slices) {
         List<MemorySlice> sortedSlices = new ArrayList<>();
         for (var slice : slices) sortedSlices.add(slice);

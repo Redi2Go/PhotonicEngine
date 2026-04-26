@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -56,10 +57,7 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
         return ptr == -1 ? null : new SubHeap(this, ptr, byteSize);
     }
 
-    @Override
-    public void upload() {
-        ICommandEncoder encoder = IRenderSystem.getDevice().createCommandEncoder();
-
+    private List<? extends MemorySlice> pollUploadQueue() {
         var regions = new ArrayList<Region>();
 
         while (!uploadQueue.isEmpty()) {
@@ -69,16 +67,24 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
             regions.add(region);
         }
 
-        final var mergedRegions = MemorySlice.mergeNeighbors(regions);
-        for (var region : mergedRegions) {
-            long offset = region.begin();
-            long length = region.end() - offset;
+        return MemorySlice.mergeNeighbors(regions);
+    }
 
-            encoder.writeToBuffer(
-                    gpuBuffer.slice(offset, length),
-                    buffer.slice(Math.toIntExact(offset), Math.toIntExact(length))
-                            .order(buffer.order())
-            );
+    @Override
+    public void upload() {
+        var regionsToUpload = pollUploadQueue();
+        ICommandEncoder encoder = IRenderSystem.getDevice().createCommandEncoder();
+
+        for (var region : regionsToUpload) {
+            var slice = gpuBuffer.slice(region.begin(), region.length());
+            try (var mappedView = encoder.mapBuffer(slice, false, true)) {
+                mappedView.data().put(
+                        0,
+                        buffer,
+                        Math.toIntExact(slice.offset()),
+                        Math.toIntExact(slice.length())
+                );
+            }
         }
     }
 
