@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 import java.util.AbstractList;
 import java.util.List;

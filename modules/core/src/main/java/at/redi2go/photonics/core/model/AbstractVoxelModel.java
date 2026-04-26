@@ -1,13 +1,10 @@
 package at.redi2go.photonics.core.model;
 
 import at.redi2go.photonics.core.util.VectorUtil;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
 
 public abstract class AbstractVoxelModel implements VoxelModel {
     protected final int width, height, depth;

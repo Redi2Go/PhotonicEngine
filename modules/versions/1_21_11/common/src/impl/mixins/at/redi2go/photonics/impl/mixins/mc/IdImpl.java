@@ -1,7 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc;
 
 import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.core.Photonics;
 import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

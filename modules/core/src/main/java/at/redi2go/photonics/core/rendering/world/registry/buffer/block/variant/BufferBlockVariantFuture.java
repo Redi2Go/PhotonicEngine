@@ -5,7 +5,6 @@ import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
 import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockVoxel;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;

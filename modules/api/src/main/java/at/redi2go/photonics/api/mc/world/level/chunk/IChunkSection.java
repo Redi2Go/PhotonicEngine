@@ -1,7 +1,6 @@
 package at.redi2go.photonics.api.mc.world.level.chunk;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
 public interface IChunkSection {

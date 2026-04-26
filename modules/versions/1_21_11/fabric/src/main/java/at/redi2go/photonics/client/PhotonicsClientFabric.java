@@ -1,6 +1,5 @@
 package at.redi2go.photonics.client;
 
-import at.redi2go.photonics.api.shaders.IPackPath;
 import at.redi2go.photonics.core.Photonics;
 import com.vdurmont.semver4j.Semver;
 import net.fabricmc.api.ClientModInitializer;

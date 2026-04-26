@@ -3,7 +3,6 @@ package at.redi2go.photonics.api.mc;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import org.joml.Vector3f;
 
 public interface Minecraft {
     /**

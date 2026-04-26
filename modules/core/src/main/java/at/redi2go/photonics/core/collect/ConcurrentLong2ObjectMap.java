@@ -2,9 +2,7 @@ package at.redi2go.photonics.core.collect;
 
 import com.trivago.fastutilconcurrentwrapper.PrimitiveKeyMap;
 import com.trivago.fastutilconcurrentwrapper.map.PrimitiveConcurrentMap;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.util.concurrent.locks.Lock;

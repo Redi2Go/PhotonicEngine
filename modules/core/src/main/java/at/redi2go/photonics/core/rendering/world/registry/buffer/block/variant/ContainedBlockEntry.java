@@ -1,9 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.registry.buffer.block.variant;
 
-import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockEntry;

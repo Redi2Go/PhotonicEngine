@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
-import org.joml.Vector4f;
 
 public record TextureData(
         int blockId,

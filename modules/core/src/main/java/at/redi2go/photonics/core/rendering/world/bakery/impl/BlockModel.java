@@ -1,7 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.bakery.impl;
 
-import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.joml.Vector3i;
 
 public class BlockModel {

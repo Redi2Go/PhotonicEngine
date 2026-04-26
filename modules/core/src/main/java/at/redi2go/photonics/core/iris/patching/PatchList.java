@@ -3,7 +3,6 @@ package at.redi2go.photonics.core.iris.patching;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.core.Photonics;
-import it.unimi.dsi.fastutil.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class PatchList implements Disposable {
     private final List<FileSystem> fileSystems;

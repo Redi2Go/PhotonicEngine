@@ -11,8 +11,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.spongepowered.asm.mixin.Mixin;
 
-import java.util.Map;
-
 @Mixin(BlockState.class)
 @SuppressWarnings("unchecked")
 public abstract class BlockStateMixin extends BlockBehaviour.BlockStateBase implements IBlockState {

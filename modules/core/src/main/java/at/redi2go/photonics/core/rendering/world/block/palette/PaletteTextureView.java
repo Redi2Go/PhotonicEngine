@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
 import at.redi2go.photonics.api.Disposable;
-import org.joml.Vector4f;
 import org.joml.Vector4i;
 
 public interface PaletteTextureView extends Disposable {

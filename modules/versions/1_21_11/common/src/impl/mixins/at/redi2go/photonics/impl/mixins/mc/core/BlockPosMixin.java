@@ -4,7 +4,6 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlockPos.class)
 public abstract class BlockPosMixin extends Vec3i implements IBlockPos {

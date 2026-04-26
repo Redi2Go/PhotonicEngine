@@ -1,6 +1,5 @@
 package at.redi2go.photonics.impl.mixins.mc.commands.arguments.blocks;
 
-import at.redi2go.photonics.api.mc.IProperty;
 import at.redi2go.photonics.api.mc.commands.arguments.blocks.IBlockStateParser;
 import at.redi2go.photonics.api.mc.nbt.ICompoundTag;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
@@ -10,8 +9,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.Map;
 
 @Mixin(BlockStateParser.BlockResult.class)
 public abstract class BlockStateParser$BlockResultMixin implements IBlockStateParser.BlockResult {

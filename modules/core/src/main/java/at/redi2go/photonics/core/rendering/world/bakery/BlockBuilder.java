@@ -1,10 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
 import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 

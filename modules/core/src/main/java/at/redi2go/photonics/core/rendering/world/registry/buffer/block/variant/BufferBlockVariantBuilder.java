@@ -12,7 +12,6 @@ import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferPaletteOb
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.AbstractBlockBuilder;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

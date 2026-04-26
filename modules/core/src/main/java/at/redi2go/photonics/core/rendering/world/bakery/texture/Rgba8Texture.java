@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.bakery.texture;
 
-import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import org.joml.Math;
 

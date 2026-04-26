@@ -3,8 +3,6 @@ package at.redi2go.photonics.common.mixins.iris.pipeline.uniforms;
 import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
-import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
-import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.gl.uniform.UniformHolder;

@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.collect;
 
 import com.trivago.fastutilconcurrentwrapper.PrimitiveLongKeyMap;
-import it.unimi.dsi.fastutil.longs.Long2LongFunction;
 import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
 
 import java.util.function.BiFunction;

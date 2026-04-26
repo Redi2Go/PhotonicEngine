@@ -2,8 +2,6 @@ package at.redi2go.photonics.core.rendering.world.block;
 
 import org.joml.Vector4f;
 
-import java.util.Vector;
-
 public class VoxelColor {
     private static final float INV_255 = 1f / 255f;
 

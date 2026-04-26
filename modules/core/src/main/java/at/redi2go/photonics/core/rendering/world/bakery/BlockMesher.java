@@ -5,7 +5,6 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.core.rendering.world.WorldOrigin;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.joml.Vector3i;

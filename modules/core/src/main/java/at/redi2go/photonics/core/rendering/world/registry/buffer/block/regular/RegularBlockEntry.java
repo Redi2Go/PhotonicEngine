@@ -7,7 +7,6 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferObject;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockHeader;
-import at.redi2go.photonics.core.rendering.world.registry.buffer.block.BufferBlockVoxel;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;

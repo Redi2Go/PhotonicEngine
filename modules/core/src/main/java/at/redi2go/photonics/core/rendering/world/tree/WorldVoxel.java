@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.tree;
 
-import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.core.model.AbstractVoxelModel;

@@ -12,8 +12,6 @@ import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Map;
-
 @SuppressWarnings("unchecked")
 @Mixin(BlockStateParser.TagResult.class)
 public abstract class BlockStateParser$TagResultMixin implements IBlockStateParser.TagResult {

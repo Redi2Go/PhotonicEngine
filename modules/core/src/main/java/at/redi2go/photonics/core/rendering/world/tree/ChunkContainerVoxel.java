@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.tree;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
-import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;

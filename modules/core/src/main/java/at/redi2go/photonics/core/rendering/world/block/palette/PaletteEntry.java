@@ -1,7 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
-import org.jetbrains.annotations.NotNull;
-
 public abstract class PaletteEntry {
     protected final TextureData[] faces = new TextureData[6];
 
