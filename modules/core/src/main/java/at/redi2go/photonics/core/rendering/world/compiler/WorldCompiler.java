@@ -202,6 +202,8 @@ public class WorldCompiler implements Runnable, Disposable {
     private void buildSections() throws InterruptedException {
         var task = new MultiThreadTask();
 
+        var chunks = new ArrayList<>(this.chunks);
+
         while (!uploadQueue.isEmpty())
             task.queueJob(uploadQueue.remove()::upload);
 
