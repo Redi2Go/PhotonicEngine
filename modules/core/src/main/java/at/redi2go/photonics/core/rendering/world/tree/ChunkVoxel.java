@@ -7,8 +7,6 @@ import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
-import it.unimi.dsi.fastutil.shorts.ShortSet;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Queue;
 

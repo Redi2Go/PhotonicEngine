@@ -3,16 +3,15 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
-import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.tree.WorldVoxel;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.joml.Vector3d;
+import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
@@ -52,7 +51,12 @@ public class WorldCompiler implements Runnable, Disposable {
     private Vector3i iorigin = null;
     private WorldOrigin origin = null;
 
+    private final Vector3i minVoxel = new Vector3i();
+    private final Vector3i maxVoxel = new Vector3i();
+
     private WorldOrigin mostRecentOrigin;
+    private Vector3f mostRecentMinVoxel;
+    private Vector3f mostRecentMaxVoxel;
 
     private final Thread compilerThread;
 
@@ -81,6 +85,14 @@ public class WorldCompiler implements Runnable, Disposable {
 
     public WorldOrigin origin() {
         return mostRecentOrigin;
+    }
+
+    public Vector3f minVoxel() {
+        return mostRecentMinVoxel;
+    }
+
+    public Vector3f maxVoxel() {
+        return mostRecentMaxVoxel;
     }
 
     @Override
@@ -199,6 +211,19 @@ public class WorldCompiler implements Runnable, Disposable {
         while (!uploadQueue.isEmpty())
             task.queueJob(uploadQueue.remove()::upload);
 
+        minVoxel.set(Integer.MAX_VALUE);
+        maxVoxel.set(Integer.MIN_VALUE);
+
+        var temp = new Vector3i();
+
+        for (var chunk : chunks) {
+            temp.set(chunk.x(), chunk.y(), chunk.z());
+            minVoxel.min(temp);
+
+            temp.add(chunk.voxelSize());
+            maxVoxel.max(temp);
+        }
+
         task.awaitPending();
     }
 
@@ -227,6 +252,9 @@ public class WorldCompiler implements Runnable, Disposable {
             }
 
             waitingForUpload = false;
+
+            mostRecentMinVoxel = new Vector3f(minVoxel);
+            mostRecentMaxVoxel = new Vector3f(maxVoxel);
 
             uploadDone.signalAll();
         } finally {
