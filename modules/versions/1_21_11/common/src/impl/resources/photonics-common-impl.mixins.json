@@ -11,6 +11,7 @@
     "mc.blaze3d.buffers.GpuBufferMixin",
     "mc.blaze3d.buffers.GpuBufferSliceMixin",
     "mc.blaze3d.opengl.GlBufferAccessor",
+    "mc.blaze3d.opengl.ImmutableBufferStorageMixin",
     "mc.blaze3d.systems.CommandEncoderMixin",
     "mc.blaze3d.systems.GpuDeviceMixin",
     "mc.blaze3d.systems.IRenderSystemMixin",

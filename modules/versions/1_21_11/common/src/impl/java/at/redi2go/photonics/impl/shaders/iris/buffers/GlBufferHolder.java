@@ -30,7 +30,7 @@ public class GlBufferHolder implements IBufferHolder {
 
     @Override
     public void addDefaultBufferHeap(String name, Supplier<IGpuBufferHeap> buffer) {
-        buffers.add(Pair.of(name, () -> ((DefaultGpuBufferHeap) buffer.get()).buffer()));
+        buffers.add(Pair.of(name, () -> ((GlBufferHeap) buffer.get()).buffer()));
     }
 
     public void bind(int shaderId, IntSet usedBuffers) {

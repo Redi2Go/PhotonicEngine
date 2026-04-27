@@ -4,6 +4,8 @@ import at.redi2go.photonics.api.Disposable;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -61,6 +63,19 @@ public abstract class AbstractGpuBufferHeap implements IGpuBufferHeap {
             _setBegin(_begin() | SIGN_BIT);
 
             owner().freeRegions.add(new FreeRegion(begin(), end()));
+        }
+
+        static List<? extends MemorySlice> takeFrom(Queue<Region> queue) {
+            var regions = new ArrayList<Region>();
+
+            while (!queue.isEmpty()) {
+                @Nullable Region region = queue.poll();
+                if (region == null) break;
+
+                regions.add(region);
+            }
+
+            return MemorySlice.mergeNeighbors(regions);
         }
     }
 

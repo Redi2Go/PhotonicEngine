@@ -1,7 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.systems;
 
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.heap.DefaultGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.systems.ICommandEncoder;
 import at.redi2go.photonics.api.gpu.systems.IGpuDevice;
@@ -10,6 +9,7 @@ import at.redi2go.photonics.api.gpu.textures.IFilterMode;
 import at.redi2go.photonics.api.gpu.textures.IGpuSampler;
 import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
 import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.impl.shaders.iris.buffers.GlBufferHeap;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.GpuDevice;
@@ -91,6 +91,6 @@ public interface GpuDeviceMixin extends IGpuDevice {
 
     @Override
     default IGpuBufferHeap createBufferHeap(@Nullable Supplier<String> label, long byteSize, int usage) {
-        return new DefaultGpuBufferHeap(this, label, byteSize, usage);
+        return new GlBufferHeap(this, label, byteSize, usage);
     }
 }

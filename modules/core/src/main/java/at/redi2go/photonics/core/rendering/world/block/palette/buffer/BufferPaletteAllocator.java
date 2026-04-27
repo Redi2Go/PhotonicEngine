@@ -23,7 +23,7 @@ public class BufferPaletteAllocator implements PaletteTexture {
         heap = IRenderSystem.getDevice().createBufferHeap(
                 () -> "Palette Texture",
                 width * height * ENTRY_BYTE_SIZE,
-                BufferUsage.MAP_WRITE | BufferUsage.COPY_DST
+                0
         );
     }
 
