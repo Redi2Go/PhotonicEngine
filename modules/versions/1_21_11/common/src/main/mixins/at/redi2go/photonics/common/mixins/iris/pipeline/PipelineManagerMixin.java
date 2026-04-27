@@ -2,8 +2,8 @@ package at.redi2go.photonics.common.mixins.iris.pipeline;
 
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
-import at.redi2go.photonics.common.MinecraftBlockMesher;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
+import at.redi2go.photonics.common.meshing.MinecraftBlockMesher;
 import at.redi2go.photonics.common.test.VoxelizationTestExtension;
 import at.redi2go.photonics.core.iris.PhotonicsExtension;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
