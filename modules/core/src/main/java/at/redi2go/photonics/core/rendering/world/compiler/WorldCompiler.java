@@ -3,6 +3,7 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
@@ -141,7 +142,7 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     private void recenter() throws InterruptedException {
-        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt() + 3);
+        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt() + 8);
         if (iorigin == null) {
             setOrigin(newOrigin);
             return;
@@ -290,7 +291,8 @@ public class WorldCompiler implements Runnable, Disposable {
     }
 
     private static int snapToSectionPos(int component, int renderDistance) {
-        return ((component >> 4) - renderDistance) << 4;
+        var chunkPos = ((component >> 4) - renderDistance) << 4;
+        return (chunkPos >> 6) << 6;
     }
 
     private static Vector3i getWorldOrigin(Vector3d cameraPos, int renderDistance) {
