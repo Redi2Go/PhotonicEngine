@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.client.renderer.blockentity.SpawnerRenderer;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.LevelRenderState;
@@ -38,11 +37,10 @@ import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class MinecraftBlockMesher implements BlockMesher {
-    private final ThreadLocal<Renderer> renderer = ThreadLocal.withInitial(Renderer::new);
+    private static final ThreadLocal<Renderer> RENDERERS = ThreadLocal.withInitial(Renderer::new);
 
     // Replace with proper config system
     private @BlockLod int getLod(BlockState blockState) {
@@ -76,7 +74,7 @@ public class MinecraftBlockMesher implements BlockMesher {
             BlockAndTintGetter blockAndTintGetter,
             BlockBuilder builder
     ) {
-        var renderer = this.renderer.get();
+        var renderer = this.RENDERERS.get();
         int lod = getLod(blockState);
         builder.beginBlock(IrisUtil.getBlockId(blockState), lod, blockChunkOffset);
 
