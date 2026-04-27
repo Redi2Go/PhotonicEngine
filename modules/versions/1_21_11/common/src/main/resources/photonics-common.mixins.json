@@ -21,7 +21,8 @@
     "meshing.RenderSetupAccessor",
     "meshing.TextureSetupAccessor",
     "meshing.ReloadableTextureMixin",
-    "meshing.FeatureRenderDispatcherMixin"
+    "meshing.FeatureRenderDispatcherMixin",
+    "meshing.OuterWrappedRenderTypeAccessor"
   ],
   "mixins": [
 
