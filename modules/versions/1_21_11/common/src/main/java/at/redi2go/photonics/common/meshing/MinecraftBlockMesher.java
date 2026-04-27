@@ -32,7 +32,9 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
@@ -138,6 +140,8 @@ public class MinecraftBlockMesher implements BlockMesher {
 
         private static final Id BLOCK_ATLAS = (Id) (Object) TextureAtlas.LOCATION_BLOCKS;
 
+        private static final Set<Fluid> WHITELISTED_FLUIDS = Set.of(Fluids.LAVA, Fluids.FLOWING_LAVA);
+
         private void submitFluid(
                 BlockPos blockPos,
                 BlockAndTintGetter blockAndTintGetter,
@@ -145,6 +149,8 @@ public class MinecraftBlockMesher implements BlockMesher {
                 BlockState blockState,
                 FluidState fluidState
         ) {
+            if (!WHITELISTED_FLUIDS.contains(fluidState.getType())) return;
+
             builder.useAtlas(BLOCK_ATLAS);
             builder.useOffset(
                     -(blockPos.getX() & 15),
