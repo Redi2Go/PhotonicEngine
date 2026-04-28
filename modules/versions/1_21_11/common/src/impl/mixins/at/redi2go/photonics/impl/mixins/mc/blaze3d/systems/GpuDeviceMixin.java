@@ -9,7 +9,7 @@ import at.redi2go.photonics.api.gpu.textures.IFilterMode;
 import at.redi2go.photonics.api.gpu.textures.IGpuSampler;
 import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
 import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
-import at.redi2go.photonics.impl.shaders.iris.buffers.GlBufferHeap;
+import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlBufferHeap;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.GpuDevice;

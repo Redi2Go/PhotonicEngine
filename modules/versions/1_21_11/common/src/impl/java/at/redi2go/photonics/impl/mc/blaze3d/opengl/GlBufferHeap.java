@@ -1,4 +1,4 @@
-package at.redi2go.photonics.impl.shaders.iris.buffers;
+package at.redi2go.photonics.impl.mc.blaze3d.opengl;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;

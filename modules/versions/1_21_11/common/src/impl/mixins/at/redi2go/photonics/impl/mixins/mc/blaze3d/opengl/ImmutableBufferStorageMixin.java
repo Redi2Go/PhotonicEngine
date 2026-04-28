@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
-import at.redi2go.photonics.impl.shaders.iris.buffers.GlBufferHeap;
+import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlBufferHeap;
 import com.mojang.blaze3d.opengl.DirectStateAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

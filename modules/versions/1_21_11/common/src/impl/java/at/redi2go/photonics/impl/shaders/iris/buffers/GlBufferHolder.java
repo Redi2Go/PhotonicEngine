@@ -2,9 +2,9 @@ package at.redi2go.photonics.impl.shaders.iris.buffers;
 
 import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.heap.DefaultGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
+import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlBufferHeap;
 import at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.GlBufferAccessor;
 import com.mojang.blaze3d.opengl.GlBuffer;
 import it.unimi.dsi.fastutil.Pair;
