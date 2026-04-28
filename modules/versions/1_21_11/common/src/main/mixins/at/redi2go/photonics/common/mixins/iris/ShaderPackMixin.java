@@ -106,6 +106,136 @@ public abstract class ShaderPackMixin implements IShaderPack {
         return phProperties;
     }
 
+    @Inject(
+            method = "<init>(Ljava/nio/file/Path;Ljava/util/Map;Lcom/google/common/collect/ImmutableList;Z)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/google/common/collect/ImmutableList;copyOf(Ljava/util/Collection;)Lcom/google/common/collect/ImmutableList;",
+                    ordinal = 0
+            )
+    )
+    private void addEnvironmentalDefines(
+            Path root,
+            Map<String, String> changedConfigs,
+            ImmutableList<StringPair> environmentDefines,
+            boolean isZip,
+            CallbackInfo ci,
+            @Local(name = "envDefines1") ArrayList<StringPair> defines
+    ) {
+        // These are the defines used by the preprocessor for shaders.properties
+        defines.add(new StringPair("PHOTONICS", ""));
+        defines.add(new StringPair("PHOTONICS_VERSION", Photonics.getVersionString()));
+    }
+
+    @Inject(
+            method = "<init>(Ljava/nio/file/Path;Ljava/util/Map;Lcom/google/common/collect/ImmutableList;Z)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/google/common/collect/ImmutableList;copyOf(Ljava/util/Collection;)Lcom/google/common/collect/ImmutableList;",
+                    ordinal = 1
+            )
+    )
+    private void addRegularDefines(
+            Path root,
+            Map<String, String> changedConfigs,
+            ImmutableList<StringPair> environmentDefines,
+            boolean isZip,
+            CallbackInfo ci,
+            @Local(name = "newEnvDefines") List<StringPair> newEnvDefines
+    ) {
+        // These are the defines used by the preprocessor for everything else
+        floatDefine(newEnvDefines, "PH_RENDER_SCALE", phProperties.getRenderScale());
+        intDefine(newEnvDefines, "PH_MAX_LIGHTS", phProperties.getMaxLights());
+
+        switch (phProperties.getAlphaMode()) {
+            case BLOCK -> stringDefine(newEnvDefines, "PH_USE_TRANSPARENCY", "");
+            case VOXEL -> {
+                stringDefine(newEnvDefines, "PH_USE_TRANSPARENCY", "");
+                stringDefine(newEnvDefines, "PH_FULL_TRANSPARENCY", "");
+            }
+        }
+
+        if (phProperties.isGiEnabled())
+            stringDefine(newEnvDefines, "PH_ENABLE_GI", "");
+
+        if (phProperties.isBlockLightEnabled())
+            stringDefine(newEnvDefines, "PH_ENABLE_BLOCKLIGHT", "");
+
+        if (phProperties.isHandheldLightEnabled())
+            stringDefine(newEnvDefines, "PH_ENABLE_HANDHELD_LIGHT", "");
+
+        if (phProperties.isLightBinningEnabled() || phProperties.getLightingMode() == LightingMode.BASIC)
+            stringDefine(newEnvDefines, "PH_ENABLE_LIGHT_BINNING", "");
+
+        if (phProperties.useSeparateHandheldRays())
+            stringDefine(newEnvDefines, "PH_SEPARATE_HANDHELD_RAYS", "");
+
+        enumDefine(newEnvDefines, "PH_LIGHTING_MODE", phProperties.getLightingMode());
+
+        intDefine(newEnvDefines, "PH_RESTIR_INITIAL_SAMPLES", phProperties.getRestirInitialSamples());
+        intDefine(newEnvDefines, "PH_RESTIR_SPATIAL_REUSE_SAMPLES", phProperties.getRestirSpatialReuseSamples());
+        floatDefine(newEnvDefines, "PH_RESTIR_SPATIAL_REUSE_RADIUS", phProperties.getRestirSpatialReuseRadius());
+        intDefine(newEnvDefines, "PH_RESTIR_ACCUMULATION_FRAMES", phProperties.getRestirAccumulationFrames());
+        intDefine(newEnvDefines, "PH_RESTIR_DENOISER_PASSES", phProperties.getRestirDenoiserPasses());
+
+        if (phProperties.useRestirSoftShadows())
+            stringDefine(newEnvDefines, "PH_RESTIR_SOFT_SHADOWS", "");
+
+        if (phProperties.getLightingMode() == LightingMode.RESTIR && phProperties.useRestirCombinedGi())
+            stringDefine(newEnvDefines, "PH_RESTIR_COMBINED_GI", "");
+
+        intDefine(newEnvDefines, "PH_MAX_SAMPLES",  phProperties.getMaxSamples());
+    }
+
+    @Unique
+    private static boolean isPhotonicsSource = false;
+
+    @Inject(
+            method = "lambda$new$8",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/shaderpack/preprocessor/JcppProcessor;glslPreprocessSource(Ljava/lang/String;Ljava/lang/Iterable;)Ljava/lang/String;",
+                    shift = At.Shift.BEFORE
+            ),
+            remap = false
+    )
+    private static void dimensionDefinesPre(List disabledPrograms, IncludeProcessor includeProcessor, Iterable finalEnvironmentDefines1, AbsolutePackPath path, CallbackInfoReturnable<String> cir) {
+        isPhotonicsSource = path.getPathString().contains("photonics");
+    }
+
+    @ModifyArgs(
+            method = "lambda$new$8",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/shaderpack/preprocessor/JcppProcessor;glslPreprocessSource(Ljava/lang/String;Ljava/lang/Iterable;)Ljava/lang/String;"
+            ),
+            remap = false
+    )
+    private static void dimensionDefines(
+            Args args
+    ) {
+        if (!isPhotonicsSource)
+            return;
+
+        Iterable<StringPair> environmentDefines = args.get(1);
+
+        List<StringPair> definitions = Lists.newArrayList(environmentDefines.iterator());
+
+        String dimensionDefine = switch (Iris.getCurrentDimension().getName()) {
+            case "the_nether" -> "NETHER";
+            case "the_end" -> "END";
+
+            default -> "OVERWORLD";
+        };
+
+        stringDefine(definitions, dimensionDefine, "");
+
+        definitions.add(new StringPair(dimensionDefine, ""));
+
+        args.set(1, definitions);
+    }
+
+
     @Unique
     private static Properties loadShaderProperties(Path shaderPath) {
         var properties = new Properties();
@@ -117,5 +247,25 @@ public abstract class ShaderPackMixin implements IShaderPack {
         }
 
         return properties;
+    }
+
+    @Unique
+    private static void stringDefine(List<StringPair> defines, String name, String value) {
+        defines.add(new StringPair(name, value));
+    }
+
+    @Unique
+    private static void intDefine(List<StringPair> defines, String name, int value) {
+        defines.add(new StringPair(name, Integer.toString(value)));
+    }
+
+    @Unique
+    private static void floatDefine(List<StringPair> defines, String name, float value) {
+        defines.add(new StringPair(name, Float.toString(value)));
+    }
+
+    @Unique
+    private static <T extends Enum<T>> void enumDefine(List<StringPair> defines, String name, T value) {
+        defines.add(new StringPair(name, Integer.toString(value.ordinal())));
     }
 }

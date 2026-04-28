@@ -3,11 +3,13 @@ package at.redi2go.photonics.core;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.PhConfigWatchThread;
 import com.vdurmont.semver4j.Semver;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class Photonics {
     public static final Logger LOGGER = LoggerFactory.getLogger("Photonics");
@@ -31,6 +33,19 @@ public class Photonics {
 
     public static Semver getVersion() {
         return version;
+    }
+
+    public static String getVersionString() {
+        final String major = version.getMajor() != null ? version.getMajor().toString() : "0";
+        final String minor = version.getMinor() != null ? version.getMinor().toString() : "00";
+        final String patch = version.getPatch() != null ? version.getPatch().toString() : "00";
+
+        return StringUtils.stripStart(
+                major +
+                        StringUtils.leftPad(minor, 2, '0') +
+                        StringUtils.leftPad(patch, 2, '0'),
+                "0"
+        );
     }
 
     public static boolean isDevEnvironment() {
