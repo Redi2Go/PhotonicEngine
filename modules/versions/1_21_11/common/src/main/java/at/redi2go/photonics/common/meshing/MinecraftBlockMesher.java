@@ -23,6 +23,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
@@ -183,9 +184,9 @@ public class MinecraftBlockMesher implements BlockMesher {
             poseStack.popPose();
         }
 
-        private static final Set<Block> LEVEL_REQUIRED_FOR = Set.of(
-                Blocks.CHEST
-        );
+        private static final Set<Block> LEVEL_REQUIRED_FOR = new BlockSetBuilder()
+                .addBlock(Blocks.CHEST)
+                .build();
 
         private void submitBlockState(
                 BlockState blockState,
