@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 
 public interface IGpuBuffer extends Disposable {
     long size();
+
     @BufferUsage int usage();
 
     boolean isClosed();

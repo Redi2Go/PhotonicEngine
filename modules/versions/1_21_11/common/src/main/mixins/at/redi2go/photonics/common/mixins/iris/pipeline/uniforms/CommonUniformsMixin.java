@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline.uniforms;
 
-import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CommonUniforms.class)
-public class CommonUniformsMixin {
+public abstract class CommonUniformsMixin {
     @Inject(
             method = "addNonDynamicUniforms",
             at = @At("TAIL")

@@ -31,4 +31,11 @@ public interface IMinecraftImpl {
 
         return new Vector3d(position.x, position.y, position.z);
     }
+
+    @Overwrite
+    static int getRenderDistance() {
+        return net.minecraft.client.Minecraft.getInstance()
+                .options
+                .getEffectiveRenderDistance();
+    }
 }

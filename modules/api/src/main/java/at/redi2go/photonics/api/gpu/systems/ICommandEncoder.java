@@ -3,12 +3,20 @@ package at.redi2go.photonics.api.gpu.systems;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
 import at.redi2go.photonics.api.gpu.buffers.IGpuBufferSlice;
 import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.api.gpu.textures.IGpuTexture3D;
 import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
+import org.joml.Vector2fc;
+import org.joml.Vector2ic;
+import org.joml.Vector3fc;
+import org.joml.Vector3ic;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 
 import java.nio.ByteBuffer;
 
 public interface ICommandEncoder {
-    void clearColorTexture(IGpuTexture gpuTexture, int clearColor);
+    void clearColorTexture(IGpuTexture<?> gpuTexture, Vector4fc clearColor);
 
     void writeToBuffer(IGpuBuffer buffer, ByteBuffer byteBuffer);
 
@@ -21,14 +29,16 @@ public interface ICommandEncoder {
     void copyToBuffer(IGpuBufferSlice slice1, IGpuBufferSlice slice2);
 
     void writeToTexture(
-            IGpuTexture gpuTexture,
+            IGpuTexture2D texture,
             ByteBuffer data,
-            ITextureFormat format,
-            int mipLevels,
-            int cubeMapTarget,
-            int offsetX,
-            int offsetY,
-            int width,
-            int height
+            Vector2ic offset,
+            Vector2ic size
+    );
+
+    void writeToTexture(
+            IGpuTexture3D texture,
+            ByteBuffer data,
+            Vector3ic offset,
+            Vector3ic size
     );
 }

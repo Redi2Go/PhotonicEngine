@@ -19,4 +19,8 @@ public interface Minecraft {
     static Vector3d getCameraPos() {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }
+
+    static int getRenderDistance() {
+        throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
+    }
 }

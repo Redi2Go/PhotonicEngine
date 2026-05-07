@@ -2,19 +2,23 @@ package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
-import at.redi2go.photonics.api.shaders.buffer.IBufferHolder;
-import at.redi2go.photonics.api.shaders.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.api.shaders.uniform.IUniformHolder;
-import at.redi2go.photonics.core.iris.extensions.TestingExtension;
+import at.redi2go.photonics.core.iris.extensions.BasicPipeline;
+import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
+import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 
 import java.util.function.Supplier;
 
 /**
- * The extension for Iris (maybe aperture?), handles world building, light list, ect.
+ * The extension for Iris handles world building, light list, ect.
  */
 public interface PhotonicsExtension extends Disposable {
     void onFrameBegin();
+
+    void onRender();
 
     void onSectionAdded(int x, int y, int z);
 
@@ -26,21 +30,30 @@ public interface PhotonicsExtension extends Disposable {
 
     void registerBuffers(IBufferHolder buffers);
 
+    void registerCustomTextures(ISamplerHolder samplers);
+
     static PhotonicsExtension create(
             PhotonicsProperties properties,
-            Supplier<AtlasDownloader> atlasDownloader
+            Supplier<AtlasDownloader> atlasDownloader,
+            IrisPipelineFactory passFactory
     ) {
         if (!properties.isPhotonicsEnabled()) return new Disabled();
 
-        return new TestingExtension(
+        return new BasicPipeline(
                 properties,
-                atlasDownloader.get()
+                atlasDownloader.get(),
+                passFactory
         );
     }
 
     class Disabled implements PhotonicsExtension {
         @Override
         public void onFrameBegin() {
+
+        }
+
+        @Override
+        public void onRender() {
 
         }
 
@@ -69,6 +82,12 @@ public interface PhotonicsExtension extends Disposable {
         public void registerBuffers(IBufferHolder buffers) {
 
         }
+
+        @Override
+        public void registerCustomTextures(ISamplerHolder samplers) {
+
+        }
+
 
         @Override
         public void close() {

@@ -7,7 +7,7 @@ import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
-import at.redi2go.photonics.impl.shaders.PhotonicsPropertiesImpl;
+import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.irisshaders.iris.Iris;
@@ -16,7 +16,6 @@ import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,7 +31,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 
 @Mixin(ShaderPack.class)
