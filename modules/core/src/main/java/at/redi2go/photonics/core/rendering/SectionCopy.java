@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.compiler;
+package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;

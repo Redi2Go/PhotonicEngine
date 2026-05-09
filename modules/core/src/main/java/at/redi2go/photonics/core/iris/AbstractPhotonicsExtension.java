@@ -5,21 +5,18 @@ import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
-import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
-import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
+import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.block.palette.buffer.BufferPaletteAllocator;
 import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
-import at.redi2go.photonics.core.rendering.world.compiler.SectionManager;
+import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
 import org.joml.Vector3d;
 import org.joml.Vector3i;
-
-import java.util.function.IntSupplier;
 
 public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
     private static final int ROOT_VOXEL_DEPTH = 3;
@@ -52,16 +49,20 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         this.registry = new BufferBlockRegistry(heap, paletteTexture);
 
         this.sectionManager = new SectionManager(Minecraft::getRenderDistance);
+        var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
+
         this.worldCompiler = new WorldCompiler(
                 ROOT_VOXEL_DEPTH,
                 Minecraft::getRenderDistance,
                 sectionManager,
+                builtSectionQueue,
                 registry,
                 heap
         );
 
         this.chunkCompiler = new ChunkCompiler(
                 sectionManager,
+                builtSectionQueue,
                 atlasDownloader,
                 registry
         );

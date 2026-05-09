@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.compiler;
+package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
@@ -10,6 +10,7 @@ import org.joml.Vector3i;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,12 +29,9 @@ public class SectionManager {
     private Set<Vector2i> loadedChunks = Set.of();
     private final Set<Vector3i> notEmptySections = ConcurrentHashMap.newKeySet();
 
-    private final Queue<Vector3i> worldCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
-    private final Queue<Vector3i> chunkCompilerUnloadQueue = new ConcurrentLinkedQueue<>();
-
-    private final TaskQueue<SectionCopy> sectionMeshQueue = new TaskQueue<>(-1);
-    private final TaskQueue<ChunkCompiler.BuildResult> builtSections = new TaskQueue<>(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
-
+    private final List<Queue<Vector3i>> unloadQueues = new ArrayList<>();
+    private final List<TaskQueue<SectionCopy>> sectionQueues = new ArrayList<>();
+    
     private final IntSupplier renderDistanceSupplier;
 
     public SectionManager(IntSupplier renderDistanceSupplier) {
@@ -42,6 +40,26 @@ public class SectionManager {
 
     private Vector3i lastCameraPos = null;
     private int lastRenderDistance = -1;
+
+    private void queueUnload(Vector3i section) {
+        for (var unloadQueue : unloadQueues)
+            unloadQueue.add(section);
+    }
+
+    private void queueUnload(Collection<Vector3i> sections) {
+        for (var unloadQueue : unloadQueues)
+            unloadQueue.addAll(sections);
+    }
+
+    private void queueSection(SectionCopy section) throws InterruptedException {
+        for (var sectionQueue : sectionQueues)
+            sectionQueue.offer(section.pos(), section);
+    }
+
+    private void queueSections(List<Pair<Vector3i, SectionCopy>> sections) throws InterruptedException {
+        for (var sectionQueue : sectionQueues)
+            sectionQueue.offerMany(sections);
+    }
 
     private void refreshSections(@NonNls ILevel level) throws InterruptedException {
         var cameraPos = getCameraChunkPos();
@@ -52,7 +70,7 @@ public class SectionManager {
         Set<Vector2i> discoveredChunks = new HashSet<>();
         Set<Vector3i> discoveredSections = new HashSet<>();
         Set<Vector3i> unloadedSections = new HashSet<>();
-        List<Pair<Vector3i, SectionCopy>> sectionsToMesh = new ArrayList<>();
+        List<Pair<Vector3i, SectionCopy>> sectionsToUpdate = new ArrayList<>();
 
         for (int px = -rd; px <= rd; px++) {
             for (int pz = -rd; pz <= rd; pz++) {
@@ -80,7 +98,7 @@ public class SectionManager {
                     discoveredSections.add(sectionCoord);
 
                     if (!notEmptySections.contains(sectionCoord))
-                        sectionsToMesh.add(Pair.of(sectionCoord, new SectionCopy(sectionCoord, section)));
+                        sectionsToUpdate.add(Pair.of(sectionCoord, new SectionCopy(sectionCoord, section)));
                 }
             }
         }
@@ -100,26 +118,26 @@ public class SectionManager {
         lastCameraPos = cameraPos;
         lastRenderDistance = rd;
 
-        worldCompilerUnloadQueue.addAll(unloadedSections);
-        chunkCompilerUnloadQueue.addAll(unloadedSections);
-
-        sectionMeshQueue.offerMany(sectionsToMesh);
+        queueUnload(unloadedSections);
+        queueSections(sectionsToUpdate);
     }
 
-    public Queue<Vector3i> worldUnloadedSections() {
-        return worldCompilerUnloadQueue;
+    public Queue<Vector3i> newUnloadQueue() {
+        var queue = new ConcurrentLinkedQueue<Vector3i>();
+        unloadQueues.add(queue);
+
+        return queue;
     }
 
-    public Queue<Vector3i> chunkUnloadedSections() {
-        return chunkCompilerUnloadQueue;
+    public TaskQueue<SectionCopy> newSectionQueue() {
+        var queue = new TaskQueue<SectionCopy>(-1);
+        sectionQueues.add(queue);
+
+        return queue;
     }
 
-    public TaskQueue<ChunkCompiler.BuildResult> builtSections() {
-        return builtSections;
-    }
-
-    public TaskQueue<SectionCopy> sectionMeshQueue() {
-        return sectionMeshQueue;
+    public <T> TaskQueue<T> newTaskQueue(int maxCapacity) {
+        return new TaskQueue<>(maxCapacity);
     }
 
     private Optional<SectionCopy> createCopy(Vector3i sectionPos, ILevel level) {
@@ -147,13 +165,13 @@ public class SectionManager {
         var copyResult = createCopy(sectionPos, level);
         if (copyResult.isEmpty()) {
             if (notEmptySections.remove(sectionPos))
-                worldCompilerUnloadQueue.add(sectionPos);
+                queueUnload(sectionPos);
 
             return;
         }
 
         var section = copyResult.get();
-        sectionMeshQueue.offer(sectionPos, section);
+        queueSection(section);
     }
 
     public void submitNewSection(Vector3i sectionPos) throws InterruptedException {
@@ -169,7 +187,7 @@ public class SectionManager {
 
         var section = copyResult.get();
         notEmptySections.add(section.pos());
-        sectionMeshQueue.offer(section.pos(), section);
+        queueSection(section);
     }
 
     public void updateRenderDistance() throws InterruptedException {
