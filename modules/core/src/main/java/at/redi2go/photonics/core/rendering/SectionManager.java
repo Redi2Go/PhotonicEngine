@@ -25,13 +25,13 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntSupplier;
 
-public class SectionManager {
+public class SectionManager implements RenderingComponent {
     private Set<Vector2i> loadedChunks = Set.of();
     private final Set<Vector3i> notEmptySections = ConcurrentHashMap.newKeySet();
 
     private final List<Queue<Vector3i>> unloadQueues = new ArrayList<>();
     private final List<TaskQueue<SectionCopy>> sectionQueues = new ArrayList<>();
-    
+
     private final IntSupplier renderDistanceSupplier;
 
     public SectionManager(IntSupplier renderDistanceSupplier) {
@@ -156,47 +156,65 @@ public class SectionManager {
         return Optional.of(new SectionCopy(sectionPos, section));
     }
 
-    public void submitRebuild(Vector3i sectionPos) throws InterruptedException {
+    @Override
+    public void onFrameBegin() {
         ILevel level = Minecraft.getLevel();
         if (level == null) return;
 
-        if (!notEmptySections.contains(sectionPos)) return;
-
-        var copyResult = createCopy(sectionPos, level);
-        if (copyResult.isEmpty()) {
-            if (notEmptySections.remove(sectionPos))
-                queueUnload(sectionPos);
-
-            return;
+        try {
+            if (renderDistanceSupplier.getAsInt() != lastRenderDistance) {
+                refreshSections(level);
+            }
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
         }
-
-        var section = copyResult.get();
-        queueSection(section);
     }
 
-    public void submitNewSection(Vector3i sectionPos) throws InterruptedException {
+    @Override
+    public void onSectionAdded(int x, int y, int z) {
         ILevel level = Minecraft.getLevel();
         if (level == null) return;
 
-        refreshSections(level);
-        if (!loadedChunks.contains(new Vector2i(sectionPos.x, sectionPos.z))) return;
-        if (notEmptySections.contains(sectionPos)) return;
-
-        var copyResult = createCopy(sectionPos, level);
-        if (copyResult.isEmpty()) return;
-
-        var section = copyResult.get();
-        notEmptySections.add(section.pos());
-        queueSection(section);
-    }
-
-    public void updateRenderDistance() throws InterruptedException {
-        ILevel level = Minecraft.getLevel();
-        if (level == null) return;
-
-        if (renderDistanceSupplier.getAsInt() != lastRenderDistance)
+        try {
             refreshSections(level);
+            Vector3i sectionPos = new Vector3i(x, y, z);
 
+            if (!loadedChunks.contains(new Vector2i(x, z))) return;
+            if (notEmptySections.contains(sectionPos)) return;
+
+            var copyResult = createCopy(sectionPos, level);
+            if (copyResult.isEmpty()) return;
+
+            var section = copyResult.get();
+            notEmptySections.add(section.pos());
+            queueSection(section);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public void onSectionChanged(int x, int y, int z) {
+        ILevel level = Minecraft.getLevel();
+        if (level == null) return;
+
+        try {
+            Vector3i sectionPos = new Vector3i(x, y, z);
+            if (!notEmptySections.contains(sectionPos)) return;
+
+            var copyResult = createCopy(sectionPos, level);
+            if (copyResult.isEmpty()) {
+                if (notEmptySections.remove(sectionPos))
+                    queueUnload(sectionPos);
+
+                return;
+            }
+
+            var section = copyResult.get();
+            queueSection(section);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static Vector3i getCameraChunkPos() {

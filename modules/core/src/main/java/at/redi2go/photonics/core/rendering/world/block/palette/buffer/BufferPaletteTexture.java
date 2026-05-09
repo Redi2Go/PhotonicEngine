@@ -1,22 +1,22 @@
 package at.redi2go.photonics.core.rendering.world.block.palette.buffer;
 
-import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
+import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
 import org.joml.Vector4i;
 
 import java.nio.IntBuffer;
 
-public class BufferPaletteAllocator implements PaletteTexture {
+public class BufferPaletteTexture implements PaletteTexture {
     // 4 ints per entry, with 6 faces.
     private static final long ENTRY_BYTE_SIZE = (4 * 4) * 6;
 
     private final IGpuBufferHeap heap;
 
-    public BufferPaletteAllocator(
+    public BufferPaletteTexture(
             int width,
             int height
     ) {
@@ -27,10 +27,6 @@ public class BufferPaletteAllocator implements PaletteTexture {
         );
     }
 
-    public IGpuBufferHeap heap() {
-        return heap;
-    }
-
     @Override
     public void upload() {
         heap.upload();
@@ -39,6 +35,11 @@ public class BufferPaletteAllocator implements PaletteTexture {
     @Override
     public PaletteTextureView reserveEntry() {
         return new View(heap.allocateOrThrow(ENTRY_BYTE_SIZE));
+    }
+
+    @Override
+    public void registerBuffers(IBufferHolder buffers) {
+        buffers.addDefaultBufferHeap("palette_texture", () -> heap);
     }
 
     @Override

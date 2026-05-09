@@ -1,141 +1,140 @@
 package at.redi2go.photonics.core.iris;
 
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
+import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
-import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
-import at.redi2go.photonics.core.rendering.SectionCopy;
-import at.redi2go.photonics.core.rendering.world.BlockRegistry;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.rendering.world.block.palette.buffer.BufferPaletteAllocator;
-import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
+import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+import at.redi2go.photonics.core.rendering.world.block.palette.buffer.BufferPaletteTexture;
+import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
 import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
-import org.joml.Vector3d;
-import org.joml.Vector3i;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
     private static final int ROOT_VOXEL_DEPTH = 3;
 
     protected final PhotonicsProperties properties;
-    private final AtlasDownloader atlasDownloader;
 
-    private IGpuBufferHeap heap;
-    private BufferPaletteAllocator paletteTexture;
+    private final List<RenderingComponent> components;
+    private final List<Disposable> resources = new ArrayList<>();
 
-    private BlockRegistry registry;
-
-    private final SectionManager sectionManager;
-
-    private final WorldCompiler worldCompiler;
-    private final ChunkCompiler chunkCompiler;
-
-    public AbstractPhotonicsExtension(PhotonicsProperties properties, AtlasDownloader atlasDownloader) {
+    public AbstractPhotonicsExtension(
+            PhotonicsProperties properties,
+            AtlasDownloader atlasDownloader,
+            @Nullable RenderingComponent... components
+    ) {
         this.properties = properties;
-        this.atlasDownloader = atlasDownloader;
+        this.components = new ArrayList<>(components.length);
 
-        this.heap = IRenderSystem.getDevice()
-                .createBufferHeap(
-                        () -> "Photonics World Buffer",
-                        1 << 29,
-                        0
-                );
+        for (var component : components) {
+            if (component != null) {
+                this.components.add(component);
+            }
+        }
 
-        this.paletteTexture = new BufferPaletteAllocator(2048, 600);
-        this.registry = new BufferBlockRegistry(heap, paletteTexture);
+        registerResource(atlasDownloader);
+        var sectionManager = registerComponent(new SectionManager(Minecraft::getRenderDistance));
 
-        this.sectionManager = new SectionManager(Minecraft::getRenderDistance);
+        var heap = registerResource(IRenderSystem.getDevice().createBufferHeap(
+                () -> "Photonics World Buffer",
+                1 << 29,
+                0
+        ));
+
+        var paletteTexture = registerComponent(new BufferPaletteTexture(2048, 600));
+        var blockRegistry = registerComponent(new BufferBlockRegistry(heap, paletteTexture));
+
         var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
-
-        this.worldCompiler = new WorldCompiler(
+        registerComponent(new WorldCompiler(
                 ROOT_VOXEL_DEPTH,
                 Minecraft::getRenderDistance,
                 sectionManager,
                 builtSectionQueue,
-                registry,
-                heap
-        );
+                heap,
+                paletteTexture,
+                blockRegistry
+        ));
 
-        this.chunkCompiler = new ChunkCompiler(
+        registerComponent(new ChunkCompiler(
                 sectionManager,
                 builtSectionQueue,
                 atlasDownloader,
-                registry
-        );
+                blockRegistry
+        ));
+    }
+
+    protected <T extends RenderingComponent> T registerComponent(T component) {
+        if (component != null)
+            this.components.add(component);
+
+        return component;
+    }
+
+    protected <T extends Disposable> T registerResource(T resource) {
+        if (resource != null)
+            this.resources.add(resource);
+
+        return resource;
     }
 
     @Override
     public void onFrameBegin() {
-        worldCompiler.doUpload(() -> {
-            heap.upload();
-            paletteTexture.upload();
-        });
-
-        try {
-            sectionManager.updateRenderDistance();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        components.forEach(RenderingComponent::onFrameBegin);
     }
 
     @Override
     public void onSectionAdded(int x, int y, int z) {
-        try {
-            sectionManager.submitNewSection(new Vector3i(x, y, z));
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        for (var component : components)
+            component.onSectionAdded(x, y, z);
     }
 
     @Override
     public void onSectionChanged(int x, int y, int z) {
-        try {
-            sectionManager.submitRebuild(new Vector3i(x, y, z));
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        for (var component : components)
+            component.onSectionChanged(x, y, z);
     }
 
     @Override
     public void registerUniforms(IUniformHolder uniforms) {
-        uniforms.uniform3d(IUniformUpdateFrequency.perFrame(), "world_offset", () -> {
-            var offset = worldCompiler.origin();
-            if (offset == null) return new Vector3d(0f);
+        for (var component : components)
+            component.registerUniforms(uniforms);
+    }
 
-            return new Vector3d(offset);
-        });
-
-        uniforms.uniform3f(IUniformUpdateFrequency.perFrame(), "world_min_voxel", worldCompiler::minVoxel);
-        uniforms.uniform3f(IUniformUpdateFrequency.perFrame(), "world_max_voxel", worldCompiler::maxVoxel);
-
-        uniforms.uniform3d(IUniformUpdateFrequency.perFrame(), "rt_camera_position", () -> {
-            var offset = worldCompiler.origin();
-            if (offset == null) return new Vector3d(0f);
-
-            var pos = Minecraft.getCameraPos();
-            return offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z));
-        });
+    @Override
+    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
+        for (var component : components)
+            component.registerDynamicUniforms(dynamicUniforms);
     }
 
     @Override
     public void registerBuffers(IBufferHolder buffers) {
-        buffers.addDefaultBufferHeap("world_voxel_buffer", () -> heap);
-        buffers.addDefaultBufferHeap("palette_texture", () -> paletteTexture.heap());
+        for (var component : components)
+            component.registerBuffers(buffers);
+    }
+
+    @Override
+    public void registerCustomTextures(ISamplerHolder samplers) {
+        for (var component : components)
+            component.registerCustomTextures(samplers);
     }
 
     @Override
     public void close() {
-        worldCompiler.close();
-        chunkCompiler.close();
+        for (int i = components.size() - 1; i >= 0; i--)
+            components.get(i).close();
 
-        registry.close();
-
-        atlasDownloader.close();
-        heap.close();
-        paletteTexture.close();
+        for (int i = resources.size() - 1; i >= 0; i--)
+            resources.get(i).close();
     }
 }
