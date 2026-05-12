@@ -16,6 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -61,15 +63,21 @@ public abstract class IncludeGraphMixin {
                     target = "Lnet/irisshaders/iris/shaderpack/include/IncludeGraph;readFile(Ljava/nio/file/Path;)Ljava/lang/String;"
             )
     )
-    private String readFile(Path path, Operation<String> original) {
-        return patcher.readShaderFile(
-                IPackPath.fromAbsolutePath("/" + root.relativize(path).toString()),
-                packPath -> {
-                    var fsPath = packPath.resolved(root);
+    private String readFile(Path path, Operation<String> original) throws IOException {
+        var packPath = IPackPath.fromAbsolutePath("/" + root.relativize(path));
+        var result = patcher.readShaderFile(
+                packPath,
+                p -> {
+                    var fsPath = p.resolved(root);
                     if (!Files.exists(fsPath)) return null;
 
                     return original.call(fsPath);
                 }
         );
+
+        if (result == null)
+            throw new FileNotFoundException(packPath.pathString());
+
+        return result;
     }
 }

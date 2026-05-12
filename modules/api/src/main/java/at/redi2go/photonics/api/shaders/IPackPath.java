@@ -21,6 +21,8 @@ public interface IPackPath {
         return startsWith(fromAbsolutePath(absolutePath));
     }
 
+    String pathString();
+
     static IPackPath fromAbsolutePath(String absolutePath) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }

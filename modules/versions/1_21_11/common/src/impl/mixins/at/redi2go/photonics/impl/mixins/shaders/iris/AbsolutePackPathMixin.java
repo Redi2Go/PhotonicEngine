@@ -21,4 +21,9 @@ public abstract class AbsolutePackPathMixin implements IPackPath {
     public boolean startsWith(IPackPath path) {
         return this.path.startsWith(((AbsolutePackPath) path).getPathString());
     }
+
+    @Override
+    public String pathString() {
+        return path;
+    }
 }
