@@ -3,14 +3,14 @@ bool trace_light_vis(
     vec3 direction,
     vec3 light_rt_pos,
     int max_iterations,
-    out vec4 tint_color,
+    out vec3 tint_color,
     out float light_transmittance
 ) {
     RayIterator ray;
     ray_iter_begin(ray, rt_pos, direction);
     RayResult result = missed_ray_result();
 
-    tint_color = vec4(0);
+    vec4 running_tint_color = vec4(0);
     light_transmittance = 1f;
 
     while (ray_iter_has_next_block(ray, light_rt_pos)) {
@@ -21,7 +21,7 @@ bool trace_light_vis(
             vec4 albedo = voxel_data_albedo(voxel_data);
 
             light_transmittance *= 1.0f - albedo.a;
-            ray_iter_apply_transparency(tint_color, albedo);
+            ray_iter_apply_transparency(running_tint_color, albedo);
             ray_iter_skip_block(ray);
 
             continue;
@@ -32,6 +32,8 @@ bool trace_light_vis(
 
     if (!ray_result_is_hit(result)) return false;
     if (floor(ray_result_position(result)) != floor(light_rt_pos)) return false;
+
+    tint_color = running_tint_color.a == 0.0f ? vec3(1f) : running_tint_color.rgb;
 
     return true;
 }
