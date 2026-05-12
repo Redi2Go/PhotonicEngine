@@ -77,7 +77,7 @@ public class MinecraftBlockMesher implements BlockMesher {
             BlockAndTintGetter blockAndTintGetter,
             BlockBuilder builder
     ) {
-        var renderer = this.RENDERERS.get();
+        var renderer = RENDERERS.get();
         int lod = getLod(blockState);
         builder.beginBlock(IrisUtil.getBlockId(blockState), lod, blockChunkOffset);
 
