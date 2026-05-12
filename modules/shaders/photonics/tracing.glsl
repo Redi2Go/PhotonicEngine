@@ -3,5 +3,6 @@
 
 #include "/photonics/internal/tracing/common.glsl"
 #include "/photonics/internal/tracing/iterator.glsl"
+#include "/photonics/internal/tracing/simple.glsl"
 
 #endif

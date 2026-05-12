@@ -98,7 +98,8 @@ bool _ray_skip_intersection(inout RayIterator ray, ivec3 intersection) {
     return false;
 }
 
-void _ray_iter_trace_next(inout RayIterator ray) {
+const ivec3 ph_ray_no_target = ivec3(-1);
+void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     if (ray.state != PH_RAY_STATE_READY) return;
     if (ray.iterations == 0) return;
 
@@ -122,7 +123,8 @@ void _ray_iter_trace_next(inout RayIterator ray) {
 
     for (; ray.iterations > 0; ray.iterations--) {
         int index_shift_factor = ph_trace_depth << 2;
-        int index = ph_get_voxel_index((ph_trace_ipos >> index_shift_factor) & 15);
+        ivec3 voxel_pos = ph_trace_ipos >> index_shift_factor;
+        int index = ph_get_voxel_index(voxel_pos & 15);
 
         uint parent_voxel = entry_ptrs[ph_trace_depth + 1];
         uint entry = ph_world_buffer[parent_voxel + index];
@@ -150,6 +152,18 @@ void _ray_iter_trace_next(inout RayIterator ray) {
                 ray.state = PH_RAY_STATE_HAS_HIT;
                 return;
             } else if (ph_trace_depth == PH_CHUNK_DEPTH) {
+                if (voxel_pos == target) {
+                    ray.hit = new_ray_result(
+                        vec3(target),
+                        0,
+                        0,
+                        false
+                    );
+
+                    ray.state = PH_RAY_STATE_HAS_HIT;
+                    return;
+                }
+
                 //Block header:
                 //ptr + 0 = skylight
                 //ptr + 1 = block voxel ptr
@@ -176,14 +190,27 @@ void _ray_iter_trace_next(inout RayIterator ray) {
 }
 
 bool ray_iter_has_next(inout RayIterator ray) {
-    _ray_iter_trace_next(ray);
+    _ray_iter_trace_next(ray, ph_ray_no_target);
     return ray.state == PH_RAY_STATE_HAS_HIT;
 }
 
 RayResult ray_iter_next(inout RayIterator ray) {
-    _ray_iter_trace_next(ray);
+    _ray_iter_trace_next(ray, ph_ray_no_target);
     if (ray.state != PH_RAY_STATE_OUT_OF_BOUNDS)
         ray.state = PH_RAY_STATE_READY;
+
+    return ray.hit;
+}
+
+bool ray_iter_has_next_block(inout RayIterator ray, vec3 target) {
+    _ray_iter_trace_next(ray, ivec3(target));
+    return ray.state == PH_RAY_STATE_HAS_HIT;
+}
+
+RayResult ray_iter_next_block(inout RayIterator ray, vec3 target) {
+    _ray_iter_trace_next(ray, ivec3(target));
+    if (ray.state != PH_RAY_STATE_OUT_OF_BOUNDS)
+    ray.state = PH_RAY_STATE_READY;
 
     return ray.hit;
 }
@@ -211,7 +238,7 @@ bool ray_iter_is_in_bounds(RayIterator ray) {
 }
 
 void ray_iter_apply_transparency(inout vec4 accumulator, vec4 albedo) {
-    if (accumulator.a != -1) {
+    if (accumulator.a != 0) {
         float mix_factor = (1 - accumulator.a) * albedo.a;
         accumulator.rgb = mix(accumulator.rgb, albedo.rgb, mix_factor);
         accumulator.a+= mix_factor;

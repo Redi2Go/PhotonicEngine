@@ -25,6 +25,7 @@ public class ShaderPatcher {
     // TODO replace with comment at the top of the file
     private static final Set<String> AUTO_REPLACED_FILES = Set.of("photonics.glsl", "ph_samplers.glsl");
     private static final Path PATCHED_DEBUG_PATH = ModLoader.getGameDir().resolve(".ph-patched-shaders");
+    private static final Path PHOTONICS_SHADERS_PATH = getPhotonicsShadersPath();
 
     private final IShaderPack pack;
     private final @Nullable Patch patch;
@@ -51,9 +52,7 @@ public class ShaderPatcher {
         if (patch != null)
             createdFiles.addAll(patch.getFiles());
 
-        Path includedShaders = Photonics.getAssetsPath()
-                .resolve("photonics")
-                .resolve("shaders")
+        Path includedShaders = PHOTONICS_SHADERS_PATH
                 .resolve("photonics");
 
         try (Stream<Path> shaders = Files.walk(includedShaders)) {
@@ -73,16 +72,24 @@ public class ShaderPatcher {
         return createdFiles;
     }
 
+    private static Path getPhotonicsShadersPath() {
+        if (Photonics.isDevEnvironment()) {
+            return ModLoader.getGameDir().resolve("../../../../shaders")
+                    .normalize();
+        }
+
+        return Photonics.getAssetsPath()
+                .resolve("photonics")
+                .resolve("shaders")
+                .normalize();
+    }
+
     public @Nullable String readPhotonicsFile(
             IPackPath packPath,
             Function<IPackPath, @Nullable String> shaderSourceSupplier
     ) {
-        Path includedShaders = Photonics.getAssetsPath()
-                .resolve("photonics")
-                .resolve("shaders");
-
-        Path realPath = packPath.resolved(includedShaders);
-        Path relativePath = includedShaders.resolve("photonics")
+        Path realPath = packPath.resolved(PHOTONICS_SHADERS_PATH);
+        Path relativePath = PHOTONICS_SHADERS_PATH.resolve("photonics")
                 .relativize(realPath);
 
         @Nullable String source = null;
