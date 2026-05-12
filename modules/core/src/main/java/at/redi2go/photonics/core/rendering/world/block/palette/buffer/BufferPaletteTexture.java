@@ -39,7 +39,7 @@ public class BufferPaletteTexture implements PaletteTexture {
 
     @Override
     public void registerBuffers(IBufferHolder buffers) {
-        buffers.addDefaultBufferHeap("palette_texture", () -> heap);
+        buffers.addDefaultBufferHeap("ph_palette_texture", () -> heap);
     }
 
     @Override
