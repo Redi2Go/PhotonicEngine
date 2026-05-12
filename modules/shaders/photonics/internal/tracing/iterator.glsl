@@ -156,7 +156,7 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
                     ray.hit = new_ray_result(
                         vec3(target),
                         0,
-                        0,
+                        1,
                         false
                     );
 
