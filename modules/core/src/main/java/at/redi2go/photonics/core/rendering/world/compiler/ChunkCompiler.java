@@ -80,10 +80,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
                 var bakery = nextBakery();
 
-                Vector3i sectionBlockPos = section.pos().mul(16, new Vector3i());
-                Vector3i blockChunkOffset = new Vector3i();
-
-                long hash = 0;
+                final long[] hash = {0};
 
                 ILevel level = Minecraft.getLevel();
                 if (level == null) {
@@ -91,38 +88,24 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                     continue;
                 }
 
-                for (int px = 0; px < 16; px++) {
-                    for (int py = 0; py < 16; py++) {
-                        for (int pz = 0; pz < 16; pz++) {
-                            var blockPos = IBlockPos.of(
-                                    sectionBlockPos.x + px,
-                                    sectionBlockPos.y + py,
-                                    sectionBlockPos.z + pz
-                            );
+                section.forEachBlock((blockChunkOffset, blockPos, block) -> {
+                    hash[0] = hash[0] * 31 + block.hashCode();
 
-                            var block = section.getBlockState(px, py, pz);
-                            hash = hash * 31 + block.hashCode();
+                    if (block.isAir()) return;
+                    bakery.submitBlock(
+                            blockChunkOffset,
+                            blockPos,
+                            block,
+                            level
+                    );
+                });
 
-                            if (block.isAir()) continue;
-
-                            blockChunkOffset.set(px, py, pz);
-
-                            bakery.submitBlock(
-                                    blockChunkOffset,
-                                    blockPos,
-                                    block,
-                                    level
-                            );
-                        }
-                    }
-                }
-
-                if (Objects.equals(sectionHashes.put(section.pos(), hash), hash)) {
+                if (Objects.equals(sectionHashes.put(section.pos(), hash[0]), hash[0])) {
                     releaseBakery(bakery);
                     continue;
                 }
 
-                builtSectionQueue.offer(section.pos(), new BuildResult(section.pos(), sectionBlockPos, bakery));
+                builtSectionQueue.offer(section.pos(), new BuildResult(section.pos(), section.blockPos(), bakery));
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
 

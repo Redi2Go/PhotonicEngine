@@ -1,14 +1,14 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
-import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
-import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
-import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
+import at.redi2go.photonics.core.rendering.ThreadRunnable;
+import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.WorldOrigin;
@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.IntSupplier;
 
 public class WorldCompiler implements Runnable, RenderingComponent {
     public static final int MAX_SECTIONS_PER_RUN = 12;
@@ -42,7 +41,6 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private static final int THREAD_POOL_SIZE = 3;
     private static final ExecutorService THREAD_POOL;
 
-    private final IntSupplier renderDistanceSupplier;
     private final Queue<Vector3i> unloadQueue;
     private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue;
 
@@ -64,6 +62,8 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private final Vector3i minVoxel = new Vector3i();
     private final Vector3i maxVoxel = new Vector3i();
 
+    private final UniformUpdater uniformUpdater = new UniformUpdater();
+
     private WorldOrigin mostRecentOrigin;
     private Vector3f mostRecentMinVoxel = new Vector3f();
     private Vector3f mostRecentMaxVoxel = new Vector3f();
@@ -72,14 +72,12 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
     public WorldCompiler(
             int depth,
-            IntSupplier renderDistanceSupplier,
             SectionManager sectionManager,
             SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue,
             IGpuBufferHeap heap,
             PaletteTexture paletteTexture,
             BlockRegistry blockRegistry
     ) {
-        this.renderDistanceSupplier = renderDistanceSupplier;
         this.unloadQueue = sectionManager.newUnloadQueue();
         this.builtSectionQueue = builtSectionQueue;
         this.heap = heap;
@@ -91,6 +89,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
+    }
+
+    public WorldOrigin origin() {
+        return mostRecentOrigin;
     }
 
     private void setOrigin(Vector3i origin) {
@@ -144,7 +146,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     }
 
     private void recenter() throws InterruptedException {
-        var newOrigin = getWorldOrigin(Minecraft.getCameraPos(), renderDistanceSupplier.getAsInt() + 8);
+        var newOrigin = WorldOrigin.getAsVector3i();
         if (iorigin == null) {
             setOrigin(newOrigin);
             return;
@@ -243,6 +245,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
         try {
             canUpload = true;
+            uniformUpdater.updateNextFrame();
             uploadDone.await();
         } finally {
             uploadLock.unlock();
@@ -258,6 +261,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
             heap.upload();
             paletteTexture.upload();
+            uniformUpdater.updateAll();
 
             mostRecentOrigin = origin;
 
@@ -271,29 +275,33 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     }
 
     @Override
-    public void registerUniforms(IUniformHolder uniforms) {
-        uniforms.uniform3d(IUniformUpdateFrequency.perFrame(), "world_offset", () -> {
+    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
+        dynamicUniforms.uniform3f(
+                "world_offset",
+                () -> {
+                    var offset = mostRecentOrigin;
+                    if (offset == null) return new Vector3f(0f);
+
+                    return new Vector3f(offset);
+                },
+                uniformUpdater.newNotifier()
+        );
+
+        dynamicUniforms.uniform3f("world_min_voxel", () -> mostRecentMinVoxel, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_max_voxel", () -> mostRecentMaxVoxel, uniformUpdater.newNotifier());
+
+        dynamicUniforms.uniform3f("rt_camera_position", () -> {
             var offset = mostRecentOrigin;
-            if (offset == null) return new Vector3d(0f);
-
-            return new Vector3d(offset);
-        });
-
-        uniforms.uniform3f(IUniformUpdateFrequency.perFrame(), "world_min_voxel", () -> mostRecentMinVoxel);
-        uniforms.uniform3f(IUniformUpdateFrequency.perFrame(), "world_max_voxel", () -> mostRecentMaxVoxel);
-
-        uniforms.uniform3d(IUniformUpdateFrequency.perFrame(), "rt_camera_position", () -> {
-            var offset = mostRecentOrigin;
-            if (offset == null) return new Vector3d(0f);
+            if (offset == null) return new Vector3f(0f);
 
             var pos = Minecraft.getCameraPos();
-            return offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z));
-        });
+            return new Vector3f(offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z)));
+        }, uniformUpdater.newNotifier());
     }
 
     @Override
     public void registerBuffers(IBufferHolder buffers) {
-        buffers.addDefaultBufferHeap("world_voxel_buffer", () -> heap);
+        buffers.addDefaultBufferHeap("ph_world_voxel_buffer", () -> heap);
     }
 
     // Chunk management
@@ -319,20 +327,6 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         int hash = chunkPos.hashCode();
         return (short) (hash ^ (hash >>> 16));
     }
-
-    private static int snapToSectionPos(int component, int renderDistance) {
-        var chunkPos = ((component >> 4) - renderDistance) << 4;
-        return (chunkPos >> 6) << 6;
-    }
-
-    private static Vector3i getWorldOrigin(Vector3d cameraPos, int renderDistance) {
-        return new Vector3i(
-                snapToSectionPos((int) cameraPos.x, renderDistance),
-                snapToSectionPos((int) cameraPos.y, renderDistance),
-                snapToSectionPos((int) cameraPos.z, renderDistance)
-        );
-    }
-
 
     // Tasks
 

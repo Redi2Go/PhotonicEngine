@@ -31,7 +31,7 @@ public class LightGroup {
 
     public void recordLights(
             Variable.Owner owner,
-            LightList lights,
+            LightRegistry lights,
             Map<IBlock, Boolean> tracedLightsOverrides,
             int priority
     ) {
@@ -50,7 +50,7 @@ public class LightGroup {
 
     private void recordLightsImpl(
             Variable.Owner owner,
-            LightList lights,
+            LightRegistry lights,
             Map<IBlock, Boolean> tracedLightsOverrides,
             @Nullable LightColor color,
             @Nullable Float intensity,
@@ -112,7 +112,7 @@ public class LightGroup {
     }
 
     private static void addBlock(
-            LightList lights,
+            LightRegistry lights,
             Map<IBlock, Boolean> tracedLightsOverrides,
             LightPredicate predicate,
             @Nullable LightColor color,

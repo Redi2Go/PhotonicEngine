@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-public class LightList {
+public class LightRegistry {
     private final ListMultimap<IBlock, BlockLightInfo> lights = ArrayListMultimap.create();
 
     public Set<IBlock> keySet() {
@@ -71,7 +71,7 @@ public class LightList {
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof LightList other)) return false;
+        if (!(obj instanceof LightRegistry other)) return false;
 
         return other.lights.equals(lights);
     }

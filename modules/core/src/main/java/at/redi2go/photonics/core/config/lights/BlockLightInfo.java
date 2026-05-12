@@ -7,6 +7,7 @@ import at.redi2go.photonics.core.config.lights.color.LightColor;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;
 import org.jetbrains.annotations.NonNls;
 import org.joml.Vector2f;
+import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -89,11 +90,9 @@ public final class BlockLightInfo implements Comparable<BlockLightInfo> {
         return predicate.test(pos, level);
     }
 
-    public float luminanceFrom(Vector3f lightPosition, Vector3f samplePosition) {
-        float dx = samplePosition.x - lightPosition.x;
-        float dy = samplePosition.y - lightPosition.y;
-        float dz = samplePosition.z - lightPosition.z;
-        float distanceSquared = (dx * dx + dy * dy + dz * dz) * falloff;
+    public float luminanceFrom(Vector3d lightPosition, Vector3d samplePosition) {
+        var result = samplePosition.sub(lightPosition, new Vector3d());
+        float distanceSquared = (float) (result.dot(result) * falloff);
 
         return this.luminanceDotColor / (0.9f + distanceSquared * radiusRcp);
     }

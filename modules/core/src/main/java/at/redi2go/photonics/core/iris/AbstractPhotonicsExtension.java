@@ -11,6 +11,7 @@ import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
+import at.redi2go.photonics.core.rendering.lights.BufferLightList;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.block.palette.buffer.BufferPaletteTexture;
 import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
@@ -56,9 +57,8 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         var blockRegistry = registerComponent(new BufferBlockRegistry(heap, paletteTexture));
 
         var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
-        registerComponent(new WorldCompiler(
+        var worldCompiler = registerComponent(new WorldCompiler(
                 ROOT_VOXEL_DEPTH,
-                Minecraft::getRenderDistance,
                 sectionManager,
                 builtSectionQueue,
                 heap,
@@ -72,6 +72,14 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
                 atlasDownloader,
                 blockRegistry
         ));
+
+        registerComponent(
+                new BufferLightList(
+                        sectionManager,
+                        properties.getMaxLights(),
+                        worldCompiler::origin
+                )
+        );
     }
 
     protected <T extends RenderingComponent> T registerComponent(T component) {
@@ -136,5 +144,8 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
 
         for (int i = resources.size() - 1; i >= 0; i--)
             resources.get(i).close();
+
+        components.clear();
+        resources.clear();
     }
 }

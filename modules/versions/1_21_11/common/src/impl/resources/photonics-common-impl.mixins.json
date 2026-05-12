@@ -6,6 +6,7 @@
   "client": [
     "mc.IdentifierMixin",
     "mc.IdImpl",
+    "mc.PropertyMixin",
     "mc.IMinecraftImpl",
     "mc.blaze3d.common.systems.IRenderSystemImpl",
     "mc.blaze3d.common.buffers.GpuBufferSliceMixin",

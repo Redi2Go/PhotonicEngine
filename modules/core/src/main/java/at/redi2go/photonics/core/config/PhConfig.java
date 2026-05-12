@@ -4,7 +4,7 @@ import at.redi2go.photonics.api.ModLoader;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.config.adapter.BlockAdapter;
-import at.redi2go.photonics.core.config.lights.LightList;
+import at.redi2go.photonics.core.config.lights.LightRegistry;
 import at.redi2go.photonics.core.config.lights.LightsProvider;
 import at.redi2go.photonics.core.config.lights.block.LightBlock;
 import at.redi2go.photonics.core.config.lights.color.LightColor;
@@ -38,17 +38,17 @@ public class PhConfig {
     static int mod = 0;
 
     private static PhStorage INSTANCE = new PhStorage();
-    private static LightList lightList = new LightList();
+    private static LightRegistry lightRegistry = new LightRegistry();
     private static final Set<PhConfigWatcher<?>> WATCHERS = new LinkedHashSet<>();
 
     private static final Set<LightsProvider> LIGHTS_PROVIDERS = Sets.newHashSet(
             new LightsProvider() {
                 @Override
-                public void registerLights(LightList lights) {
+                public void registerLights(LightRegistry lights) {
                     for (final var lightGroup : INSTANCE.lights.values())
                         lightGroup.recordLights(
                                 PhConfigOwner.INSTANCE,
-                                lightList,
+                                lightRegistry,
                                 INSTANCE.raytracedLights,
                                 0
                         );
@@ -156,15 +156,15 @@ public class PhConfig {
         config.defines.setOwner(PhConfigOwner.INSTANCE);
 
         // create a new light list instance so PhConfigWatchers detect a change
-        lightList = new LightList();
+        lightRegistry = new LightRegistry();
         for (var provider : LIGHTS_PROVIDERS)
             try {
-                provider.registerLights(lightList);
+                provider.registerLights(lightRegistry);
             } catch (Exception e) {
                 Photonics.LOGGER.warn("Could not register lights provider", e);
             }
 
-        lightList.sort();
+        lightRegistry.sort();
 
         for (var PhConfigWatcher : WATCHERS)
             PhConfigWatcher.reload(config);
@@ -178,8 +178,8 @@ public class PhConfig {
         INSTANCE.multiThreadingEnabled = enabled;
     }
 
-    public static LightList getLightList() {
-        return lightList;
+    public static LightRegistry getLightRegistry() {
+        return lightRegistry;
     }
 
     public static boolean isVoxelizedBlocksEnabled() {

@@ -24,14 +24,4 @@ public class BasicPipeline extends AbstractPhotonicsExtension {
     public void onRender() {
 
     }
-
-    @Override
-    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
-
-    }
-
-    @Override
-    public void registerCustomTextures(ISamplerHolder samplers) {
-
-    }
 }
