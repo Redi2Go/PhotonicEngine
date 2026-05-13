@@ -3,6 +3,7 @@ package at.redi2go.photonics.common.iris.pipeline.framebuffer;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.impl.mc.blaze3d.opengl.textures.IGlTexture;
 import com.google.common.collect.ImmutableList;
+import net.irisshaders.iris.gl.IrisRenderSystem;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
 import net.minecraft.client.Minecraft;
 import org.joml.Vector2i;
@@ -67,7 +68,12 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
     }
 
     @Override
-    public void addSamplers(ISamplerHolder samplers) {
+    public void onFrameBegin() {
+        recalculateSizes();
+    }
+
+    @Override
+    public void registerCustomTextures(ISamplerHolder samplers) {
         for (int i = 0; i < attachments.size(); i++) {
             var attachment = attachments.get(i);
             final int attachmentIndex = i;
