@@ -8,10 +8,7 @@ import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 public class ShaderPropertiesBridge {
     public static PhotonicsPropertiesImpl PROPERTIES = null;
 
-    public static PhotonicsPropertiesImpl consumeProperties() {
-        var result = PROPERTIES;
-        PROPERTIES = null;
-
-        return result;
+    public static PhotonicsPropertiesImpl getProperties() {
+        return PROPERTIES;
     }
 }

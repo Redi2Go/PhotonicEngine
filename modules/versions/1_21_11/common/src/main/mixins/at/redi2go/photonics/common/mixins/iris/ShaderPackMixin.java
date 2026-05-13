@@ -68,22 +68,7 @@ public abstract class ShaderPackMixin implements IShaderPack {
             phProperties.enabled = Boolean.parseBoolean(
                     changedConfigs.getOrDefault("PHOTONICS_ENABLED", "true")
             );
-    }
 
-    @Inject(
-            method = "<init>(Ljava/nio/file/Path;Ljava/util/Map;Lcom/google/common/collect/ImmutableList;Z)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/irisshaders/iris/shaderpack/ShaderPack;loadProperties(Ljava/nio/file/Path;Ljava/lang/String;)Ljava/util/Optional;"
-            )
-    )
-    private void loadShaderProperties(
-            Path root,
-            Map<String, String> changedConfigs,
-            ImmutableList<String> environmentDefines,
-            boolean isZip,
-            CallbackInfo ci
-    ) {
         ShaderPropertiesBridge.PROPERTIES = phProperties;
     }
 

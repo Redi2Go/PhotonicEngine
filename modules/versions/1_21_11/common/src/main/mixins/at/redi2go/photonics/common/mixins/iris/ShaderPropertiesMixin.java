@@ -49,7 +49,7 @@ public abstract class ShaderPropertiesMixin {
             @Local(name = "key") String key,
             @Local(name = "value") String value
     ) {
-        var phProperties = ShaderPropertiesBridge.consumeProperties();
+        var phProperties = ShaderPropertiesBridge.getProperties();
 
         handleBooleanDirective(key, value, ENABLED_KEY, e -> phProperties.enabled = e);
         handleFloatDirective(key, value, RENDER_SCALE_KEY, e -> phProperties.renderScale = e);
