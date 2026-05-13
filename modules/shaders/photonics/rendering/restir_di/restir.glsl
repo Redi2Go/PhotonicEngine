@@ -26,8 +26,6 @@ void light_sample_compute_weight(inout LightSample smple) {
 }
 
 LightSample light_sample_new(Light light, vec3 sample_pos) {
-    snap_to_voxel(sample_pos, ph_geo_normal);
-
     LightSample result = LightSample(
         light.index,
         light.position,
