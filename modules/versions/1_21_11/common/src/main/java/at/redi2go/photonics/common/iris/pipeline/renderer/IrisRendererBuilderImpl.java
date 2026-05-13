@@ -32,7 +32,7 @@ public class IrisRendererBuilderImpl implements IrisRenderer.Builder {
                 new IrisRendererImpl.Pass(
                         name,
                         fragmentShader,
-                        vertexShader,
+                        vertexShader == null ? "/photonics/rendering/screen.vsh" : vertexShader,
                         framebuffer
                 )
         );
