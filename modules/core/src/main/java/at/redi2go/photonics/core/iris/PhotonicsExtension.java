@@ -2,6 +2,8 @@ package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.extensions.BasicPipeline;
+import at.redi2go.photonics.core.iris.extensions.OffPipeline;
+import at.redi2go.photonics.core.iris.extensions.RestirDiPipeline;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
@@ -25,11 +27,11 @@ public interface PhotonicsExtension extends RenderingComponent {
     ) {
         if (!properties.isPhotonicsEnabled()) return new Disabled();
 
-        return new BasicPipeline(
-                properties,
-                atlasDownloader.get(),
-                passFactory
-        );
+        return switch (properties.getLightingMode()) {
+            case OFF -> new OffPipeline(properties, atlasDownloader.get());
+            case BASIC -> new BasicPipeline(properties, atlasDownloader.get(), passFactory);
+            case RESTIR -> new RestirDiPipeline(properties, atlasDownloader.get(), passFactory);
+        };
     }
 
     class Disabled implements PhotonicsExtension {
