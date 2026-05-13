@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 import java.util.List;
 
@@ -24,8 +25,13 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
         this.attachments = ImmutableList.copyOf(attachments);
         this.sizeSupplier = sizeSupplier;
 
-        for (int i = 0; i < attachments.size(); i++)
+        int[] drawBuffers = new int[attachments.size()];
+        for (int i = 0; i < attachments.size(); i++) {
             addColorAttachment(i, ((IGlTexture) attachments.get(i).texture()).handle());
+            drawBuffers[i] = GL30.GL_COLOR_ATTACHMENT0 + i;
+        }
+
+        IrisRenderSystem.drawBuffers(getGlId(), drawBuffers);
     }
 
     public List<FramebufferAttachment> attachments() {
