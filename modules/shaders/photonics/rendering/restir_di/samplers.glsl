@@ -1,7 +1,8 @@
-uniform sampler2D restir_direct;
+uniform sampler2D restir_lighting;
 
 vec3 sample_photonics_direct(vec2 tex_coord) {
-    return texture(restir_direct, tex_coord).rgb;
+    vec4 lighting = texture2D(restir_lighting, tex_coord);
+    return (lighting.rgb / max(lighting.a, 1f));
 }
 
 vec3 sample_photonics_handheld(vec2 tex_coord) {

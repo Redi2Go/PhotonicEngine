@@ -5,8 +5,22 @@
 #include "/photonics/light_list.glsl"
 #include "/photonics/utility/random.glsl"
 #include "/photonics/utility/color.glsl"
+#include "/photonics/utility/projection.glsl"
 
-float light_importance = 1f / ph_light_count;
+uniform sampler2D restir_reservoirs;
+uniform sampler2D restir_lighting;
+uniform sampler2D restir_lighting_variance;
+uniform sampler2D restir_lighting_samples;
+
+uniform sampler2D prev_restir_reservoirs;
+uniform sampler2D prev_restir_lighting;
+uniform sampler2D prev_restir_lighting_variance;
+
+
+uniform sampler2D prev_restir_position_history;
+uniform sampler2D prev_restir_normal_history;
+
+float light_importance = 1f / light_list_size;
 const float MAX_RESERVOIR_SAMPLES = 20f * PH_RESTIR_INITIAL_SAMPLES;
 
 struct LightSample {
@@ -40,8 +54,8 @@ LightSample light_sample_new(Light light, vec3 sample_pos) {
         result.dir,
         sample_pos,
         light.position,
-        ph_geo_normal,
-        ph_tex_normal
+        frag_geo_normal,
+        frag_tex_normal
     );
 
     result.dir = normalize(result.dir);
@@ -61,7 +75,7 @@ LightSample light_sample_new(Light light, vec3 sample_pos) {
 
 void light_sample_trace_hit(inout LightSample smple, out vec3 tint_color, out float light_transmittance, bool jitter) {
     if (jitter) {
-        rand_sample_position(ph_rnd_state, smple.light_pos, smple.sample_pos);
+        rand_sample_position(frag_rnd_state, smple.light_pos, smple.sample_pos);
         smple.dir = normalize(smple.light_pos - smple.sample_pos);
     }
 
@@ -80,15 +94,10 @@ float light_sample_encode(LightSample smple) {
 }
 
 LightSample light_sample_decode(float value, vec3 sample_pos, bool remap) {
-    int index = int(value);
-    if (index < 0 || index > ph_light_count) return NULL_SAMPLE;
+    int index = remap ? light_list_map_index(int(value)) : int(value);
+    if (index < 0 || index > light_list_size) return NULL_SAMPLE;
 
-//    if (remap) {
-//        index = ph_lights_array_mapping[index];
-//        if (index < 0 || index > ph_light_count) return NULL_SAMPLE;
-//    }
-
-    return light_sample_new(load_light(index), sample_pos);
+    return light_sample_new(light_list_get(index), sample_pos);
 }
 
 struct Reservoir {
@@ -113,7 +122,7 @@ bool reservoir_update(
     reservoir.weight_sum+= weight;
     reservoir.samples+= samples;
 
-    if (rand_next_float(ph_rnd_state) < (weight / reservoir.weight_sum)) {
+    if (rand_next_float(frag_rnd_state) < (weight / reservoir.weight_sum)) {
         reservoir.light = smple;
 
         return true;
@@ -124,8 +133,8 @@ bool reservoir_update(
 
 void reservoir_init(inout Reservoir reservoir, vec3 rt_pos) {
     for (int i = 0; i < 32; i++) {
-        int rand_index = rand_next_int(ph_rnd_state, 0, ph_light_count);
-        LightSample smple = light_sample_new(load_light(rand_index), rt_pos);
+        int rand_index = rand_next_int(frag_rnd_state, 0, light_list_size);
+        LightSample smple = light_sample_new(light_list_get(rand_index), rt_pos);
 
         reservoir_update(
             reservoir,
@@ -170,70 +179,63 @@ void reservoir_decode(inout Reservoir reservoir, vec4 color, vec3 sample_pos, bo
     reservoir.samples = color.w;
 }
 
-//bool reservoir_reuse(inout Reservoir reservoir, ivec2 uv) {
-//    if (!bad_angle) {
-//        vec3 smple_rt_pos = texelFetch(
-//            radiosity_position,
-//            uv,
-//            0
-//        ).xyz - world_offset;
-//
-//        vec3 d = smple_rt_pos - rt_pos;
-//        if (dot(d, d) >= 0.3f) return false;
-//    }
-//
-//    vec3 n = ph_decode_normal(texelFetch(radiosity_normal, uv, 0).xy);
-//    if (dot(n, block_normal) < 0.99f) return false;
-//
-//    reservoir_decode(
-//        reservoir,
-//        texelFetch(
-//            radiosity_reservoirs,
-//            uv,
-//            0
-//        ),
-//        rt_pos,
-//        false
-//    );
-//
-//    return !isnan(reservoir.weight) && !isnan(reservoir.weight_sum);
-//}
+bool reservoir_reuse(inout Reservoir reservoir, vec2 texel) {
+    if (!frag_is_bad_angle) {
+        vec3 sample_player_pos = get_player_position(texel);
+        vec3 d = sample_player_pos - frag_player_pos;
+        if (dot(d, d) >= 0.3f) return false;
+    }
 
-//bool reservoir_reproject(inout Reservoir reservoir) {
-//    vec2 uv = ph_reprojectf(
-//        previous_modelview_projection,
-//        world_pos + block_normal * 0.01f,
-//        vec2(viewWidth, viewHeight),
-//        get_taa_jitter()
-//    );
-//
-//    if (!bad_angle) {
-//        vec3 prev_rt_pos = texelFetch(
-//            prev_radiosity_position,
-//            ivec2(uv),
-//            0
-//        ).xyz - world_offset;
-//
-//        vec3 d = prev_rt_pos - rt_pos;
-//        if (dot(d, d) >= 0.3f) return false;
-//    }
-//
-//    vec3 n = ph_decode_normal(texelFetch(prev_radiosity_normal, ivec2(uv), 0).xy);
-//    if (dot(n, block_normal) < 0.99f) return false;
-//
-//    reservoir_decode(
-//        reservoir,
-//        texelFetch(
-//            prev_radiosity_reservoirs,
-//            ivec2(uv),
-//            0
-//        ),
-//        rt_pos,
-//        true
-//    );
-//
-//    return true;
-//}
+    vec3 n;
+    vec3 ignored_tex_normal;
+    get_fragment_data(texel, n, ignored_tex_normal);
+
+    if (dot(n, frag_geo_normal) < 0.99f) return false;
+
+    reservoir_decode(
+        reservoir,
+        texelFetch(
+            restir_reservoirs,
+            ivec2(texel),
+            0
+        ),
+        frag_rt_pos,
+        false
+    );
+
+    return !isnan(reservoir.weight) && !isnan(reservoir.weight_sum);
+}
+
+bool reservoir_reproject(inout Reservoir reservoir) {
+    vec3 previous_player_pos;
+    vec2 uv = ph_reproject_player_pos(frag_player_pos, frag_is_hand, previous_player_pos).xy;
+
+    if (clamp(uv, 0, 1) != uv) return false;
+    vec2 prev_texel = uv * vec2(viewWidth, viewHeight);
+    ivec2 prev_itexel = ivec2(prev_texel);
+
+    if (!frag_is_bad_angle) {
+        vec3 projected_player_pos = texelFetch(prev_restir_position_history, prev_itexel, 0).xyz;
+        vec3 d = projected_player_pos - previous_player_pos;
+        if (dot(d, d) >= 0.3f) return false;
+    }
+
+    vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, prev_itexel, 0).xy);
+    if (dot(n, frag_geo_normal) < 0.99f) return false;
+
+    reservoir_decode(
+        reservoir,
+        texelFetch(
+            prev_restir_reservoirs,
+            prev_itexel,
+            0
+        ),
+        frag_rt_pos,
+        true
+    );
+
+    return true;
+}
 
 struct SampleHistory {
     vec4 lighting;
@@ -242,10 +244,10 @@ struct SampleHistory {
 
 const SampleHistory NULL_HISTORY = SampleHistory(vec4(-999), vec4(-999));
 
-//void sample_history_load(out SampleHistory smple) {
-//    smple.lighting = texelFetch(radiosity_lighting, tex_coord, 0),
-//    smple.variance = vec4(0f);
-//}
+void sample_history_load(out SampleHistory smple) {
+    smple.lighting = texelFetch(restir_lighting, frag_tex_coord, 0),
+    smple.variance = vec4(0f);
+}
 
 SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
     if (s1 == NULL_HISTORY) {
@@ -262,54 +264,55 @@ SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
     );
 }
 
-//SampleHistory sample_history_reproject_single(vec2 uv) {
-//    if (!bad_angle) {
-//        vec3 d = texelFetch(prev_radiosity_position, ivec2(uv), 0).xyz - world_pos;
-//        if (dot(d, d) >= 0.1f) return NULL_HISTORY;
-//    }
-//
-//    vec3 n = ph_decode_normal(texelFetch(prev_radiosity_normal, ivec2(uv), 0).xy);
-//    if (dot(n, block_normal) < 0.99f) return NULL_HISTORY;
-//
-//    vec4 lighting = texelFetch(prev_radiosity_lighting, ivec2(uv), 0);
-//    if (any(isnan(lighting))) return NULL_HISTORY;
-//
-//    vec4 variance = texelFetch(prev_radiosity_lighting_variance, ivec2(uv), 0);
-//    if (any(isnan(variance))) return NULL_HISTORY;
-//
-//    return SampleHistory(lighting, variance);
-//}
-//
-//SampleHistory sample_history_reproject_mixed(vec2 center) {
-//    ivec2 icenter = ivec2(center);
-//
-//    SampleHistory c_00 = sample_history_reproject_single(icenter + ivec2(0, 0));
-//    SampleHistory c_10 = sample_history_reproject_single(icenter + ivec2(1, 0));
-//    SampleHistory c_01 = sample_history_reproject_single(icenter + ivec2(0, 1));
-//    SampleHistory c_11 = sample_history_reproject_single(icenter + ivec2(1, 1));
-//
-//    SampleHistory result = sample_history_mix(
-//        sample_history_mix(c_00, c_10, fract(center.x)),
-//        sample_history_mix(c_01, c_11, fract(center.x)),
-//        fract(center.y)
-//    );
-//
-//    if (result == NULL_HISTORY)
-//        return SampleHistory(vec4(0f), vec4(0f));
-//
-//    return result;
-//}
-//
-//void sample_history_reproject(out SampleHistory smple) {
-//    vec2 center = ph_reprojectf(
-//        previous_modelview_projection,
-//        world_pos + block_normal * 0.01f,
-//        vec2(viewWidth, viewHeight),
-//        get_taa_jitter()
-//    ) - 0.5f;
-//
-//    smple = sample_history_reproject_mixed(center);
-//}
+SampleHistory sample_history_reproject_single(ivec2 texel, vec3 previous_player_pos) {
+    if (!frag_is_bad_angle) {
+        vec3 projected_player_pos = texelFetch(prev_restir_position_history, texel, 0).xyz;
+        vec3 d = projected_player_pos - previous_player_pos;
+        if (dot(d, d) > 0.1f) return NULL_HISTORY;
+    }
+
+    vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, texel, 0).xy);
+    if (dot(n, frag_geo_normal) < 0.99f) return NULL_HISTORY;
+
+    vec4 lighting = texelFetch(prev_restir_lighting, ivec2(texel), 0);
+    if (any(isnan(lighting))) return NULL_HISTORY;
+
+    vec4 variance = texelFetch(prev_restir_lighting_variance, ivec2(texel), 0);
+    if (any(isnan(variance))) return NULL_HISTORY;
+
+    return SampleHistory(lighting, variance);
+}
+
+SampleHistory sample_history_reproject_mixed(vec2 center, vec3 previous_player_pos) {
+    ivec2 icenter = ivec2(center);
+
+    SampleHistory c_00 = sample_history_reproject_single(icenter + ivec2(0, 0), previous_player_pos);
+    SampleHistory c_10 = sample_history_reproject_single(icenter + ivec2(1, 0), previous_player_pos);
+    SampleHistory c_01 = sample_history_reproject_single(icenter + ivec2(0, 1), previous_player_pos);
+    SampleHistory c_11 = sample_history_reproject_single(icenter + ivec2(1, 1), previous_player_pos);
+
+    SampleHistory result = sample_history_mix(
+        sample_history_mix(c_00, c_10, fract(center.x)),
+        sample_history_mix(c_01, c_11, fract(center.x)),
+        fract(center.y)
+    );
+
+    if (result == NULL_HISTORY)
+        return SampleHistory(vec4(0.0f), vec4(0.0f));
+
+    return result;
+}
+
+void sample_history_reproject(out SampleHistory smple) {
+    vec3 previous_player_pos;
+    vec2 center = (ph_reproject_player_pos(
+        frag_player_pos,
+        frag_is_hand,
+        previous_player_pos
+    ).xy * vec2(viewWidth, viewHeight)) - 0.5f;
+
+    smple = sample_history_reproject_mixed(center, previous_player_pos);
+}
 
 void sample_history_combine_lighting(inout SampleHistory history, in SampleHistory smple) {
     #if PH_RESTIR_DENOISER_PASSES != 0

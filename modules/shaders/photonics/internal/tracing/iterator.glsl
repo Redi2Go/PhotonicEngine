@@ -48,14 +48,14 @@ void ray_iter_set_direction(inout RayIterator ray, vec3 direction) {
     _ray_iter_setup(ray, direction);
 }
 
-vec3 ph_trace_direction_inv;
-ivec3 ph_trace_intersection_index;
-ivec3 ph_trace_intersection_offset;
-vec3 ph_trace_skip_delta;
+vec3 ph_trace_direction_inv = vec3(0.0f);
+ivec3 ph_trace_intersection_index = ivec3(0);
+ivec3 ph_trace_intersection_offset = ivec3(0);
+vec3 ph_trace_skip_delta = vec3(0.0f);
 
-int ph_trace_t_min;
-int ph_trace_depth;
-ivec3 ph_trace_ipos;
+int ph_trace_t_min = -1;
+int ph_trace_depth = 0;
+ivec3 ph_trace_ipos = ivec3(0);
 
 ivec3 _ray_intersection(uint entry, int index_shift_factor) {
     ivec3 intersection = (((ivec3(entry) >> ph_trace_intersection_index) & 15) + ph_trace_intersection_offset) << index_shift_factor;

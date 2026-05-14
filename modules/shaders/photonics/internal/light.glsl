@@ -24,7 +24,7 @@ Light new_light_from_vec4(
     int index
 ) {
     vec3 light_pos = position_full.xyz;
-    vec3 rt_pos = light_pos + light_list_offset;
+    vec3 rt_pos = light_pos - light_list_offset;
 
     #ifndef PH_LIGHT_MODIFIER_DISABLED
     Light light = Light(

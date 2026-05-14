@@ -4,40 +4,60 @@
 #include "/photonics/utility/normal_encoding.glsl"
 
 uniform int frameCounter;
+uniform float viewWidth;
+uniform float viewHeight;
 
-ivec2 ph_tex_coord = ivec2(0);
-uint ph_rnd_state;
+uniform vec3 cameraPosition;
+uniform vec3 previousCameraPosition;
 
-vec3 ph_rt_pos = vec3(0.0f);
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
 
-vec3 ph_geo_normal = vec3(0.0f);
-vec3 ph_tex_normal = vec3(0.0f);
-//bool bad_angle = false;
-//bool ph_frag_is_hand = false;
+ivec2 frag_tex_coord = ivec2(0);
+uint frag_rnd_state = 0;
+
+vec3 frag_rt_pos = vec3(0.0f);
+vec3 frag_player_pos = vec3(0.0f);
+
+vec3 frag_geo_normal = vec3(0.0f);
+vec3 frag_tex_normal = vec3(0.0f);
+bool frag_is_bad_angle = false;
+bool frag_is_hand = false;
+
+bool is_bad_angle(vec3 rt_pos, vec3 normal) {
+    float dist = distance(floor(rt_pos), floor(rt_camera_position));
+
+    float resolution = ceil((dist / 16)) / (4 * PH_RENDER_SCALE);
+    return dot(normal, normalize(rt_pos - rt_camera_position)) > -0.2f && dist > 16.0f;
+}
 
 bool prepare_frag(int rnd_seed) {
-    ph_tex_coord = ivec2(gl_FragCoord.xy);
-    if (!is_in_world_at(ph_tex_coord)) return false;
+    frag_tex_coord = ivec2(gl_FragCoord.xy);
+    if (!is_in_world_at(frag_tex_coord)) return false;
 
-    ph_rnd_state = new_rand_state(gl_FragCoord.xy, frameCounter, 0);
+    frag_rnd_state = new_rand_state(gl_FragCoord.xy, frameCounter, 0);
 
-    ph_rt_pos = get_player_position(ph_tex_coord) + rt_camera_position;
-    get_fragment_data(ph_tex_coord, ph_geo_normal, ph_tex_normal);
+    frag_player_pos = get_player_position(gl_FragCoord.xy);
+    frag_rt_pos = frag_player_pos + rt_camera_position;
+    get_fragment_data(gl_FragCoord.xy, frag_geo_normal, frag_tex_normal);
+
+    frag_is_hand = is_hand_at(gl_FragCoord.xy);
 
     // Attempts to correct bias from depth
 
-    vec3 voxel_pos = ph_rt_pos * 16.0f;
-    uint normal_index = ph_encode_voxel_normal(ph_geo_normal);
+    vec3 voxel_pos = frag_rt_pos * 16.0f;
+    uint normal_index = ph_encode_voxel_normal(frag_geo_normal);
     float normal_pos = round(voxel_pos[normal_index >> 1]);
 
-    vec3 view_dir =  normalize(ph_rt_pos - rt_camera_position);
-    float view_distance = distance(ph_rt_pos, rt_camera_position);
+    vec3 view_dir =  normalize(frag_rt_pos - rt_camera_position);
+    float view_distance = distance(frag_rt_pos, rt_camera_position);
 
     voxel_pos += (view_dir * (view_distance * 0.03));
     voxel_pos[normal_index >> 1] = normal_pos;
 
     const float rcp_16 = 1.0f / 16.0f;
-    ph_rt_pos = voxel_pos * rcp_16;
+    frag_rt_pos = voxel_pos * rcp_16;
+    frag_is_bad_angle = is_bad_angle(frag_rt_pos, frag_geo_normal);
 
     return true;
 }
