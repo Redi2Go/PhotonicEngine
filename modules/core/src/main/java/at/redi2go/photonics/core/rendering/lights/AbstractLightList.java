@@ -1,11 +1,12 @@
 package at.redi2go.photonics.core.rendering.lights;
 
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.PhConfigWatcher;
 import at.redi2go.photonics.core.config.lights.LightRegistry;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
@@ -20,11 +21,12 @@ import org.joml.Vector4f;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-public abstract class AbstractLightList<S> implements Runnable, RenderingComponent {
+public abstract class AbstractLightList implements Runnable, RenderingComponent {
     private final Thread compilerThread;
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -39,15 +41,10 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
     private final SectionManager.TaskQueue<SectionCopy> sectionQueue;
 
     private final ListMultimap<Vector3i, TracedLightPosition> tracedLightPositions;
-
-    protected final TracedLightPosition[] lights;
-    protected WorldOrigin worldOrigin = null;
-    protected int lightCount = 0;
-
     private final UniformUpdater uniformUpdater = new UniformUpdater();
 
-    protected WorldOrigin mostRecentOrigin = null;
-    protected int mostRecentLightCount = 0;
+    protected LightList lights;
+    protected LightList mostRecentLights;
 
     @SuppressWarnings("UnstableApiUsage")
     public AbstractLightList(
@@ -65,8 +62,6 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
                 .arrayListValues()
                 .build();
 
-        this.lights = new TracedLightPosition[maxLights];
-
         this.compilerThread = new Thread(this, "Photonics Light List Compiler");
         this.compilerThread.start();
 
@@ -75,6 +70,13 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
                 ignored -> PhConfig.getLightRegistry(),
                 this::setLightRegistry
         );
+    }
+
+    private void setLightRegistry(LightRegistry lightRegistry) {
+        this.lightRegistry = lightRegistry;
+
+        needsReload = true;
+        compilerThread.interrupt();
     }
 
     @Override
@@ -87,9 +89,9 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
                 reloadLights();
 
                 addNewSections();
-                trimLights();
 
-                storeLights();
+                var newLights = trimLights();
+                storeLights(newLights);
             } catch (InterruptedException e) {
                 if (!needsReload) return;
             }
@@ -152,50 +154,45 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
         }
     }
 
-    private void trimLights() {
+    private LightList trimLights() {
         var loadedLights = tracedLightPositions.values().toArray(TracedLightPosition[]::new);
-        int oldSize = lightCount;
-        int newSize;
-
         if (loadedLights.length < maxLights) {
-            newSize = loadedLights.length;
-
-            if (oldSize > newSize)
-                Arrays.fill(lights, newSize, oldSize, null);
-        } else {
-            newSize = maxLights;
-
-            Vector3d cameraPosition = Minecraft.getCameraPos();
-            int mod = (int) System.nanoTime();
-
-            Arrays.sort(
-                    loadedLights,
-                    Comparator.comparingDouble(light -> light.getLuminance(cameraPosition, mod))
-            );
+            return new LightList(loadedLights, WorldOrigin.get());
         }
 
-        System.arraycopy(loadedLights, 0, this.lights, 0, newSize);
-        this.lightCount = newSize;
+        Vector3d cameraPosition = Minecraft.getCameraPos();
+        int mod = (int) System.nanoTime();
+
+        Arrays.sort(
+                loadedLights,
+                Comparator.comparingDouble(light -> -light.getLuminance(cameraPosition, mod))
+        );
+
+        return new LightList(
+                Arrays.copyOf(loadedLights, maxLights),
+                WorldOrigin.get()
+        );
     }
 
-    protected abstract S getStorage();
+    protected abstract void storeLight(int index, Vector4f[] light);
 
-    protected abstract void storeLight(S storage, int index, Vector4f[] light);
+    protected abstract void storeMapping(int beforeIndex, int afterIndex);
 
-    protected abstract void markForUpload(S storage);
+    protected abstract void clearMapping();
 
-    private void storeLights() throws InterruptedException {
+    protected abstract void prepareUpload();
+
+    private void storeLights(LightList lights) throws InterruptedException {
         lock.lockInterruptibly();
 
         try {
-            S storage = getStorage();
-            worldOrigin = WorldOrigin.get();
+            this.lights = lights;
+            var worldOrigin = lights.origin();
 
-            for (int i = 0; i < lightCount; i++) {
-                var light = lights[i];
+            for (int i = 0; i < lights.size(); i++) {
+                var light = lights.get(i);
 
                 storeLight(
-                        storage,
                         i,
                         light.lightInfo().toVector4Array(
                                 new Vector3f(worldOrigin.applyOffset(light.pos())),
@@ -204,18 +201,15 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
                 );
             }
 
-            markForUpload(storage);
+            if (mostRecentLights != null)
+                lights.createMapping(mostRecentLights)
+                        .forEachIndex(this::storeMapping);
+
+            prepareUpload();
             uniformUpdater.updateNextFrame();
         } finally {
             lock.unlock();
         }
-    }
-
-    private void setLightRegistry(LightRegistry lightRegistry) {
-        this.lightRegistry = lightRegistry;
-
-        needsReload = true;
-        compilerThread.interrupt();
     }
 
     // Upload
@@ -230,26 +224,31 @@ public abstract class AbstractLightList<S> implements Runnable, RenderingCompone
             upload();
             uniformUpdater.updateAll();
 
-            mostRecentOrigin = worldOrigin;
-            mostRecentLightCount = lightCount;
+            if (lights != mostRecentLights) {
+                mostRecentLights = lights;
+                clearMapping();
+            }
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
-        dynamicUniforms.uniform3f("light_list_offset", () -> {
-            var listOrigin = mostRecentOrigin;
+    public void registerUniforms(IUniformHolder uniforms) {
+        uniforms.uniform3f(IUniformUpdateFrequency.perFrame(), "light_list_offset", () -> {
+            var listOrigin = mostRecentLights == null ? null : mostRecentLights.origin();
             var realOrigin = worldOriginSupplier.get();
 
             if (listOrigin == null || realOrigin == null)
                 return new Vector3f(0f);
 
             return new Vector3f(realOrigin.sub(listOrigin, new Vector3d()));
-        }, uniformUpdater.newNotifier());
+        });
+    }
 
-        dynamicUniforms.uniform1i("ph_light_count", () -> mostRecentLightCount, uniformUpdater.newNotifier());
+    @Override
+    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
+        dynamicUniforms.uniform1i("light_list_size",  () -> mostRecentLights == null ? 0 : mostRecentLights.size(), uniformUpdater.newNotifier());
     }
 
     @Override

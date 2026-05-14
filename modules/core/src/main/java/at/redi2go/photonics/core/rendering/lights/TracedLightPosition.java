@@ -2,8 +2,10 @@ package at.redi2go.photonics.core.rendering.lights;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.config.lights.BlockLightInfo;
+import org.joml.RoundingMode;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 
 import java.util.Objects;
 
@@ -34,6 +36,10 @@ public final class TracedLightPosition {
 
     public Vector3d pos() {
         return pos;
+    }
+
+    public Vector3i blockPos() {
+        return new Vector3i(pos, RoundingMode.TRUNCATE);
     }
 
     public IBlockState blockState() {
