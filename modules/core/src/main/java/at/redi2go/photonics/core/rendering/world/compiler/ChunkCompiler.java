@@ -32,7 +32,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ChunkCompiler implements Runnable, RenderingComponent {
-    private static final int THREAD_COUNT = 2;
+    private static final int THREAD_COUNT = 1;
 
     private final Queue<Vector3i> unloadQueue;
     private final SectionManager.TaskQueue<SectionCopy> sectionQueue;

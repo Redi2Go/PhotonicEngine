@@ -217,7 +217,10 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
             ));
 
             blockSorter.forEachBlock((block -> {
-                for (var part : block.blockModel().parts()) {
+                var parts = block.blockModel().parts();
+                for (int i = 0; i < parts.size(); i++) {
+                    var part = parts.get(i);
+
                     blockVoxelPos.set(block.x(), block.y(), block.z());
                     blockVoxelPos.add(part.offset().mul(16, new Vector3i()));
 

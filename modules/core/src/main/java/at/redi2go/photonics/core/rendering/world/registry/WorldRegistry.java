@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class WorldRegistry implements RenderingComponent {
-    private static final int OPTIMIZATION_THREAD_COUNT = 3;
+    private static final int OPTIMIZATION_THREAD_COUNT = 1;
 
     private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
