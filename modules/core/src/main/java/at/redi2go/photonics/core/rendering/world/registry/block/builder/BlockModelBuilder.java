@@ -50,7 +50,12 @@ public class BlockModelBuilder implements VoxelConsumer {
     ) {
         BlockPartBuilder builder;
 
-        Vector3i blockPos =  new Vector3i(x, y, z).div(16);
+        Vector3i blockPos = new Vector3i(
+                Math.floorDiv(x, 16),
+                Math.floorDiv(y, 16),
+                Math.floorDiv(z, 16)
+        );
+
         int hash = blockPos.hashCode();
         if (lastPartHash != hash || lastPart == null) {
             builder = parts.computeIfAbsent(
@@ -118,6 +123,9 @@ public class BlockModelBuilder implements VoxelConsumer {
     }
 
     private static int correctVoxelPos(int component) {
-        return component < 0 ? 15 - (-component & 15) : component & 15;
+        if (component < 0)
+            return 15 - ((-component - 1) & 15);
+
+        return component & 15;
     }
 }

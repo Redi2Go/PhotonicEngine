@@ -4,6 +4,7 @@ import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.BaryPos;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
@@ -18,6 +19,7 @@ import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.joml.RoundingMode;
+import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -334,9 +336,7 @@ public class BlockBakeryImpl implements BlockBakery {
                 max.max(temp.set(vertex, RoundingMode.CEILING));
             }
 
-            min.max(VEC3I_ZERO);
             max.max(min);
-
             max.sub(min).max(VEC3I_ONE);
 
             Vector3f voxelPos = rasterState.voxelPos();
@@ -361,11 +361,9 @@ public class BlockBakeryImpl implements BlockBakery {
                         var dist = worldPos.dot(normal);
 
                         voxelPos.sub(normal.mul(dist, worldPos), worldPos);
+                        temp.set(worldPos, RoundingMode.FLOOR);
 
-                        if ((int) worldPos.x != x
-                                || (int) worldPos.y != y
-                                || (int) worldPos.z != z
-                        ) continue;
+                        if (temp.x != x || temp.y != y || temp.z != z) continue;
 
                         voxelPos.mul(BLOCK_SIZE_INV);
                         voxelPos.sub(tri[0]);
