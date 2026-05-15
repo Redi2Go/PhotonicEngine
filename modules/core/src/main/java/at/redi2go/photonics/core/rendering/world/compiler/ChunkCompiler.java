@@ -22,9 +22,11 @@ import org.joml.Vector3i;
 
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -74,7 +76,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 unloadChunks();
 
                 ILevel level = Minecraft.getLevel();
-                if (level == null)  continue;
+                if (level == null) continue;
 
                 // Computing the hash immediately is cheaper than meshing an entire section just to discard it
                 long hash = section.computeSectionHash();
@@ -134,9 +136,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         private final @Nullable BlockModel[] blocks = new BlockModel[IChunkSection.SECTION_SIZE];
 
         private final AtomicInteger pendingBlocks = new AtomicInteger();
-
-        private final ReentrantLock lock = new ReentrantLock();
-        private final Condition canSubmit = lock.newCondition();
+        private final CompletableFuture<Void> future = new CompletableFuture<>();
 
         public BuildResult(Vector3i chunkPos, Vector3i chunkBlockPos, long hash) {
             this.chunkPos = chunkPos;
@@ -194,47 +194,36 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             }
         }
 
-        private boolean trySubmit() throws InterruptedException {
+        private void trySubmit() throws InterruptedException {
             while (true) {
                 int pending = pendingBlocks.get();
-                if (pending == -1 || (pending & Integer.MIN_VALUE) == 0) return false;
+                if (pending == -1 || (pending & Integer.MIN_VALUE) == 0) return;
 
                 int remaining = pending & Integer.MAX_VALUE;
-                if (remaining > 0) return false;
+                if (remaining > 0) return;
 
                 // This is safe because the max possible pending is 4096
                 if (pendingBlocks.compareAndSet(pending, -1)) {
-                    lock.lockInterruptibly();
+                    future.complete(null);
 
-                    try {
-                        canSubmit.signalAll();
-                    } finally {
-                        lock.unlock();
-                    }
-
-                    return true;
+                    return;
                 }
             }
         }
 
-        private void awaitSubmission() throws InterruptedException {
-            try {
-                lock.lockInterruptibly();
+        private void awaitSubmission() throws InterruptedException, ExecutionException {
+            while (true) {
+                int pending = pendingBlocks.get();
+                if ((pending & Integer.MIN_VALUE) != 0) return;
 
-                while (true) {
-                    int pending = pendingBlocks.get();
-                    if ((pending & Integer.MIN_VALUE) != 0) return;
-
-                    if (pendingBlocks.compareAndSet(pending, pending | Integer.MIN_VALUE)) {
-                        if (!trySubmit()) canSubmit.await();
-                        break;
-                    }
+                if (pendingBlocks.compareAndSet(pending, pending | Integer.MIN_VALUE)) {
+                    trySubmit();
+                    break;
                 }
-
-            } finally {
-                lock.unlock();
             }
 
+
+            future.get();
             var previousHash = sectionHashes.put(chunkPos(), hash);
 
             if (!Objects.equals(previousHash, hash))
