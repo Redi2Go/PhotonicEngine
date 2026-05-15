@@ -140,7 +140,7 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
                 // but we need to double it anyway as each palette entry is 2 ints (1 tint, 1 palette ptr)
                 // so we can just remove the transparency bit and use the raw value
                 // We also use +3 instead of +5 since 0 means empty, index 0 becomes 1 (2 since its doubled)
-                uint palette_header_ptr = block_header_ptr + 1 + ((ptr & ~1u));
+                uint palette_header_ptr = block_header_ptr + ((ptr & ~1u));
 
                 ray.hit = new_ray_result(
                     ray.position * ph_16_rcp,
@@ -165,14 +165,13 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
                 }
 
                 //Block header:
-                //ptr + 0 = skylight
-                //ptr + 1 = block voxel ptr
-                //ptr + 2 = palette size
+                //ptr + 0 = block voxel ptr
+                //ptr + 1 = palette size
 
                 block_header_ptr = ptr;
 
-                entry_ptrs[ph_trace_depth] = ph_world_buffer[block_header_ptr + 1];
-                block_palette_size = ph_world_buffer[block_header_ptr + 2];
+                entry_ptrs[ph_trace_depth] = ph_world_buffer[block_header_ptr + 0];
+                block_palette_size = ph_world_buffer[block_header_ptr + 1];
             } else entry_ptrs[ph_trace_depth] = ptr;
 
             ph_trace_depth--;
