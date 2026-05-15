@@ -43,14 +43,6 @@ import java.util.Set;
 public class MinecraftBlockMesher implements BlockMesher {
     private static final ThreadLocal<Renderer> RENDERERS = ThreadLocal.withInitial(Renderer::new);
 
-//    // Replace with proper config system
-//    private @BlockLod int getLod(BlockState blockState) {
-//        if (blockState.is(BlockTags.LEAVES))
-//            return BlockLod.NO_SEED | BlockLod.CONTAINED;
-//
-//        return 0;
-//    }
-
     @Override
     public void meshBlock(
             Vector3i blockChunkOffset,
