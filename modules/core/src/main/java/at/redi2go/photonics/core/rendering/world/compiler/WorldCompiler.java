@@ -109,6 +109,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
                 unloadSections();
                 rootVoxel.pruneEmptyVoxels();
 
+                //TODO: FIX ME!
                 //registry.freeUnusedBlocks();
 
                 var sections = builtSectionQueue.drain(MAX_SECTIONS_PER_RUN);
