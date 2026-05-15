@@ -1,18 +1,17 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.core.Photonics;
-import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
-import at.redi2go.photonics.core.rendering.ThreadRunnable;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
-import at.redi2go.photonics.core.rendering.world.BlockRegistry;
+import at.redi2go.photonics.core.rendering.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
-import at.redi2go.photonics.core.rendering.world.WorldOrigin;
+import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
+import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
+import at.redi2go.photonics.core.rendering.world.tree.ChunkManager;
 import at.redi2go.photonics.core.rendering.world.tree.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.tree.WorldVoxel;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
@@ -35,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class WorldCompiler implements Runnable, RenderingComponent {
+public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent {
     public static final int MAX_SECTIONS_PER_RUN = 12;
 
     private static final int THREAD_POOL_SIZE = 3;
@@ -44,9 +43,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private final Queue<Vector3i> unloadQueue;
     private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue;
 
-    private final IGpuBufferHeap heap;
+    private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
-    private final BlockRegistry registry;
+
+    private final WorldRegistry registry;
 
     private final Queue<WorldVoxel> uploadQueue;
     private final WorldVoxel rootVoxel;
@@ -72,20 +72,21 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
     public WorldCompiler(
             int depth,
+            WorldAllocator worldAllocator,
+            PaletteTexture paletteTexture,
             SectionManager sectionManager,
             SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue,
-            IGpuBufferHeap heap,
-            PaletteTexture paletteTexture,
-            BlockRegistry blockRegistry
+            WorldRegistry worldRegistry
     ) {
+        this.worldAllocator = worldAllocator;
+        this.paletteTexture = paletteTexture;
+
         this.unloadQueue = sectionManager.newUnloadQueue();
         this.builtSectionQueue = builtSectionQueue;
-        this.heap = heap;
-        this.paletteTexture = paletteTexture;
-        this.registry = blockRegistry;
+        this.registry = worldRegistry;
 
         this.uploadQueue = new ConcurrentLinkedQueue<>();
-        this.rootVoxel = WorldVoxel.create(depth, this, registry, heap, uploadQueue);
+        this.rootVoxel = WorldVoxel.create(depth, BlockMergeMode.OVERWRITE, this, registry, uploadQueue);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -100,6 +101,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
     }
 
+
     @Override
     public void run() {
         try {
@@ -107,14 +109,14 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                 unloadSections();
                 rootVoxel.pruneEmptyVoxels();
 
-                registry.freeUnusedBlocks();
+                //registry.freeUnusedBlocks();
 
                 var sections = builtSectionQueue.drain(MAX_SECTIONS_PER_RUN);
                 recenter();
 
                 clearPendingSections(sections);
 
-                voxelizeSections(sections);
+                insertSections(sections);
 
                 stopUpload();
                 buildSections();
@@ -124,6 +126,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
         }
     }
+
 
     // Compiler Steps
 
@@ -190,17 +193,40 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         rootVoxel.removeRegions(regions);
     }
 
-    private void voxelizeSections(List<ChunkCompiler.BuildResult> sections) {
-        for (var builtSection : sections) {
-            var chunkBlockPos = builtSection.chunkBlockPos();
-            var sectionBakery = builtSection.bakery();
+    private void insertSections(List<ChunkCompiler.BuildResult> sections) {
+        BlockSorter blockSorter = new BlockSorter();
+        Vector3i blockVoxelPos = new Vector3i();
 
-            chunkBlockPos.sub(iorigin);
-            if (!rootVoxel.containsChunk(chunkBlockPos)) continue;
+        for (var section : sections) {
+            blockSorter.reset();
 
-            sectionBakery.setRegion(toRegion(builtSection.chunkPos()));
-            sectionBakery.setChunkOffset(chunkBlockPos);
-            sectionBakery.bake(rootVoxel, rootVoxel);
+            var chunkVoxelPos = new Vector3i(section.chunkBlockPos())
+                    .sub(iorigin)
+                    .mul(16);
+
+            if (!rootVoxel.containsChunk(chunkVoxelPos)) {
+                section.discard();
+                continue;
+            }
+
+            short region = toRegion(section.chunkPos());
+            section.forEachBlock((blockChunkPos, block) -> blockSorter.addBlock(
+                    chunkVoxelPos.add(blockChunkPos.mul(16), new Vector3i()),
+                    block
+            ));
+
+            blockSorter.forEachBlock((block -> {
+                for (var part : block.blockModel().parts()) {
+                    blockVoxelPos.set(block.x(), block.y(), block.z());
+                    blockVoxelPos.add(part.offset().mul(16, new Vector3i()));
+
+                    rootVoxel.insertBlock(
+                            blockVoxelPos.x, blockVoxelPos.y, blockVoxelPos.z,
+                            region,
+                            part.toEntry(region)
+                    );
+                }
+            }));
         }
     }
 
@@ -227,6 +253,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
         task.awaitPending();
     }
+
 
     // Uploading
 
@@ -259,7 +286,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         try {
             if (!canUpload) return;
 
-            heap.upload();
+            worldAllocator.upload();
             paletteTexture.upload();
             uniformUpdater.updateAll();
 
@@ -299,21 +326,17 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         }, uniformUpdater.newNotifier());
     }
 
-    @Override
-    public void registerBuffers(IBufferHolder buffers) {
-        buffers.addDefaultBufferHeap("ph_world_voxel_buffer", () -> heap);
-    }
-
     // Chunk management
 
+    @Override
     public void addChunk(ChunkVoxel chunk) {
         chunks.add(chunk);
     }
 
+    @Override
     public void removeChunk(ChunkVoxel chunk) {
         chunks.remove(chunk);
     }
-
 
     @Override
     public void close() {
@@ -328,20 +351,21 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         return (short) (hash ^ (hash >>> 16));
     }
 
+
     // Tasks
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {
-        private final AtomicInteger PENDING_TASKS = new AtomicInteger();
+        private final AtomicInteger pendingTasks = new AtomicInteger();
 
         @Override
         public void queueJob(Runnable task) {
-            PENDING_TASKS.incrementAndGet();
+            pendingTasks.incrementAndGet();
 
             THREAD_POOL.execute(() -> {
                 try {
                     task.run();
                 } finally {
-                    if (PENDING_TASKS.decrementAndGet() == 0)
+                    if (pendingTasks.decrementAndGet() == 0)
                         complete(null);
                 }
             });
@@ -349,7 +373,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
         void awaitPending() throws InterruptedException {
             try {
-                if (PENDING_TASKS.get() != 0)
+                if (pendingTasks.get() != 0)
                     get();
             } catch (ExecutionException e) {
                 throw new RuntimeException(e);

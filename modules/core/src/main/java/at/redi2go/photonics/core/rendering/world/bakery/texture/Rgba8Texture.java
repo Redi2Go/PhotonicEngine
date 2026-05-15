@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.bakery.texture;
 
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
+import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import org.joml.Math;
 
 public class Rgba8Texture implements CpuTexture {

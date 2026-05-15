@@ -1,8 +1,7 @@
 package at.redi2go.photonics.core.rendering.lights;
 
-import at.redi2go.photonics.core.rendering.world.WorldOrigin;
+import at.redi2go.photonics.core.rendering.WorldOrigin;
 import it.unimi.dsi.fastutil.ints.IntIntBiConsumer;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 import java.util.AbstractList;

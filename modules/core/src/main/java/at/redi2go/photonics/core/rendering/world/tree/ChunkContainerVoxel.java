@@ -1,21 +1,19 @@
 package at.redi2go.photonics.core.rendering.world.tree;
 
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.core.model.VoxelModel;
-import at.redi2go.photonics.core.rendering.world.BlockRegistry;
-import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 
 import java.util.Queue;
 
 public class ChunkContainerVoxel extends WorldVoxel {
     public ChunkContainerVoxel(
             int depth,
-            WorldCompiler compiler,
-            BlockRegistry blockRegistry,
-            IGpuBufferHeap heap,
+            BlockMergeMode mergeMode,
+            ChunkManager chunkManager,
+            WorldRegistry worldRegistry,
             Queue<WorldVoxel> uploadQueue
     ) {
-        super(depth, compiler, blockRegistry, heap, uploadQueue);
+        super(depth, mergeMode, chunkManager, worldRegistry, uploadQueue);
     }
 
     @Override

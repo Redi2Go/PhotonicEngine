@@ -1,4 +1,5 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
+
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import org.joml.Vector3f;
 
@@ -18,16 +19,16 @@ public class Vertex extends Vector3f {
         return v;
     }
 
-    public void readVertex(BlockBakeryImpl builder) {
-        int index = builder.read(6);
+    public void readVertex(BlockBakeryImpl.MeshResultImpl mesh) {
+        int index = mesh.read(6);
 
-        x = builder.floatAt(index);
-        y = builder.floatAt(index + 1);
-        z = builder.floatAt(index + 2);
+        x = mesh.floatAt(index);
+        y = mesh.floatAt(index + 1);
+        z = mesh.floatAt(index + 2);
 
-        tint = builder.intAt(index + 3);
+        tint = mesh.intAt(index + 3);
 
-        u = builder.floatAt(index + 4);
-        v = builder.floatAt(index + 5);
+        u = mesh.floatAt(index + 4);
+        v = mesh.floatAt(index + 5);
     }
 }

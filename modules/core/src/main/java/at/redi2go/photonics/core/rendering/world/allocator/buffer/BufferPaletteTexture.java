@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.block.palette.buffer;
+package at.redi2go.photonics.core.rendering.world.allocator.buffer;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
@@ -57,7 +57,7 @@ public class BufferPaletteTexture implements PaletteTexture {
         }
 
         @Override
-        public int pos() {
+        public int entryData() {
             return (int) memory.begin() >> 4;
         }
 

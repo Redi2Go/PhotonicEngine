@@ -2,52 +2,60 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
+import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import at.redi2go.photonics.core.Photonics;
+import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
-import at.redi2go.photonics.core.rendering.world.BlockRegistry;
-import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
-import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+import at.redi2go.photonics.core.rendering.world.block.BlockModel;
+import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
+import org.apache.logging.log4j.util.BiConsumer;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ChunkCompiler implements Runnable, RenderingComponent {
     private static final int THREAD_COUNT = 2;
 
     private final Queue<Vector3i> unloadQueue;
     private final SectionManager.TaskQueue<SectionCopy> sectionQueue;
-    private final SectionManager.TaskQueue<BuildResult> builtSectionQueue;
+    private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue;
 
-    private final AtlasDownloader atlasDownloader;
-    private final BlockRegistry blockRegistry;
+    private final WorldRegistry worldRegistry;
+
+    private final BlockBakery bakery;
 
     private final ConcurrentMap<Vector3i, Long> sectionHashes = new ConcurrentHashMap<>();
-    private final Queue<BlockBakery> bakeryQueue = new ConcurrentLinkedQueue<>();
-
     private final Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
             SectionManager sectionManager,
-            SectionManager.TaskQueue<BuildResult> builtSectionQueue,
+            SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue,
             AtlasDownloader atlasDownloader,
-            BlockRegistry blockRegistry
+            WorldRegistry worldRegistry
     ) {
         this.unloadQueue = sectionManager.newUnloadQueue();
         this.sectionQueue = sectionManager.newSectionQueue();
         this.builtSectionQueue = builtSectionQueue;
 
-        this.atlasDownloader = atlasDownloader;
-        this.blockRegistry = blockRegistry;
+        this.worldRegistry = worldRegistry;
+
+        this.bakery = BlockBakery.newBakery(atlasDownloader);
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             var thread = new Thread(this, "Photonic Chunk Compiler #" + i);
@@ -58,19 +66,6 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         }
     }
 
-    private BlockBakery nextBakery() {
-        var bakery = bakeryQueue.poll();
-        if (bakery == null)
-            bakery = new BlockBakeryImpl(atlasDownloader, blockRegistry);
-
-        bakery.reset();
-        return bakery;
-    }
-
-    private void releaseBakery(BlockBakery bakery) {
-        bakeryQueue.offer(bakery);
-    }
-
     @Override
     public void run() {
         try {
@@ -78,34 +73,37 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 var section = sectionQueue.take();
                 unloadChunks();
 
-                var bakery = nextBakery();
-
-                final long[] hash = {0};
-
                 ILevel level = Minecraft.getLevel();
-                if (level == null) {
-                    releaseBakery(bakery);
-                    continue;
-                }
+                if (level == null)  continue;
+
+                // Computing the hash immediately is cheaper than meshing an entire section just to discard it
+                long hash = section.computeSectionHash();
+                if (Objects.equals(sectionHashes.get(section.pos()), hash)) continue;
+
+                var buildResult = new BuildResult(section.pos(), section.blockPos(), hash);
 
                 section.forEachBlock((blockChunkOffset, blockPos, block) -> {
-                    hash[0] = hash[0] * 31 + block.hashCode();
-
                     if (block.isAir()) return;
-                    bakery.submitBlock(
-                            blockChunkOffset,
+
+                    var meshResult = bakery.meshBlock(
+                            new Vector3i(blockChunkOffset),
                             blockPos,
                             block,
                             level
                     );
+
+                    if (meshResult == null) return;
+
+                    buildResult.submitBlockFuture(
+                            blockChunkOffset.x(),
+                            blockChunkOffset.y(),
+                            blockChunkOffset.z(),
+                            meshResult.tintData(),
+                            worldRegistry.createBlockModel(meshResult)
+                    );
                 });
 
-                if (Objects.equals(sectionHashes.put(section.pos(), hash[0]), hash[0])) {
-                    releaseBakery(bakery);
-                    continue;
-                }
-
-                builtSectionQueue.offer(section.pos(), new BuildResult(section.pos(), section.blockPos(), bakery));
+                buildResult.awaitSubmission();
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
 
@@ -129,15 +127,21 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             thread.interrupt();
     }
 
-    public class BuildResult implements Disposable {
+    public class BuildResult {
         private final Vector3i chunkPos;
         private final Vector3i chunkBlockPos;
-        private final BlockBakery bakery;
+        private final long hash;
+        private final @Nullable BlockModel[] blocks = new BlockModel[IChunkSection.SECTION_SIZE];
 
-        public BuildResult(Vector3i chunkPos, Vector3i chunkBlockPos, BlockBakery bakery) {
+        private final AtomicInteger pendingBlocks = new AtomicInteger();
+
+        private final ReentrantLock lock = new ReentrantLock();
+        private final Condition canSubmit = lock.newCondition();
+
+        public BuildResult(Vector3i chunkPos, Vector3i chunkBlockPos, long hash) {
             this.chunkPos = chunkPos;
             this.chunkBlockPos = chunkBlockPos;
-            this.bakery = bakery;
+            this.hash = hash;
         }
 
         public Vector3i chunkPos() {
@@ -148,13 +152,135 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             return chunkBlockPos;
         }
 
-        public BlockBakery bakery() {
-            return bakery;
+        private void submitBlockFuture(
+                int x, int y, int z,
+                TintBuilder.Result tintInfo,
+                CompletionStage<BlockProvider> block
+        ) {
+            while (true) {
+                int pending = pendingBlocks.get();
+                if (pending == -1) throw new IllegalStateException();
+
+                int remaining = (pending & Integer.MAX_VALUE) + 1;
+                if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
+                    block.thenAccept((result) -> {
+                        try {
+                            completeBlock(x, y, z, result.createVariant(tintInfo));
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        } catch (Throwable t) {
+                            Photonics.LOGGER.error("Error while setting block", t);
+                        }
+                    });
+
+                    return;
+                }
+            }
         }
 
-        @Override
-        public void close() {
-            releaseBakery(bakery);
+        private void completeBlock(int x, int y, int z, BlockModel blockModel) throws InterruptedException {
+            setBlock(x, y, z, blockModel);
+
+            while (true) {
+                int pending = pendingBlocks.get();
+                if (pending == -1) throw new IllegalStateException();
+
+                int remaining = (pending & Integer.MAX_VALUE) - 1;
+                if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
+                    trySubmit();
+
+                    return;
+                }
+            }
+        }
+
+        private boolean trySubmit() throws InterruptedException {
+            while (true) {
+                int pending = pendingBlocks.get();
+                if (pending == -1 || (pending & Integer.MIN_VALUE) == 0) return false;
+
+                int remaining = pending & Integer.MAX_VALUE;
+                if (remaining > 0) return false;
+
+                // This is safe because the max possible pending is 4096
+                if (pendingBlocks.compareAndSet(pending, -1)) {
+                    lock.lockInterruptibly();
+
+                    try {
+                        canSubmit.signalAll();
+                    } finally {
+                        lock.unlock();
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        private void awaitSubmission() throws InterruptedException {
+            try {
+                lock.lockInterruptibly();
+
+                while (true) {
+                    int pending = pendingBlocks.get();
+                    if ((pending & Integer.MIN_VALUE) != 0) return;
+
+                    if (pendingBlocks.compareAndSet(pending, pending | Integer.MIN_VALUE)) {
+                        if (!trySubmit()) canSubmit.await();
+                        break;
+                    }
+                }
+
+            } finally {
+                lock.unlock();
+            }
+
+            var previousHash = sectionHashes.put(chunkPos(), hash);
+
+            if (!Objects.equals(previousHash, hash))
+                builtSectionQueue.offer(chunkPos, this);
+        }
+
+        public @Nullable BlockModel getBlock(int x, int y, int z) {
+            if (!containsBlock(x, y, z)) return null;
+
+            return blocks[VoxelModel.toVoxelIndex(x, y, z)];
+        }
+
+        private void setBlock(int x, int y, int z, @Nullable BlockModel block) {
+            if (!containsBlock(x, y, z)) return;
+
+            blocks[VoxelModel.toVoxelIndex(x, y, z)] = block;
+        }
+
+        public void forEachBlock(BiConsumer<Vector3i, BlockModel> blockConsumer) {
+            Vector3i chunkOffset = new Vector3i();
+
+            for (int px = 0; px < 16; px++) {
+                for (int py = 0; py < 16; py++) {
+                    for (int pz = 0; pz < 16; pz++) {
+
+                        var block = getBlock(px, py, pz);
+                        if (block == null) continue;
+
+                        chunkOffset.set(px, py, pz);
+                        blockConsumer.accept(chunkOffset, block);
+                    }
+                }
+            }
+        }
+
+        public void discard() {
+            for (int i = 0; i < IChunkSection.SECTION_SIZE; i++) {
+                var block = blocks[i];
+                if (block == null) continue;
+
+                block.parts().forEach(Disposable::close);
+            }
+        }
+
+        private static boolean containsBlock(int x, int y, int z) {
+            return VoxelModel.contains(x, y, z, 16, 16, 16);
         }
     }
 }

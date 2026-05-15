@@ -11,7 +11,7 @@ import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
-import at.redi2go.photonics.core.rendering.world.WorldOrigin;
+import at.redi2go.photonics.core.rendering.WorldOrigin;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import org.joml.Vector3d;
@@ -21,7 +21,6 @@ import org.joml.Vector4f;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;

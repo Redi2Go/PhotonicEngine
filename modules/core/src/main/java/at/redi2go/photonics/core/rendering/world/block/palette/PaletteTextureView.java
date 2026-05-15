@@ -4,7 +4,7 @@ import at.redi2go.photonics.api.Disposable;
 import org.joml.Vector4i;
 
 public interface PaletteTextureView extends Disposable {
-    int pos();
+    int entryData();
 
     void writeFace(int face, Vector4i value);
 

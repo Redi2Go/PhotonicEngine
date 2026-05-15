@@ -7,9 +7,7 @@ import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
 import at.redi2go.photonics.core.iris.pipeline.rendering.IrisRenderer;
 import at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
-import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import org.jetbrains.annotations.Nullable;
 
 public class RestirDiPipeline extends AbstractPhotonicsExtension {
     private final IrisFramebuffer framebuffer;

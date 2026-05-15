@@ -7,7 +7,6 @@ import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.common.BlockRenderDispatcherExt;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
-import at.redi2go.photonics.core.rendering.world.bakery.BlockLod;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -23,7 +22,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
@@ -45,13 +43,13 @@ import java.util.Set;
 public class MinecraftBlockMesher implements BlockMesher {
     private static final ThreadLocal<Renderer> RENDERERS = ThreadLocal.withInitial(Renderer::new);
 
-    // Replace with proper config system
-    private @BlockLod int getLod(BlockState blockState) {
-        if (blockState.is(BlockTags.LEAVES))
-            return BlockLod.NO_SEED | BlockLod.CONTAINED;
-
-        return 0;
-    }
+//    // Replace with proper config system
+//    private @BlockLod int getLod(BlockState blockState) {
+//        if (blockState.is(BlockTags.LEAVES))
+//            return BlockLod.NO_SEED | BlockLod.CONTAINED;
+//
+//        return 0;
+//    }
 
     @Override
     public void meshBlock(
@@ -78,17 +76,16 @@ public class MinecraftBlockMesher implements BlockMesher {
             BlockBuilder builder
     ) {
         var renderer = RENDERERS.get();
-        int lod = getLod(blockState);
-        builder.beginBlock(IrisUtil.getBlockId(blockState), lod, blockChunkOffset);
+        builder.useBlockId(IrisUtil.getBlockId(blockState));
 
         FluidState fluidState = blockState.getFluidState();
         if (!fluidState.isEmpty()) renderer.submitFluid(
-                pos,
-                blockAndTintGetter,
-                builder,
-                blockState,
-                fluidState
-        );
+                    pos,
+                    blockAndTintGetter,
+                    builder,
+                    blockState,
+                    fluidState
+            );
 
         if (blockState.hasBlockEntity()) {
             renderer.submitBlockState(
@@ -100,7 +97,6 @@ public class MinecraftBlockMesher implements BlockMesher {
 
         if (blockState.getRenderShape() == RenderShape.MODEL) {
             renderer.submitBlock(
-                    lod,
                     pos,
                     blockState,
                     blockAndTintGetter,
@@ -163,7 +159,6 @@ public class MinecraftBlockMesher implements BlockMesher {
         }
 
         private void submitBlock(
-                int lod,
                 BlockPos pos,
                 BlockState blockState,
                 BlockAndTintGetter blockAndTintGetter,
@@ -175,7 +170,7 @@ public class MinecraftBlockMesher implements BlockMesher {
             poseStack.pushPose();
 
             parts.clear();
-            randomSource.setSeed((lod & BlockLod.NO_SEED) == 0 ? blockState.getSeed(pos) : 0);
+            randomSource.setSeed(blockState.getSeed(pos));
             blockRenderer.getBlockModel(blockState).collectParts(randomSource, parts);
             ((BlockRenderDispatcherExt) blockRenderer)
                     .photonics$modelBlockRenderer()

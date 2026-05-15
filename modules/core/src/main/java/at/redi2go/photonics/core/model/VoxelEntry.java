@@ -2,20 +2,11 @@ package at.redi2go.photonics.core.model;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
 public interface VoxelEntry extends Disposable {
     int entryData();
-
-    void insertVoxel(
-            int x, int y, int z,
-            short region,
-            int normal,
-            int tint,
-            TextureData textureData
-    );
 
     void insertBlock(
             int x, int y, int z,
@@ -24,8 +15,6 @@ public interface VoxelEntry extends Disposable {
     );
 
     @Nullable VoxelEntry removeRegions(ShortSet regions);
-
-    VoxelEntry toMutableEntry();
 
     @Nullable VoxelEntry build();
 

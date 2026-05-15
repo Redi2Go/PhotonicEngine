@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
@@ -12,11 +11,12 @@ import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.lights.BufferLightList;
+import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferPaletteTexture;
+import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.rendering.world.block.palette.buffer.BufferPaletteTexture;
 import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
 import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
-import at.redi2go.photonics.core.rendering.world.registry.buffer.BufferBlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -47,30 +47,26 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         registerResource(atlasDownloader);
         var sectionManager = registerComponent(new SectionManager(Minecraft::getRenderDistance));
 
-        var heap = registerResource(IRenderSystem.getDevice().createBufferHeap(
-                () -> "Photonics World Buffer",
-                1 << 29,
-                0
-        ));
-
+        var worldAllocator = registerComponent(new BufferWorldAllocator(1 << 29));
         var paletteTexture = registerComponent(new BufferPaletteTexture(2048, 600));
-        var blockRegistry = registerComponent(new BufferBlockRegistry(heap, paletteTexture));
+
+        var worldRegistry = registerComponent(new WorldRegistry(worldAllocator, paletteTexture));
 
         var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
         var worldCompiler = registerComponent(new WorldCompiler(
                 ROOT_VOXEL_DEPTH,
+                worldAllocator,
+                paletteTexture,
                 sectionManager,
                 builtSectionQueue,
-                heap,
-                paletteTexture,
-                blockRegistry
+                worldRegistry
         ));
 
         registerComponent(new ChunkCompiler(
                 sectionManager,
                 builtSectionQueue,
                 atlasDownloader,
-                blockRegistry
+                worldRegistry
         ));
 
         registerComponent(

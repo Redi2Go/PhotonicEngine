@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.block.palette;
 
+import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;

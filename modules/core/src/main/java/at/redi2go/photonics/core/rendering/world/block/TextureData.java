@@ -1,6 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.block.palette;
-
-import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
+package at.redi2go.photonics.core.rendering.world.block;
 
 public record TextureData(
         int blockId,

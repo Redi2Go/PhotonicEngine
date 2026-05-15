@@ -1,0 +1,15 @@
+package at.redi2go.photonics.core.rendering.world.allocator;
+
+import at.redi2go.photonics.api.Disposable;
+
+public interface BlockVoxelMemory extends Disposable {
+    int entryData();
+
+    int getEntry(int index);
+
+    void setEntry(int index, int entry);
+
+    void setData(int[] voxelData);
+
+    void upload();
+}

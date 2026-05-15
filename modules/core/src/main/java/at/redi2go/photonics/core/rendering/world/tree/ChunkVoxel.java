@@ -1,12 +1,9 @@
 package at.redi2go.photonics.core.rendering.world.tree;
 
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.model.VoxelModel;
-import at.redi2go.photonics.core.rendering.world.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.palette.TextureData;
-import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 
 import java.util.Queue;
 
@@ -14,14 +11,14 @@ public class ChunkVoxel extends WorldVoxel {
     private boolean setPos = false;
     private int x, y, z;
 
-    public ChunkVoxel(
+    protected ChunkVoxel(
             int depth,
-            WorldCompiler compiler,
-            BlockRegistry blockRegistry,
-            IGpuBufferHeap heap,
+            BlockMergeMode mergeMode,
+            ChunkManager chunkManager,
+            WorldRegistry worldRegistry,
             Queue<WorldVoxel> uploadQueue
     ) {
-        super(depth, compiler, blockRegistry, heap, uploadQueue);
+        super(depth, mergeMode, chunkManager, worldRegistry, uploadQueue);
     }
 
     public int x() {
@@ -41,7 +38,7 @@ public class ChunkVoxel extends WorldVoxel {
 
         setPos = true;
         updatePos(x, y, z);
-        compiler.addChunk(this);
+        chunkManager.addChunk(this);
     }
 
     void updatePos(int x, int y, int z) {
@@ -52,14 +49,7 @@ public class ChunkVoxel extends WorldVoxel {
 
     @Override
     protected VoxelEntry newMutableEntry(int depth) {
-        return blockRegistry.newBlockBuilder();
-    }
-
-    @Override
-    public void insertVoxel(int x, int y, int z, short region, int normal, int tint, TextureData textureData) {
-        initPos(x, y, z);
-
-        super.insertVoxel(x, y, z, region, normal, tint, textureData);
+        throw new UnsupportedOperationException("newMutableEntry");
     }
 
     @Override
@@ -68,15 +58,11 @@ public class ChunkVoxel extends WorldVoxel {
         containedRegions.add(region);
 
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
-        final var entry = getEntry(index);
-        VoxelEntry newEntry;
 
-        if (entry != null) {
-            newEntry = entry.toMutableEntry();
-            newEntry.insertBlock(x, y, z, region, block);
-        } else newEntry = block;
+        final VoxelEntry oldEntry = getEntry(index);
+        final VoxelEntry newEntry = oldEntry == null ? block : mergeMode.merge((BlockEntry) oldEntry, block);
 
-        setEntry(index, entry, newEntry);
+        setEntry(index, oldEntry, newEntry);
     }
 
     @Override
@@ -102,6 +88,6 @@ public class ChunkVoxel extends WorldVoxel {
     @Override
     public void close() {
         super.close();
-        compiler.removeChunk(this);
+        chunkManager.removeChunk(this);
     }
 }

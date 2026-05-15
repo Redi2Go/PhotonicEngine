@@ -1,24 +1,32 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 public interface BlockBakery {
-    void reset();
-
-    void setRegion(short region);
-
-    void setChunkOffset(Vector3i chunkOffset);
-
-    //TODO: Make relative to chunk
-    void submitBlock(
+    @Nullable MeshResult meshBlock(
             Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter
     );
 
-    void bake(VoxelConsumer voxelConsumer, BlockConsumer blockConsumer);
+    interface MeshResult extends Disposable {
+        long vertexHash();
+
+        TintBuilder.Result tintData();
+
+        void bake(VoxelConsumer voxelConsumer) throws InterruptedException;
+    }
+
+    static BlockBakery newBakery(AtlasDownloader atlasDownloader) {
+        return new BlockBakeryImpl(atlasDownloader);
+    }
 }

@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.buffer;
+package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
@@ -7,10 +7,10 @@ import org.joml.Vector4i;
 
 import java.util.List;
 
-public class BufferPaletteObject extends BufferObject<BufferPaletteObject.Entry, PaletteTextureView> {
+public class PaletteObject extends MemoryOwner<PaletteObject.Entry, PaletteTextureView> {
     private final Entry entry;
 
-    public BufferPaletteObject(PaletteEntry toCopy, BufferBlockRegistry registry) {
+    public PaletteObject( WorldRegistry registry, PaletteEntry toCopy) {
         super(registry);
 
         this.entry = new Entry(toCopy);
@@ -37,14 +37,14 @@ public class BufferPaletteObject extends BufferObject<BufferPaletteObject.Entry,
         }
 
         public void awaitAllocated() {
-            BufferPaletteObject.this.awaitAllocated();
+            PaletteObject.this.awaitAllocated();
         }
 
-        public int begin() {
-            return memoryOrThrow().pos();
+        public int entryData() {
+            return memoryOrThrow().entryData();
         }
 
-        public void upload() {
+        private void upload() {
             var texture = memoryOrThrow();
             var faceData = new Vector4i();
 

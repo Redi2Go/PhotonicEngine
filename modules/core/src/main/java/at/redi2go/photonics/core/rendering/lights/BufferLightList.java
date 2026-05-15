@@ -5,7 +5,7 @@ import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
 import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.rendering.SectionManager;
-import at.redi2go.photonics.core.rendering.world.WorldOrigin;
+import at.redi2go.photonics.core.rendering.WorldOrigin;
 import org.joml.Vector4f;
 
 import java.nio.ByteBuffer;

@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world;
+package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.core.IBlockPos;

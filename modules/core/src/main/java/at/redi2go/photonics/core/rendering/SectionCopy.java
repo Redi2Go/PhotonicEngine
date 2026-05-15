@@ -61,4 +61,14 @@ public class SectionCopy implements IChunkSection {
             }
         }
     }
+
+    public long computeSectionHash() {
+        final long[] hash = {0};
+
+        forEachBlock((ignored, ignored1, block) ->
+                hash[0] = hash[0] * 31 + block.hashCode()
+        );
+
+        return hash[0];
+    }
 }

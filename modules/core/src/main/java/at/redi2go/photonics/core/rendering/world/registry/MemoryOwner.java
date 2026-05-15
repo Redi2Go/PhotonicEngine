@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.buffer;
+package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.api.Disposable;
 import org.jetbrains.annotations.NonNls;
@@ -10,13 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class BufferObject<T, M extends Disposable> {
-    public static final Disposable NO_MEMORY = new Disposable() {
-        @Override
-        public void close() {
-
-        }
-    };
+public abstract class MemoryOwner<T, M extends Disposable> {
+    public static final Disposable NO_MEMORY = () -> { };
 
     private static final int CLOSED = -3;
     private static final int UNALLOCATED = -2;
@@ -24,7 +19,7 @@ public abstract class BufferObject<T, M extends Disposable> {
 
     private static final VarHandle VAR_HANDLE;
 
-    protected final BufferBlockRegistry registry;
+    protected final WorldRegistry registry;
 
     private M memory = null;
     private volatile int count = UNALLOCATED;
@@ -32,7 +27,7 @@ public abstract class BufferObject<T, M extends Disposable> {
     private final ManagedRefImpl managedRef = new ManagedRefImpl();
     private final RefImpl ref = new RefImpl();
 
-    protected BufferObject(BufferBlockRegistry registry) {
+    protected MemoryOwner(WorldRegistry registry) {
         this.registry = registry;
     }
 
@@ -53,7 +48,7 @@ public abstract class BufferObject<T, M extends Disposable> {
             loadDependants(dependants);
 
             for (var dependant : dependants) {
-                ((BufferObject<?, ?>.ManagedRefImpl) dependant).awaitAllocated();
+                ((MemoryOwner<?, ?>.ManagedRefImpl) dependant).awaitAllocated();
                 dependant.acquire();
             }
 
@@ -95,7 +90,7 @@ public abstract class BufferObject<T, M extends Disposable> {
         loadDependants(dependants);
 
         for (var dependant : dependants)
-            ((BufferObject<?, ?>.ManagedRefImpl) dependant).close();
+            ((MemoryOwner<?, ?>.ManagedRefImpl) dependant).close();
 
         registry.removeObject(this);
 
@@ -104,12 +99,12 @@ public abstract class BufferObject<T, M extends Disposable> {
 
     // Ref
 
-    public Ref<T> makeRef() {
+    public final Ref<T> makeRef() {
         incrementCount();
         return ref;
     }
 
-    public ManagedRef<T> makeManagedRef() {
+    public final ManagedRef<T> makeManagedRef() {
         return managedRef;
     }
 
@@ -151,7 +146,7 @@ public abstract class BufferObject<T, M extends Disposable> {
         int count = this.count;
         checkNotClosed(count);
 
-        while(count < 0) {
+        while (count < 0) {
             Thread.onSpinWait();
 
             count = this.count;
@@ -176,12 +171,16 @@ public abstract class BufferObject<T, M extends Disposable> {
 
     @Override
     public int hashCode() {
-        return getWrappedValue().hashCode();
+        var wrapped = getWrappedValue();
+        if (wrapped == this)
+            return System.identityHashCode(this);
+
+        return wrapped.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof BufferObject<?,?> other && getWrappedValue().equals(other.getWrappedValue());
+        return obj instanceof MemoryOwner<?, ?> other && getWrappedValue().equals(other.getWrappedValue());
     }
 
     private class ManagedRefImpl implements ManagedRef<T> {
@@ -197,11 +196,11 @@ public abstract class BufferObject<T, M extends Disposable> {
 
         @Override
         public T get() {
-            return BufferObject.this.getWrappedValue();
+            return MemoryOwner.this.getWrappedValue();
         }
 
         protected void awaitAllocated() {
-            BufferObject.this.awaitAllocated();
+            MemoryOwner.this.awaitAllocated();
         }
 
         public void close() {
@@ -212,11 +211,11 @@ public abstract class BufferObject<T, M extends Disposable> {
     private class RefImpl implements Ref<T> {
         @Override
         public T get() {
-            return BufferObject.this.getWrappedValue();
+            return MemoryOwner.this.getWrappedValue();
         }
 
         protected void awaitAllocated() {
-            BufferObject.this.awaitAllocated();
+            MemoryOwner.this.awaitAllocated();
         }
 
         @Override
@@ -249,7 +248,7 @@ public abstract class BufferObject<T, M extends Disposable> {
     static {
         try {
             VAR_HANDLE = MethodHandles.lookup()
-                    .findVarHandle(BufferObject.class, "count", int.class);
+                    .findVarHandle(MemoryOwner.class, "count", int.class);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
