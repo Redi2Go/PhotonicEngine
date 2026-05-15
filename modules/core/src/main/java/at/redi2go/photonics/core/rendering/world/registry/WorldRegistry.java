@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class WorldRegistry implements RenderingComponent {
-    private static final int VOXELIZATION_THREAD_COUNT = 3;
+    private static final int OPTIMIZATION_THREAD_COUNT = 3;
 
     private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
@@ -38,20 +38,16 @@ public class WorldRegistry implements RenderingComponent {
     final Queue<Disposable> freeQueue = new ConcurrentLinkedQueue<>();
 
     private final ExecutorService optimizationService;
-    private final ExecutorService voxelizationService;
 
     public WorldRegistry(WorldAllocator worldAllocator, PaletteTexture paletteTexture) {
         this.worldAllocator = worldAllocator;
         this.paletteTexture = paletteTexture;
 
-        optimizationService =
-                Executors.newSingleThreadExecutor((r) -> new Thread(r, "Photonics Optimization Thread"));
-
         AtomicInteger threadCount = new AtomicInteger();
-        voxelizationService =
+        optimizationService =
                 Executors.newFixedThreadPool(
-                        VOXELIZATION_THREAD_COUNT,
-                        (r) -> new Thread(r, "Photonics Voxelization Thread #" + threadCount.incrementAndGet())
+                        OPTIMIZATION_THREAD_COUNT,
+                        (r) -> new Thread(r, "Photonics Optimization Thread #" + threadCount.incrementAndGet())
                 );
     }
 
@@ -124,15 +120,14 @@ public class WorldRegistry implements RenderingComponent {
         return blocks.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
             var result = new CompletableFuture<BlockProvider>();
 
-            voxelizationService.submit(() -> {
+            try {
                 var builder = new BlockModelBuilder(this, hash, blockMesh.tintData());
-                try {
-                    blockMesh.bake(builder);
-                    result.complete(builder.build());
-                } catch(Throwable t) {
-                    result.completeExceptionally(t);
-                }
-            });
+
+                blockMesh.bake(builder);
+                result.complete(builder.build());
+            } catch (Throwable t) {
+                result.completeExceptionally(t);
+            }
 
             return result;
         });
@@ -162,7 +157,6 @@ public class WorldRegistry implements RenderingComponent {
     @Override
     public void close() {
         optimizationService.shutdownNow();
-        voxelizationService.shutdownNow();
         worldAllocator.close();
     }
 }
