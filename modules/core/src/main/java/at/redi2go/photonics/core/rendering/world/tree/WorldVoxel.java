@@ -261,7 +261,7 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
             data[i] = !firstUpload && (diff == 0 && newEntry == null) ? oldEntryData : newEntryData;
         }
 
-        if (optimized != 0)
+        if (voxelCount != RtVoxel.ENTRIES_SIZE && optimized != 0)
             new OptimizeWrapper(data).optimize();
 
         memory.setData(data);
