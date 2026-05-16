@@ -1,12 +1,10 @@
-package at.redi2go.photonics.common.meshing;
+package at.redi2go.photonics.common.meshing.impl;
 
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 public class BlockSetBuilder {

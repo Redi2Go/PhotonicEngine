@@ -1,4 +1,4 @@
-package at.redi2go.photonics.common.meshing;
+package at.redi2go.photonics.common.meshing.impl;
 
 public interface FeatureRendererExt {
     void setRenderShadows(boolean enabled);

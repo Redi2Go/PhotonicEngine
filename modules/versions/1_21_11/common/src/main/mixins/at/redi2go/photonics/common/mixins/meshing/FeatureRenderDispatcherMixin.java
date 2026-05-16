@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.mixins.meshing;
 
-import at.redi2go.photonics.common.meshing.FeatureRendererExt;
+import at.redi2go.photonics.common.meshing.impl.FeatureRendererExt;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.Font;

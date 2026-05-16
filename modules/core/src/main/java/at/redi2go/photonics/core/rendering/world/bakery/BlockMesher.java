@@ -11,19 +11,22 @@ import org.joml.Vector3i;
 
 import java.util.Optional;
 
-public interface BlockMesher {
+public interface BlockMesher<T extends BlockMeshState> {
     Registry REGISTRY = new Registry();
 
     default void setup() {
 
     }
 
-    /**
-     * Meshes a block at {@code pos} with {@code blockState}.
-     *
-     * @apiNote {@code VertexBuilder} only accepts quads
-     */
+    T extractMeshState(
+            Vector3i blockChunkOffset,
+            IBlockPos pos,
+            IBlockState blockState,
+            IBlockAndTintGetter blockAndTintGetter
+    );
+
     void meshBlock(
+            T meshState,
             Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,

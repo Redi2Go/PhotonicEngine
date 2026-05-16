@@ -1,16 +1,9 @@
-package at.redi2go.photonics.common.meshing;
+package at.redi2go.photonics.common.meshing.impl;
 
-import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.common.mixins.meshing.RenderSetupAccessor;
-import at.redi2go.photonics.common.mixins.meshing.RenderTypeAccessor;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jspecify.annotations.NonNull;
-
-import java.util.SequencedMap;
 
 public class EmptyBufferSource extends MultiBufferSource.BufferSource {
     public static final EmptyBufferSource INSTANCE = new EmptyBufferSource();
