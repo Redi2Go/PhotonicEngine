@@ -309,8 +309,12 @@ public class SectionManager implements RenderingComponent {
 
                 List<Vector3i> result = new ArrayList<>(unloadedQueue.size());
 
-                while (!unloadedQueue.isEmpty())
-                    result.add(unloadedQueue.remove());
+                while (!unloadedQueue.isEmpty()) {
+                    var section = unloadedQueue.remove();
+                    if (notEmptySections.contains(section)) continue;
+
+                    result.add(section);
+                }
 
                 return result;
             } finally {
@@ -413,7 +417,7 @@ public class SectionManager implements RenderingComponent {
                         notEmptyCondition.signalAll();
                     }
 
-                    index+= maxRemainingSlots;
+                    index += maxRemainingSlots;
                 }
             } finally {
                 lock.unlock();
