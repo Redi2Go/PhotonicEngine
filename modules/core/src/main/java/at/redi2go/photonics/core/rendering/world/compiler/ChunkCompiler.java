@@ -39,15 +39,12 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
     private final WorldRegistry worldRegistry;
 
-    private final BlockBakery bakery;
-
     private final ConcurrentMap<Vector3i, Long> sectionHashes = new ConcurrentHashMap<>();
     private final Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
             SectionManager sectionManager,
             SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue,
-            AtlasDownloader atlasDownloader,
             WorldRegistry worldRegistry
     ) {
         this.unloadQueue = sectionManager.newUnloadQueue();
@@ -55,8 +52,6 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         this.builtSectionQueue = builtSectionQueue;
 
         this.worldRegistry = worldRegistry;
-
-        this.bakery = BlockBakery.newBakery(atlasDownloader);
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             var thread = new Thread(this, "Photonic Chunk Compiler #" + i);
@@ -93,22 +88,19 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 section.forEachBlock((blockChunkOffset, blockPos, block) -> {
                     if (block.isAir()) return;
 
-                    var meshResult = bakery.meshBlock(
-                            new Vector3i(blockChunkOffset),
-                            blockPos,
-                            block,
-                            level
-                    );
-
-                    if (meshResult == null) return;
-
-                    buildResult.submitBlockFuture(
-                            blockChunkOffset.x(),
-                            blockChunkOffset.y(),
-                            blockChunkOffset.z(),
-                            meshResult.tintData(),
-                            worldRegistry.createBlockModel(meshResult)
-                    );
+                    BlockMesher.REGISTRY.get(block.block())
+                            .ifPresent(mesher -> buildResult.submitBlockFuture(
+                                    blockChunkOffset.x(),
+                                    blockChunkOffset.y(),
+                                    blockChunkOffset.z(),
+                                    worldRegistry.getBlockModel(
+                                            mesher,
+                                            new Vector3i(blockChunkOffset),
+                                            blockPos,
+                                            block,
+                                            level
+                                    )
+                            ));
                 });
 
                 BlockMesher.REGISTRY.teardown();
@@ -162,8 +154,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
         private void submitBlockFuture(
                 int x, int y, int z,
-                TintBuilder.Result tintInfo,
-                CompletionStage<BlockProvider> block
+                CompletionStage<@Nullable BlockModel> block
         ) {
             while (true) {
                 int pending = pendingBlocks.get();
@@ -173,7 +164,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
                     block.thenAccept((result) -> {
                         try {
-                            completeBlock(x, y, z, result.createVariant(tintInfo));
+                            completeBlock(x, y, z, result);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         } catch (Throwable t) {
@@ -186,7 +177,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             }
         }
 
-        private void completeBlock(int x, int y, int z, BlockModel blockModel) throws InterruptedException {
+        private void completeBlock(int x, int y, int z, @Nullable BlockModel blockModel) throws InterruptedException {
             setBlock(x, y, z, blockModel);
 
             while (true) {

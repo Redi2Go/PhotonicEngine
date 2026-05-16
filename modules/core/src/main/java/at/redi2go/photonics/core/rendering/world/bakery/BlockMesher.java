@@ -39,9 +39,9 @@ public interface BlockMesher<T extends BlockMeshState> {
     }
 
     class Registry {
-        private final Object2ObjectMap<Id, BlockMesher> blockRegistry = new Object2ObjectOpenHashMap<>();
-        private final Object2ObjectMap<String, BlockMesher> namespaceRegistry = new Object2ObjectOpenHashMap<>();
-        private BlockMesher defaultMesher = null;
+        private final Object2ObjectMap<Id, BlockMesher<?>> blockRegistry = new Object2ObjectOpenHashMap<>();
+        private final Object2ObjectMap<String, BlockMesher<?>> namespaceRegistry = new Object2ObjectOpenHashMap<>();
+        private BlockMesher<?> defaultMesher = null;
 
         Registry() {
 
@@ -69,20 +69,20 @@ public interface BlockMesher<T extends BlockMeshState> {
                 defaultMesher.teardown();
         }
 
-        public void addBlock(Id id, BlockMesher mesher) {
+        public void addBlock(Id id, BlockMesher<?> mesher) {
             blockRegistry.putIfAbsent(id, mesher);
         }
 
-        public void addNamespace(String namespace, BlockMesher mesher) {
+        public void addNamespace(String namespace, BlockMesher<?> mesher) {
             namespaceRegistry.putIfAbsent(namespace, mesher);
         }
 
-        public void addDefault(BlockMesher mesher) {
+        public void addDefault(BlockMesher<?> mesher) {
             defaultMesher = mesher;
         }
 
-        public Optional<BlockMesher> get(IBlock block) {
-            return Optional.ofNullable(blockRegistry.get(block.id()))
+        public Optional<BlockMesher<?>> get(IBlock block) {
+            return Optional.<BlockMesher<?>>ofNullable(blockRegistry.get(block.id()))
                     .or(() -> Optional.ofNullable(namespaceRegistry.get(block.id().namespace())))
                     .or(() -> Optional.ofNullable(defaultMesher));
         }

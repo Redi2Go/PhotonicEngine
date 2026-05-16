@@ -68,7 +68,7 @@ public class BlockModelTemplate extends ManagedObject<BlockModelTemplate> implem
     protected boolean dispose() {
         if (!super.dispose()) return false;
 
-        registry.removeBlockModel(vertexHash);
+        registry.removeBlockProvider(vertexHash);
         return true;
     }
 }

@@ -1,18 +1,27 @@
 package at.redi2go.photonics.core.rendering.world.registry;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.core.Photonics;
+import at.redi2go.photonics.api.mc.core.IBlockPos;
+import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMeshState;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
+import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
+import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockHeader;
+import at.redi2go.photonics.core.rendering.world.registry.block.BlockModelImpl;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockVoxel;
 import at.redi2go.photonics.core.rendering.world.registry.block.builder.BlockModelBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockModelTemplate;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3i;
 
 import java.util.List;
 import java.util.Queue;
@@ -29,19 +38,30 @@ import java.util.function.Function;
 
 public class WorldRegistry implements RenderingComponent {
     private static final int OPTIMIZATION_THREAD_COUNT = 1;
+    private static final CompletionStage<@Nullable BlockModel> EMPTY_BLOCK_MODEL_FUTURE = CompletableFuture.completedFuture(null);
 
     private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
 
-    private final ConcurrentLong2ObjectMap<CompletionStage<BlockProvider>> blocks = new ConcurrentLong2ObjectMap<>(16);
+    private final BlockBakery bakery;
+
+    private final ConcurrentHashMap<BlockMeshState, CompletionStage<@Nullable BlockModel>> blockModelCache = new ConcurrentHashMap<>();
+    private final ConcurrentLong2ObjectMap<CompletionStage<BlockProvider>> vertexToBlockCache = new ConcurrentLong2ObjectMap<>(16);
+
     private final ConcurrentHashMap<Object, MemoryOwner<?, ?>> hashedObjectCache = new ConcurrentHashMap<>();
     final Queue<Disposable> freeQueue = new ConcurrentLinkedQueue<>();
 
     private final ExecutorService optimizationService;
 
-    public WorldRegistry(WorldAllocator worldAllocator, PaletteTexture paletteTexture) {
+    public WorldRegistry(
+            WorldAllocator worldAllocator,
+            PaletteTexture paletteTexture,
+            AtlasDownloader atlasDownloader
+    ) {
         this.worldAllocator = worldAllocator;
         this.paletteTexture = paletteTexture;
+
+        this.bakery = BlockBakery.newBakery(atlasDownloader);
 
         AtomicInteger threadCount = new AtomicInteger();
         optimizationService =
@@ -116,8 +136,49 @@ public class WorldRegistry implements RenderingComponent {
         );
     }
 
-    public CompletionStage<BlockProvider> createBlockModel(BlockBakery.MeshResult blockMesh) {
-        var result = blocks.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
+    @SuppressWarnings("unchecked")
+    //TODO: Do not do work IN COMPUTE IF ABSENT
+    public <T extends BlockMeshState> CompletionStage<BlockModel> getBlockModel(
+            BlockMesher<T> blockMesher,
+            Vector3i blockChunkOffset,
+            IBlockPos pos,
+            IBlockState blockState,
+            IBlockAndTintGetter blockAndTintGetter
+    ) {
+        return blockModelCache.computeIfAbsent(
+                blockMesher.extractMeshState(
+                        blockChunkOffset,
+                        pos,
+                        blockState,
+                        blockAndTintGetter
+                ), (meshState) -> {
+                    var meshResult = bakery.meshBlock(
+                            blockMesher,
+                            (T) meshState,
+                            blockChunkOffset,
+                            pos,
+                            blockState,
+                            blockAndTintGetter
+                    );
+
+                    meshState.prepareCacheUse();
+                    if (meshResult == null) return EMPTY_BLOCK_MODEL_FUTURE;
+
+                    TintBuilder.Result tintInfo = meshResult.tintData();
+
+                    return cacheBlockProvider(meshResult)
+                            .thenApply((provider) -> {
+                                var variant = provider.createVariant(tintInfo);
+                                ((BlockModelImpl) variant).addMeshState(meshState);
+
+                                return variant;
+                            });
+                }
+        );
+    }
+
+    private CompletionStage<BlockProvider> cacheBlockProvider(BlockBakery.MeshResult blockMesh) {
+        var result = vertexToBlockCache.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
             var future = new CompletableFuture<BlockProvider>();
 
             try {
@@ -139,8 +200,12 @@ public class WorldRegistry implements RenderingComponent {
         return result;
     }
 
-    public void removeBlockModel(long vertexHash) {
-        blocks.remove(vertexHash);
+    public void removeBlockProvider(long vertexHash) {
+        vertexToBlockCache.remove(vertexHash);
+    }
+
+    public void removeBlockModel(BlockMeshState blockMeshState) {
+        blockModelCache.remove(blockMeshState);
     }
 
     public void scheduleOptimization(Runnable runnable) {

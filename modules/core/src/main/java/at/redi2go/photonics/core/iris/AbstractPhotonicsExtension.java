@@ -49,7 +49,7 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         var worldAllocator = registerComponent(new BufferWorldAllocator(1 << 29));
         var paletteTexture = registerComponent(new BufferPaletteTexture(2048, 600));
 
-        var worldRegistry = registerComponent(new WorldRegistry(worldAllocator, paletteTexture));
+        var worldRegistry = registerComponent(new WorldRegistry(worldAllocator, paletteTexture, atlasDownloader));
 
         var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1, true);
         var worldCompiler = registerComponent(new WorldCompiler(
@@ -63,7 +63,6 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         registerComponent(new ChunkCompiler(
                 sectionManager,
                 builtSectionQueue,
-                atlasDownloader,
                 worldRegistry
         ));
 

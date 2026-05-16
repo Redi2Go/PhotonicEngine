@@ -1,11 +1,13 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMeshState;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.registry.ManagedObject;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockModelTemplate;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,6 +15,8 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
     private final ManagedRef<BlockModelTemplate> template;
     private final long hash;
     private final PartsWrapper parts;
+
+    private final List<BlockMeshState> meshes = new ArrayList<>();
 
     public BlockModelImpl(
             WorldRegistry registry,
@@ -39,11 +43,16 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
         return this;
     }
 
+    public void addMeshState(BlockMeshState meshState) {
+        meshes.add(meshState);
+    }
+
     @Override
     protected boolean dispose() {
         if (!super.dispose()) return false;
 
         template.get().removeVariant(hash);
+        meshes.forEach(registry::removeBlockModel);
 
         return true;
     }

@@ -8,6 +8,7 @@ import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.BaryPos;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMeshState;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
@@ -46,30 +47,29 @@ public class BlockBakeryImpl implements BlockBakery {
     }
 
     @Override
-    public @Nullable MeshResult meshBlock(
+    public @Nullable <T extends BlockMeshState> MeshResult meshBlock(
+            BlockMesher<T> mesher,
+            T meshState,
             Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter
     ) {
-        return BlockMesher.REGISTRY.get(blockState.block())
-                .map(mesher -> {
-                    var builder = new MeshResultImpl(pollMeshArray());
-                    mesher.meshBlock(
-                            blockChunkOffset,
-                            pos,
-                            blockState,
-                            blockAndTintGetter,
-                            builder
-                    );
+        var builder = new MeshResultImpl(pollMeshArray());
 
-                    return builder;
-                }).filter(mesher -> {
-                    if (mesher.vertexCount != 0) return true;
+        mesher.meshBlock(
+                meshState,
+                blockChunkOffset,
+                pos,
+                blockState,
+                blockAndTintGetter,
+                builder
+        );
 
-                    mesher.close();
-                    return false;
-                }).orElse(null);
+        if (builder.vertexCount == 0) {
+            builder.close();
+            return null;
+        } else return builder;
     }
 
     public class MeshResultImpl implements BlockBuilder, MeshResult {

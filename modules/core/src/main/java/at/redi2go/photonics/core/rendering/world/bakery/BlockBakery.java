@@ -11,7 +11,9 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 public interface BlockBakery {
-    @Nullable MeshResult meshBlock(
+    @Nullable <T extends BlockMeshState> MeshResult meshBlock(
+            BlockMesher<T> mesher,
+            T meshState,
             Vector3i blockChunkOffset,
             IBlockPos pos,
             IBlockState blockState,
