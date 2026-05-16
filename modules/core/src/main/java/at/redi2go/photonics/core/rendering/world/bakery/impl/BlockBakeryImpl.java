@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BlockBakeryImpl implements BlockBakery {
     private static final Queue<int[]> MESH_ARRAYS = new ConcurrentLinkedQueue<>();
-    private static final int INITIAL_MESH_ARRAY_SIZE = 40;
+    private static final int INITIAL_MESH_ARRAY_SIZE = 1024;
 
     private final AtlasDownloader atlasDownloader;
 
@@ -86,6 +86,8 @@ public class BlockBakeryImpl implements BlockBakery {
         private int vertexCount = 0;
         private long vertexHash = 0;
         private int vertexIndex = -1;
+
+        private boolean open = true;
 
         private final ArrayDeque<StateChange> stateChanges = new ArrayDeque<>();
 
@@ -386,7 +388,10 @@ public class BlockBakeryImpl implements BlockBakery {
 
         @Override
         public void close() {
-            MESH_ARRAYS.add(meshData);
+            if (open) {
+                MESH_ARRAYS.add(meshData);
+                open = false;
+            }
         }
 
         private static abstract class StateChange {

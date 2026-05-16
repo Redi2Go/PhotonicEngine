@@ -117,20 +117,26 @@ public class WorldRegistry implements RenderingComponent {
     }
 
     public CompletionStage<BlockProvider> createBlockModel(BlockBakery.MeshResult blockMesh) {
-        return blocks.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
-            var result = new CompletableFuture<BlockProvider>();
+        var result = blocks.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
+            var future = new CompletableFuture<BlockProvider>();
 
             try {
                 var builder = new BlockModelBuilder(this, hash, blockMesh.tintData());
 
                 blockMesh.bake(builder);
-                result.complete(builder.build());
+                blockMesh.close();
+
+                future.complete(builder.build());
             } catch (Throwable t) {
-                result.completeExceptionally(t);
+                future.completeExceptionally(t);
             }
 
-            return result;
+            return future;
         });
+
+        blockMesh.close();
+
+        return result;
     }
 
     public void removeBlockModel(long vertexHash) {
