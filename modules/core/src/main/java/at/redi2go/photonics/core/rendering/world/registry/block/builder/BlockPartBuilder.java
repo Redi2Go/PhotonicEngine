@@ -11,8 +11,9 @@ import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
 import org.joml.Vector3i;
 
 public class BlockPartBuilder implements VoxelConsumer {
-    private final Vector3i VECTOR_ZERO = new Vector3i();
-    private final Vector3i VECTOR_15 = new Vector3i(15);
+    private static final Vector3i VECTOR_ZERO = new Vector3i();
+    private static final Vector3i VECTOR_ONE = new Vector3i(1);
+    private static final Vector3i VECTOR_15 = new Vector3i(15);
 
     private final MutablePaletteEntry[] data;
 
@@ -89,7 +90,7 @@ public class BlockPartBuilder implements VoxelConsumer {
         minVoxel.min(VECTOR_15);
         maxVoxel.max(VECTOR_ZERO);
 
-        Vector3i edgeLengths = maxVoxel.sub(minVoxel);
+        Vector3i edgeLengths = maxVoxel.sub(minVoxel).max(VECTOR_ONE);
         return new BuildResult(
                 hash,
                 edgeLengths.x * edgeLengths.y * edgeLengths.z,
