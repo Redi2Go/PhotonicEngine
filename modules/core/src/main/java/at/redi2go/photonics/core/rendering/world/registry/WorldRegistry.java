@@ -52,6 +52,9 @@ public class WorldRegistry implements RenderingComponent {
 
     private final ExecutorService optimizationService;
 
+    private final Queue<Runnable> uploadQueue = new ConcurrentLinkedQueue<>();
+    private long lastUpload = System.currentTimeMillis();
+
     public WorldRegistry(
             WorldAllocator worldAllocator,
             PaletteTexture paletteTexture,
@@ -153,7 +156,7 @@ public class WorldRegistry implements RenderingComponent {
         );
 
         final CompletableFuture<BlockModel> future;
-        
+
         if (meshState.shouldCache()) {
             future = blockModelCache.computeIfAbsent(meshState,
                     (ignored) -> {
@@ -241,6 +244,20 @@ public class WorldRegistry implements RenderingComponent {
         } catch (RejectedExecutionException e) {
             // Nothing
         }
+    }
+
+    public void scheduleUpload(Runnable runnable) {
+        uploadQueue.add(runnable);
+    }
+
+    @Override
+    public void onFrameBegin() {
+        long time = System.currentTimeMillis();
+        if ((time - lastUpload) < 500) return;
+
+        lastUpload = time;
+        while (!uploadQueue.isEmpty())
+            uploadQueue.remove().run();
     }
 
     public void freeUnusedBlocks() {

@@ -48,7 +48,8 @@ public class BlockVoxel extends MemoryOwner<BlockVoxel, BlockVoxelMemory> implem
             if (newMemory == null) return;
 
             newMemory.setData(data);
-            newMemory.upload();
+
+            registry.scheduleUpload(newMemory::upload);
         });
     }
 
