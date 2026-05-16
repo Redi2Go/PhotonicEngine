@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
@@ -52,12 +51,11 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
 
         var worldRegistry = registerComponent(new WorldRegistry(worldAllocator, paletteTexture));
 
-        var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1);
+        var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1, true);
         var worldCompiler = registerComponent(new WorldCompiler(
                 ROOT_VOXEL_DEPTH,
                 worldAllocator,
                 paletteTexture,
-                sectionManager,
                 builtSectionQueue,
                 worldRegistry
         ));

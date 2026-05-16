@@ -28,14 +28,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ChunkCompiler implements Runnable, RenderingComponent {
     private static final int THREAD_COUNT = 1;
 
     private final Queue<Vector3i> unloadQueue;
-    private final SectionManager.TaskQueue<SectionCopy> sectionQueue;
+    private final SectionManager.SectionQueue sectionQueue;
     private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue;
 
     private final WorldRegistry worldRegistry;
@@ -52,7 +50,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             WorldRegistry worldRegistry
     ) {
         this.unloadQueue = sectionManager.newUnloadQueue();
-        this.sectionQueue = sectionManager.newSectionQueue();
+        this.sectionQueue = sectionManager.newSectionQueue(false);
         this.builtSectionQueue = builtSectionQueue;
 
         this.worldRegistry = worldRegistry;
@@ -72,7 +70,12 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                var section = sectionQueue.take();
+                sectionQueue.awaitTask();
+                var result = sectionQueue.take();
+
+                if (result.isEmpty()) continue;
+
+                var section = result.get();
                 unloadChunks();
 
                 ILevel level = Minecraft.getLevel();

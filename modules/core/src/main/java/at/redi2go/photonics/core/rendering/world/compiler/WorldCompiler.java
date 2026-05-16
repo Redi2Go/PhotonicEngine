@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -40,8 +41,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     private static final int THREAD_POOL_SIZE = 3;
     private static final ExecutorService THREAD_POOL;
 
-    private final Queue<Vector3i> unloadQueue;
-    private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue;
+    private final SectionManager.TaskQueue<ChunkCompiler.BuildResult> taskQueue;
 
     private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
@@ -74,15 +74,13 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
             int depth,
             WorldAllocator worldAllocator,
             PaletteTexture paletteTexture,
-            SectionManager sectionManager,
-            SectionManager.TaskQueue<ChunkCompiler.BuildResult> builtSectionQueue,
+            SectionManager.TaskQueue<ChunkCompiler.BuildResult> taskQueue,
             WorldRegistry worldRegistry
     ) {
         this.worldAllocator = worldAllocator;
         this.paletteTexture = paletteTexture;
 
-        this.unloadQueue = sectionManager.newUnloadQueue();
-        this.builtSectionQueue = builtSectionQueue;
+        this.taskQueue = taskQueue;
         this.registry = worldRegistry;
 
         this.uploadQueue = new ConcurrentLinkedQueue<>();
@@ -106,22 +104,37 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     public void run() {
         try {
             while (!Thread.interrupted()) {
-                unloadSections();
-                rootVoxel.pruneEmptyVoxels();
+                taskQueue.awaitTask();
 
-                //TODO: FIX ME!
-                //registry.freeUnusedBlocks();
 
-                var sections = builtSectionQueue.drain(MAX_SECTIONS_PER_RUN);
-                recenter();
+                var unloadedSections = taskQueue.drainUnloadQueue();
+                if (!unloadedSections.isEmpty()) {
+                    unloadSections(unloadedSections);
+                }
 
-                clearPendingSections(sections);
 
-                insertSections(sections);
+                var builtSections = taskQueue.drain(MAX_SECTIONS_PER_RUN);
+                if (!builtSections.isEmpty()) {
+                    recenter();
 
-                stopUpload();
-                buildSections();
-                awaitUpload();
+                    clearPendingSections(builtSections);
+                    insertSections(builtSections);
+                }
+
+
+                if (!unloadedSections.isEmpty()) {
+                    rootVoxel.pruneEmptyVoxels();
+                }
+
+
+                if (!unloadedSections.isEmpty() || !builtSections.isEmpty()) {
+                    stopUpload();
+                    buildSections();
+                    awaitUpload();
+
+                    //TODO: FIX ME!
+                    //registry.freeUnusedBlocks();
+                }
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
 
@@ -131,11 +144,10 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
     // Compiler Steps
 
-    private void unloadSections() {
+    private void unloadSections(List<Vector3i> unloadedSections) {
         if (iorigin == null) return;
 
-        while (!unloadQueue.isEmpty()) {
-            var sectionCoord = unloadQueue.remove();
+        for (var sectionCoord : unloadedSections) {
             Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
                     .sub(iorigin)
                     .mul(16);

@@ -21,7 +21,9 @@ import org.joml.Vector4f;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Queue;
+import java.util.Vector;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -36,8 +38,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     private final int maxLights;
     private final Supplier<WorldOrigin> worldOriginSupplier;
 
-    private final Queue<Vector3i> unloadedQueue;
-    private final SectionManager.TaskQueue<SectionCopy> sectionQueue;
+    private final SectionManager.SectionQueue sectionQueue;
 
     private final ListMultimap<Vector3i, TracedLightPosition> tracedLightPositions;
     private final UniformUpdater uniformUpdater = new UniformUpdater();
@@ -54,8 +55,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
         this.maxLights = maxLights;
         this.worldOriginSupplier = worldOriginSupplier;
 
-        this.unloadedQueue = sectionManager.newUnloadQueue();
-        this.sectionQueue = sectionManager.newSectionQueue();
+        this.sectionQueue = sectionManager.newSectionQueue(true);
 
         this.tracedLightPositions = MultimapBuilder.hashKeys()
                 .arrayListValues()
@@ -84,13 +84,29 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
             if (Thread.interrupted() && !needsReload) return;
 
             try {
-                unloadSections();
-                reloadLights();
+                sectionQueue.awaitTask();
 
-                addNewSections();
+                boolean needsUpload = false;
 
-                var newLights = trimLights();
-                storeLights(newLights);
+                var unloadedSections = sectionQueue.drainUnloadQueue();
+                if (!unloadedSections.isEmpty()) {
+                    needsUpload = true;
+                    unloadSections(unloadedSections);
+                }
+
+
+                needsUpload |= reloadLights();
+
+                var loadedSections = sectionQueue.drain(Integer.MAX_VALUE);
+                if (!loadedSections.isEmpty()) {
+                    needsUpload = true;
+                    addNewSections(loadedSections);
+                }
+
+                if (needsUpload) {
+                    var newLights = trimLights();
+                    storeLights(newLights);
+                }
             } catch (InterruptedException e) {
                 if (!needsReload) return;
             }
@@ -99,14 +115,14 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
     // Compiler stages
 
-    private void unloadSections() {
-        while (!unloadedQueue.isEmpty()) {
-            tracedLightPositions.removeAll(unloadedQueue.remove());
+    private void unloadSections(List<Vector3i> unloadedSections) {
+        for (var section : unloadedSections) {
+            tracedLightPositions.removeAll(section);
         }
     }
 
-    private void reloadLights() {
-        if (!needsReload) return;
+    private boolean reloadLights() {
+        if (!needsReload) return false;
         needsReload = false;
 
         for (var section : tracedLightPositions.keySet()) {
@@ -126,10 +142,11 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
                 } else itr.remove();
             }
         }
+
+        return true;
     }
 
-    private void addNewSections() throws InterruptedException {
-        var newSections = sectionQueue.drain(Integer.MAX_VALUE);
+    private void addNewSections(List<SectionCopy> newSections) {
         for (var section : newSections) {
             var lights = tracedLightPositions.get(section.pos());
             lights.clear();
