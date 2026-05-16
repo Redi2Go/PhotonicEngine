@@ -3,11 +3,13 @@ package at.redi2go.photonics.core.rendering;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
+import at.redi2go.photonics.core.collect.EmptyQueue;
 import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NonNls;
 import org.joml.Vector2i;
 import org.joml.Vector3i;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntSupplier;
 
@@ -30,7 +33,7 @@ public class SectionManager implements RenderingComponent {
     private final Set<Vector3i> notEmptySections = ConcurrentHashMap.newKeySet();
 
     private final List<Queue<Vector3i>> unloadQueues = new ArrayList<>();
-    private final List<TaskQueue<SectionCopy>> sectionQueues = new ArrayList<>();
+    private final List<TaskQueue<?>> taskQueues = new ArrayList<>();
 
     private final IntSupplier renderDistanceSupplier;
 
@@ -44,21 +47,28 @@ public class SectionManager implements RenderingComponent {
     private void queueUnload(Vector3i section) {
         for (var unloadQueue : unloadQueues)
             unloadQueue.add(section);
-    }
 
-    private void queueUnload(Collection<Vector3i> sections) {
-        for (var unloadQueue : unloadQueues)
-            unloadQueue.addAll(sections);
+        for (var taskQueue : taskQueues) {
+            if (taskQueue.tracksUnloads()) {
+                try {
+                    taskQueue.offerUnload(section);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     private void queueSection(SectionCopy section) throws InterruptedException {
-        for (var sectionQueue : sectionQueues)
-            sectionQueue.offer(section.pos(), section);
-    }
-
-    private void queueSections(List<Pair<Vector3i, SectionCopy>> sections) throws InterruptedException {
-        for (var sectionQueue : sectionQueues)
-            sectionQueue.offerMany(sections);
+        for (var taskQueue : taskQueues) {
+            if (taskQueue instanceof SectionQueue sectionQueue) {
+                try {
+                    sectionQueue.offer(section.pos(), section);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     private void refreshSections(@NonNls ILevel level) throws InterruptedException {
@@ -118,8 +128,22 @@ public class SectionManager implements RenderingComponent {
         lastCameraPos = cameraPos;
         lastRenderDistance = rd;
 
-        queueUnload(unloadedSections);
-        queueSections(sectionsToUpdate);
+        for (var unloadQueue : unloadQueues)
+            unloadQueue.addAll(unloadedSections);
+
+        for (var taskQueue : taskQueues) {
+            taskQueue.lock.lockInterruptibly();
+
+            try {
+                if (taskQueue.tracksUnloads())
+                    taskQueue.offerUnloads(unloadedSections);
+
+                if (taskQueue instanceof SectionQueue sectionQueue)
+                    sectionQueue.offerMany(sectionsToUpdate);
+            } finally {
+                taskQueue.lock.unlock();
+            }
+        }
     }
 
     public Queue<Vector3i> newUnloadQueue() {
@@ -129,15 +153,18 @@ public class SectionManager implements RenderingComponent {
         return queue;
     }
 
-    public TaskQueue<SectionCopy> newSectionQueue() {
-        var queue = new TaskQueue<SectionCopy>(-1);
-        sectionQueues.add(queue);
+    public SectionQueue newSectionQueue(boolean trackUnloads) {
+        var queue = new SectionQueue(-1, trackUnloads);
+        taskQueues.add(queue);
 
         return queue;
     }
 
-    public <T> TaskQueue<T> newTaskQueue(int maxCapacity) {
-        return new TaskQueue<>(maxCapacity);
+    public <T> TaskQueue<T> newTaskQueue(int maxCapacity, boolean trackUnloads) {
+        var queue = new TaskQueue<T>(maxCapacity, trackUnloads);
+        taskQueues.add(queue);
+
+        return queue;
     }
 
     private Optional<SectionCopy> createCopy(Vector3i sectionPos, ILevel level) {
@@ -200,7 +227,10 @@ public class SectionManager implements RenderingComponent {
 
         try {
             Vector3i sectionPos = new Vector3i(x, y, z);
-            if (!notEmptySections.contains(sectionPos)) return;
+            if (!notEmptySections.contains(sectionPos)) {
+                onSectionAdded(x, y, z);
+                return;
+            }
 
             var copyResult = createCopy(sectionPos, level);
             if (copyResult.isEmpty()) {
@@ -227,72 +257,218 @@ public class SectionManager implements RenderingComponent {
     }
 
     public class TaskQueue<V> {
-        private final ReentrantLock lock = new ReentrantLock();
-        private final Condition notEmpty = lock.newCondition();
-        private final Condition notFull = lock.newCondition();
+        private final Lock lock = new ReentrantLock();
 
-        private final Map<Vector3i, V> values = new HashMap<>();
-        private PendingSection[] queue;
+        private final Condition notEmptyCondition = lock.newCondition();
+        private final Condition notFullCondition = lock.newCondition();
 
-        private int pendingSections = 0;
-        private final int maxCapacity;
+        private int size = 0;
+        private final int capacity;
+
+        private SectionInfo[] sectionQueue;
+        private final Map<Vector3i, V> sectionValues = new HashMap<>();
+
+        private final Queue<Vector3i> unloadedQueue;
 
         private Vector3i lastCameraPos = null;
         private int lastRenderDistance = 0;
-
         private boolean newPending = false;
-
         private int mod = 0;
 
-        private TaskQueue(int maxCapacity) {
-            this.maxCapacity = maxCapacity;
-            this.queue = new PendingSection[maxCapacity > 0 ? maxCapacity : 24];
+        private TaskQueue(int maxSize, boolean trackUnloads) {
+            this.capacity = maxSize;
+            this.sectionQueue = new SectionInfo[maxSize > 0 ? maxSize : 24];
+
+            unloadedQueue = trackUnloads ? new ArrayDeque<>() : EmptyQueue.of();
+        }
+
+        private boolean tracksUnloads() {
+            return unloadedQueue != EmptyQueue.<Vector3i>of();
+        }
+
+        public void awaitTask() throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                while (true) {
+                    if (size != 0 || !unloadedQueue.isEmpty()) return;
+
+                    notEmptyCondition.await();
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+
+        public List<Vector3i> drainUnloadQueue() throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                if (unloadedQueue.isEmpty()) return List.of();
+
+                List<Vector3i> result = new ArrayList<>(unloadedQueue.size());
+
+                while (!unloadedQueue.isEmpty())
+                    result.add(unloadedQueue.remove());
+
+                return result;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public Optional<V> take() throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                if (size == 0) return Optional.empty();
+
+                sortSections();
+                if (size == 0) return Optional.empty();
+
+                notFullCondition.signalAll();
+                return Optional.of(removeFirst());
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public List<V> drain(int maxCount) throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                if (size == 0) return List.of();
+
+                sortSections();
+                if (size == 0) return List.of();
+
+                int count = Math.min(maxCount, size);
+                var result = new ArrayList<V>(count);
+
+                for (int i = 0; i < count; i++)
+                    result.add(removeFirst());
+
+                notFullCondition.signalAll();
+
+                return result;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+
+        public void offer(Vector3i sectionCoord, V element) throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                while (size == capacity)
+                    notFullCondition.await();
+
+                if (!notEmptySections.contains(sectionCoord)) return;
+
+                var previousValue = sectionValues.put(sectionCoord, element);
+                if (previousValue != null) return;
+
+                requireCapacity(size + 1);
+
+                sectionQueue[size++] = new SectionInfo(sectionCoord);
+
+                newPending = true;
+                notEmptyCondition.signalAll();
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        public void offerMany(List<Pair<Vector3i, V>> elements) throws InterruptedException {
+            if (elements.isEmpty()) return;
+            lock.lockInterruptibly();
+
+            try {
+                int index = 0;
+                while (index < elements.size()) {
+                    while (size == capacity)
+                        notFullCondition.await();
+
+                    int maxRemainingSlots = capacity > 0 ? (capacity - size) : elements.size();
+                    requireCapacity(size + maxRemainingSlots);
+
+                    boolean changed = false;
+                    for (int i = 0; i < maxRemainingSlots; i++) {
+                        var elementPair = elements.get(index + i);
+
+                        var sectionCoord = elementPair.left();
+                        var element = elementPair.right();
+
+                        var previousValue = sectionValues.put(sectionCoord, element);
+                        if (previousValue != null) continue;
+
+                        sectionQueue[size++] = new SectionInfo(sectionCoord);
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        newPending = true;
+                        notEmptyCondition.signalAll();
+                    }
+
+                    index+= maxRemainingSlots;
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        private void offerUnload(Vector3i section) throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                if (unloadedQueue.add(section))
+                    notEmptyCondition.signalAll();
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        private void offerUnloads(Collection<Vector3i> sections) throws InterruptedException {
+            lock.lockInterruptibly();
+
+            try {
+                if (unloadedQueue.addAll(sections))
+                    notEmptyCondition.signalAll();
+            } finally {
+                lock.unlock();
+            }
         }
 
         private void requireCapacity(int newSize) {
-            if (maxCapacity > 0) return;
-            if (newSize < queue.length) return;
+            if (capacity > 0) return;
+            if (newSize < sectionQueue.length) return;
 
-            var newCapacity = Math.max(newSize, queue.length << 1);
-            queue = Arrays.copyOf(queue, newCapacity);
+            var newCapacity = Math.max(newSize, sectionQueue.length << 1);
+            sectionQueue = Arrays.copyOf(sectionQueue, newCapacity);
         }
 
-        public int size() {
-            return pendingSections;
-        }
-
-        private void awaitNotEmpty() throws InterruptedException {
-            if (pendingSections != 0) return;
-
-            notEmpty.await();
-        }
-
-        private void awaitNotFull() throws InterruptedException {
-            if (pendingSections != queue.length) return;
-
-            notFull.await();
-        }
-
-
-        private void removeUnloadedSections() {
+        private void trimUnloadedSections() {
             int newSize = 0;
 
-            for (int i = 0; i < pendingSections; i++) {
-                var entry = queue[i];
-                queue[i] = null;
+            for (int i = 0; i < size; i++) {
+                var entry = sectionQueue[i];
+                sectionQueue[i] = null;
 
                 if (!notEmptySections.contains(entry.pos)) {
-                    values.remove(entry.pos);
+                    sectionValues.remove(entry.pos);
                     continue;
                 }
 
-                queue[newSize++] = entry;
+                sectionQueue[newSize++] = entry;
             }
 
-            if (pendingSections != newSize)
-                notFull.signalAll();
+            if (size != newSize && capacity > 0)
+                notFullCondition.signalAll();
 
-            pendingSections = newSize;
+            size = newSize;
         }
 
         private void sortSections() {
@@ -308,145 +484,37 @@ public class SectionManager implements RenderingComponent {
             lastCameraPos = cameraChunkPos;
             lastRenderDistance = SectionManager.this.lastRenderDistance;
 
-            removeUnloadedSections();
+            trimUnloadedSections();
 
             mod++;
             Arrays.parallelSort(
-                    queue,
+                    sectionQueue,
                     0,
-                    pendingSections,
+                    size,
                     (p1, p2) -> Long.compare(p2.distance(cameraChunkPos, mod), p1.distance(cameraChunkPos, mod))
             );
         }
 
-        public V take() throws InterruptedException {
-            lock.lockInterruptibly();
+        private V removeFirst() {
+            var top = sectionQueue[--size];
+            sectionQueue[size] = null;
 
-            try {
-                while (true) {
-                    if (pendingSections == 0) {
-                        awaitNotEmpty();
-                        continue;
-                    }
-
-                    sortSections();
-                    if (pendingSections == 0) continue;
-
-                    var top = queue[--pendingSections];
-                    queue[pendingSections] = null;
-
-                    notFull.signalAll();
-
-                    return Objects.requireNonNull(values.remove(top.pos));
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public List<V> drain(int maxCount) throws InterruptedException {
-            lock.lockInterruptibly();
-
-            try {
-                while (true) {
-                    if (pendingSections == 0) {
-                        awaitNotEmpty();
-                        continue;
-                    }
-
-                    sortSections();
-                    if (pendingSections == 0) continue;
-
-                    int count = Math.min(maxCount, pendingSections);
-                    var result = new ArrayList<V>(count);
-
-                    for (int i = 0; i < count; i++) {
-                        var top = queue[--pendingSections];
-                        queue[pendingSections] = null;
-
-                        result.add(Objects.requireNonNull(values.remove(top.pos)));
-                    }
-
-                    notFull.signalAll();
-
-                    return result;
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public void offer(Vector3i sectionCoord, V element) throws InterruptedException {
-            lock.lockInterruptibly();
-
-            try {
-                while (pendingSections == queue.length)
-                    awaitNotFull();
-
-                if (!notEmptySections.contains(sectionCoord)) return;
-
-                var previousValue = values.put(sectionCoord, element);
-                if (previousValue != null) return;
-
-                requireCapacity(pendingSections + 1);
-
-                queue[pendingSections++] = new PendingSection(sectionCoord);
-
-                newPending = true;
-                notEmpty.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        public void offerMany(List<Pair<Vector3i, V>> elements) throws InterruptedException {
-            lock.lockInterruptibly();
-
-            try {
-                int newSectionCount = 0;
-                boolean[] newSection = new boolean[elements.size()];
-
-                for (int i = 0; i < elements.size(); i++) {
-                    var pair = elements.get(i);
-
-                    var sectionCoord = pair.left();
-                    var element = pair.right();
-
-                    if (!notEmptySections.contains(sectionCoord)) continue;
-
-                    var previousValue = values.put(sectionCoord, element);
-                    if (previousValue != null) continue;
-
-                    newSectionCount++;
-                    newSection[i] = true;
-                }
-
-                if (newSectionCount == 0) return;
-                requireCapacity(pendingSections + newSectionCount);
-
-                for (int i = 0; i < elements.size(); i++) {
-                    if (!newSection[i]) continue;
-
-                    while (pendingSections == queue.length)
-                        awaitNotFull();
-
-                    queue[pendingSections++] = new PendingSection(elements.get(i).first());
-                }
-
-                newPending = true;
-                notEmpty.signalAll();
-            } finally {
-                lock.unlock();
-            }
+            return Objects.requireNonNull(sectionValues.remove(top.pos));
         }
     }
 
-    private static class PendingSection {
+    public class SectionQueue extends TaskQueue<SectionCopy> {
+        private SectionQueue(int maxSize, boolean trackUnloads) {
+            super(maxSize, trackUnloads);
+        }
+    }
+
+    private static class SectionInfo {
         private int mod = -1;
         private long distance = 0;
         public final Vector3i pos;
 
-        public PendingSection(Vector3i section) {
+        public SectionInfo(Vector3i section) {
             this.pos = section;
         }
 
@@ -460,3 +528,4 @@ public class SectionManager implements RenderingComponent {
         }
     }
 }
+
