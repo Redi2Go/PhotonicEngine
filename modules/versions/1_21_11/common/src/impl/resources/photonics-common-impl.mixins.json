@@ -47,6 +47,7 @@
     "mc.world.level.IBlockImpl",
     "mc.world.level.ILevelReaderImpl",
     "mc.world.level.LevelChunkSectionMixin",
+    "mc.world.level.LevelChunkSectionInvoker",
     "mc.world.level.LevelHeightAccessorMixin",
     "mc.world.level.LevelMixin",
     "mc.world.level.LevelReaderMixin",

@@ -6,6 +6,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(LevelChunkSection.class)
 public abstract class LevelChunkSectionMixin implements IChunkSection {
@@ -15,5 +16,10 @@ public abstract class LevelChunkSectionMixin implements IChunkSection {
     @Override
     public IBlockState getBlockState(int x, int y, int z) {
         return (IBlockState) shadow$getBlockState(x, y, z);
+    }
+
+    @Override
+    public IChunkSection createCopy() {
+        return (IChunkSection) LevelChunkSectionInvoker.copySection((LevelChunkSection) (Object) this);
     }
 }

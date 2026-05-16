@@ -15,4 +15,6 @@ public interface IChunkSection {
     }
 
     boolean hasOnlyAir();
+
+    IChunkSection createCopy();
 }

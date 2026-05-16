@@ -11,17 +11,11 @@ import java.util.function.BiConsumer;
 
 public class SectionCopy implements IChunkSection {
     private final Vector3i pos;
-    private final IBlockState[] blockStates;
+    private final IChunkSection copy;
 
     public SectionCopy(Vector3i pos, IChunkSection section) {
         this.pos = pos;
-        this.blockStates = new IBlockState[IChunkSection.SECTION_SIZE];
-
-        Vector3i coord = new Vector3i();
-        for (int i = 0; i < IChunkSection.SECTION_SIZE; i++) {
-            VoxelModel.fromVoxelIndex(i, coord);
-            blockStates[i] = section.getBlockState(coord);
-        }
+        this.copy = section.createCopy();
     }
 
     public Vector3i pos() {
@@ -34,12 +28,17 @@ public class SectionCopy implements IChunkSection {
 
     @Override
     public IBlockState getBlockState(int x, int y, int z) {
-        return blockStates[VoxelModel.toVoxelIndex(x, y, z)];
+        return copy.getBlockState(x, y, z);
     }
 
     @Override
     public boolean hasOnlyAir() {
         return false;
+    }
+
+    @Override
+    public IChunkSection createCopy() {
+        return this;
     }
 
     public void forEachBlock(TriConsumer<Vector3i, IBlockPos, IBlockState> blockConsumer) {
