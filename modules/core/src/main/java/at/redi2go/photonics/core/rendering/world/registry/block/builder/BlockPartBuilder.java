@@ -14,11 +14,14 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.joml.Vector3i;
 
 public class BlockPartBuilder implements VoxelConsumer {
+    private final Vector3i VECTOR_ZERO = new Vector3i();
+    private final Vector3i VECTOR_15 = new Vector3i(15);
+
     private final MutablePaletteEntry[] data;
 
     private final Vector3i temp = new Vector3i();
-    private final Vector3i minVoxel = new Vector3i();
-    private final Vector3i maxVoxel = new Vector3i();
+    private final Vector3i minVoxel = new Vector3i(Integer.MAX_VALUE);
+    private final Vector3i maxVoxel = new Vector3i(Integer.MIN_VALUE);
 
     public BlockPartBuilder() {
         this.data = new MutablePaletteEntry[RtVoxel.ENTRIES_SIZE];
@@ -85,6 +88,9 @@ public class BlockPartBuilder implements VoxelConsumer {
 
             voxelData[voxelIndex] = paletteEntry == null ? VoxelModel.makeAirEntry(voxelIndex) : VoxelEntry.toData(voxelEntry);
         }
+
+        minVoxel.min(VECTOR_15);
+        maxVoxel.max(VECTOR_ZERO);
 
         Vector3i edgeLengths = maxVoxel.sub(minVoxel);
         return new BuildResult(
