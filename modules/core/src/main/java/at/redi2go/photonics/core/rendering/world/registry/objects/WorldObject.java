@@ -124,7 +124,7 @@ public abstract class WorldObject<M extends Disposable> implements Disposable {
         for (var dependant : dependants)
             dependant.close();
 
-        worldRegistry.objectManager().enqueueObject(this);
+        worldRegistry.removeObject(this);
 
         return true;
     }
