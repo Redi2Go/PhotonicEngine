@@ -151,13 +151,20 @@ public class WorldRegistry implements RenderingComponent {
                 blockState,
                 blockAndTintGetter
         );
+
+        final CompletableFuture<BlockModel> future;
         
-        var future = blockModelCache.computeIfAbsent(meshState,
-                (ignored) -> {
-                    shouldMesh[0] = true;
-                    return new CompletableFuture<>();
-                }
-        );
+        if (meshState.shouldCache()) {
+            future = blockModelCache.computeIfAbsent(meshState,
+                    (ignored) -> {
+                        shouldMesh[0] = true;
+                        return new CompletableFuture<>();
+                    }
+            );
+        } else {
+            future = new CompletableFuture<>();
+            shouldMesh[0] = true;
+        }
         
         if (!shouldMesh[0]) return future;
 
