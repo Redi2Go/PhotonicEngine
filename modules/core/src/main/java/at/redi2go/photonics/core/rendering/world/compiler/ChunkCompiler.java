@@ -10,6 +10,7 @@ import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
+import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
@@ -87,6 +88,8 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
                 var buildResult = new BuildResult(section.pos(), section.blockPos(), hash);
 
+                BlockMesher.REGISTRY.setup();
+
                 section.forEachBlock((blockChunkOffset, blockPos, block) -> {
                     if (block.isAir()) return;
 
@@ -107,6 +110,8 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                             worldRegistry.createBlockModel(meshResult)
                     );
                 });
+
+                BlockMesher.REGISTRY.teardown();
 
                 buildResult.awaitSubmission();
             }
