@@ -37,10 +37,10 @@ public class BlockModelTemplate extends WorldObject<NoMemory> {
             part.loadDependants(output);
     }
 
-    public BlockModelImpl createVariant(
+    public BlockModelImpl createVariantWeak(
             TintBuilder.Result tint
     ) {
-        var variant = variants.computeIfAbsent(tint.hash(), (hash) -> new BlockModelImpl(
+        return variants.computeIfAbsent(tint.hash(), (hash) -> new BlockModelImpl(
                 worldRegistry,
                 this,
                 hash,
@@ -50,9 +50,6 @@ public class BlockModelTemplate extends WorldObject<NoMemory> {
                                 e
                         )).toList()
         ));
-
-        variant.acquireReference();
-        return variant;
     }
 
     public void removeVariant(long hash) {

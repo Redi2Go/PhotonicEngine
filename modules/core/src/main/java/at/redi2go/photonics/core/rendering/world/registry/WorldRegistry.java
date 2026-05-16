@@ -209,7 +209,7 @@ public class WorldRegistry implements RenderingComponent {
                         if (e != null) {
                             future.completeExceptionally(e);
                         } else {
-                            var variant = template.createVariant(tintInfo);
+                            var variant = template.createVariantWeak(tintInfo);
                             variant.addMeshState(meshState);
 
                             future.complete(variant);
