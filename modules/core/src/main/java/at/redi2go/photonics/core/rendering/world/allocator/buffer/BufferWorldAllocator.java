@@ -59,6 +59,11 @@ public class BufferWorldAllocator implements WorldAllocator {
         heap.upload();
     }
 
+    @Override
+    public void close() {
+        heap.close();
+    }
+
     private record VoxelAllocation(MemoryView memory) implements WorldVoxelMemory, BlockVoxelMemory {
         @Override
         public int entryData() {
