@@ -54,8 +54,8 @@ public class BlockPartImpl implements BlockModel.Part {
 
     @Override
     public void close() {
-        ((Disposable) model).close();
-        ((Disposable) header).close();
-        ((Disposable) template).close();
+        model.decrementCount();
+        header.decrementCount();
+        template.decrementCount();
     }
 }

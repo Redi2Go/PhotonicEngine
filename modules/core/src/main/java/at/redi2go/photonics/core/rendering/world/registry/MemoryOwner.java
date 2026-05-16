@@ -204,7 +204,12 @@ public abstract class MemoryOwner<T, M extends Disposable> {
         }
 
         public void close() {
-            decrementCount();
+            MemoryOwner.this.decrementCount();
+        }
+
+        @Override
+        public void decrementCount() {
+            MemoryOwner.this.decrementCount();
         }
     }
 
@@ -243,6 +248,8 @@ public abstract class MemoryOwner<T, M extends Disposable> {
 
         @NonNls
         T get();
+
+        void decrementCount();
     }
 
     static {
