@@ -2,15 +2,14 @@ package at.redi2go.photonics.core.rendering.world.registry.block.entry;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.block.BlockModel;
-import at.redi2go.photonics.core.rendering.world.registry.block.BlockPartOwner;
+import at.redi2go.photonics.core.rendering.world.registry.block.BlockPartImpl;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 
 public record SimpleBlockEntry(
         short region,
-        BlockPartOwner.PartImpl part
+        BlockPartImpl part
 ) implements BlockEntry {
     @Override
     public int entryData() {

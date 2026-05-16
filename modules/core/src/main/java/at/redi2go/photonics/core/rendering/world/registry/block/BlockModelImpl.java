@@ -22,13 +22,15 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
             WorldRegistry registry,
             ManagedRef<BlockModelTemplate> template,
             long hash,
-            List<BlockPartOwner> parts
+            List<BlockPartImpl> parts
     ) {
         super(registry);
 
         this.template = template;
         this.hash = hash;
         this.parts = new PartsWrapper(parts);
+
+        parts.forEach(e -> e.setModel(this));
 
         acquireDependants();
     }
@@ -63,9 +65,9 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
     }
 
     private class PartsWrapper extends AbstractList<BlockModel.Part> {
-        private final List<BlockPartOwner> parts;
+        private final List<BlockPartImpl> parts;
 
-        private PartsWrapper(List<BlockPartOwner> parts) {
+        private PartsWrapper(List<BlockPartImpl> parts) {
             this.parts = parts;
         }
 
@@ -77,7 +79,7 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
         @Override
         public BlockModel.Part get(int index) {
             Objects.checkIndex(index, parts.size());
-            return parts.get(index).makePart(BlockModelImpl.this.makeManagedRef());
+            return parts.get(index).acquire();
         }
     }
 }

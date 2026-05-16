@@ -7,7 +7,7 @@ import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.ManagedObject;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockModelImpl;
-import at.redi2go.photonics.core.rendering.world.registry.block.BlockPartOwner;
+import at.redi2go.photonics.core.rendering.world.registry.block.BlockPartImpl;
 
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class BlockModelTemplate extends ManagedObject<BlockModelTemplate> implem
                 makeManagedRef(),
                 hash,
                 parts.stream()
-                        .map(e -> new BlockPartOwner(
+                        .map(e -> new BlockPartImpl(
                                 e.createVariant(tint),
                                 e.makeManagedRef()
                         ))
