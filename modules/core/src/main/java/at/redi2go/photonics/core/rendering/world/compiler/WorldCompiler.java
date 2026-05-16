@@ -109,7 +109,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
                 var unloadedSections = taskQueue.drainUnloadQueue();
                 if (!unloadedSections.isEmpty()) {
-                    unloadSections(unloadedSections);
+                    clearUnloadedSections(unloadedSections);
                 }
 
 
@@ -121,13 +121,9 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
                     insertSections(builtSections);
                 }
 
-
-                if (!unloadedSections.isEmpty()) {
-                    rootVoxel.pruneEmptyVoxels();
-                }
-
-
                 if (!unloadedSections.isEmpty() || !builtSections.isEmpty()) {
+                    rootVoxel.pruneEmptyVoxels();
+
                     stopUpload();
                     buildSections();
                     awaitUpload();
@@ -144,21 +140,14 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
     // Compiler Steps
 
-    private void unloadSections(List<Vector3i> unloadedSections) {
+    private void clearUnloadedSections(List<Vector3i> unloadedSections) {
         if (iorigin == null) return;
 
-        for (var sectionCoord : unloadedSections) {
-            Vector3i sectionVoxelPos = sectionCoord.mul(16, new Vector3i())
-                    .sub(iorigin)
-                    .mul(16);
+        ShortSet regions = new ShortOpenHashSet(unloadedSections.size());
+        for (var section : unloadedSections)
+            regions.add(toRegion(section));
 
-            rootVoxel.removeChunk(
-                    sectionVoxelPos.x,
-                    sectionVoxelPos.y,
-                    sectionVoxelPos.z,
-                    toRegion(sectionCoord)
-            );
-        }
+        rootVoxel.removeRegions(regions);
     }
 
     private void recenter() throws InterruptedException {
@@ -200,8 +189,9 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
-        ShortSet regions = new ShortOpenHashSet();
-        for (var section : sections) regions.add(toRegion(section.chunkPos()));
+        ShortSet regions = new ShortOpenHashSet(sections.size());
+        for (var section : sections)
+            regions.add(toRegion(section.chunkPos()));
 
         rootVoxel.removeRegions(regions);
     }
