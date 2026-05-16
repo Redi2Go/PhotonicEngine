@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChunkCompiler implements Runnable, RenderingComponent {
-    private static final int THREAD_COUNT = 1;
+    private static final int THREAD_COUNT = 2;
 
     private final Queue<Vector3i> unloadQueue;
     private final SectionManager.SectionQueue sectionQueue;
