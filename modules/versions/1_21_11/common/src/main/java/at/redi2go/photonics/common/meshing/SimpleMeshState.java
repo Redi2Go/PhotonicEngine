@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -18,15 +19,18 @@ public class SimpleMeshState implements McMeshState {
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final BlockColors BLOCK_COLORS = Minecraft.getInstance().getBlockColors();
 
+    private final Block block;
     private final int blockId;
     private List<BlockModelPart> blockModel;
 
     private long hashCode = 0;
 
     public SimpleMeshState(
+            Block block,
             int blockId,
             List<BlockModelPart> blockModel
     ) {
+        this.block = block;
         this.blockId = blockId;
         this.blockModel = blockModel;
     }
@@ -154,7 +158,7 @@ public class SimpleMeshState implements McMeshState {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof SimpleMeshState other && other.hashCode == hashCode;
+        return obj instanceof SimpleMeshState other && other.hashCode == hashCode && other.block == block && other.blockId == blockId();
     }
 
     public static class HashStorage {

@@ -96,7 +96,7 @@ public class McBlockRenderer {
 
         if (parts.isEmpty()) return EmptyMeshState.INSTANCE;
 
-        var meshState = new SimpleMeshState(blockId, parts);
+        var meshState = new SimpleMeshState(blockState.getBlock(), blockId, parts);
         meshState.computeHash(
                 hashStorage,
                 blockState,
