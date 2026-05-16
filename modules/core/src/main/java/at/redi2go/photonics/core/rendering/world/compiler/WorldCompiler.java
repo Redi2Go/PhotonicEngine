@@ -162,8 +162,11 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         stopUpload();
 
         var chunks = new ArrayList<>(this.chunks);
-        for (var chunk : chunks)
+        for (var chunk : chunks) {
+            if (chunk == null) continue;
+
             rootVoxel.removeChunkUnsafe(chunk.x(), chunk.y(), chunk.z());
+        }
 
         var offset = iorigin.sub(newOrigin, new Vector3i());
         offset.x = offset.x << 4;
@@ -171,6 +174,8 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         offset.z = offset.z << 4;
 
         for (var chunk : chunks) {
+            if (chunk == null) continue;
+
             int newX = chunk.x() + offset.x;
             int newY = chunk.y() + offset.y;
             int newZ = chunk.z() + offset.z;
