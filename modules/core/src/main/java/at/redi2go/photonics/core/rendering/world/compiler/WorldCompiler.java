@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
@@ -36,7 +37,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent {
-    public static final int MAX_SECTIONS_PER_RUN = 12;
+    public static final int MAX_SECTIONS_PER_RUN = 48;
 
     private static final int THREAD_POOL_SIZE = 3;
     private static final ExecutorService THREAD_POOL;
