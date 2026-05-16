@@ -66,7 +66,7 @@ public class SectionCopy implements IChunkSection {
         final long[] hash = {0};
 
         forEachBlock((ignored, ignored1, block) ->
-                hash[0] = hash[0] * 31 + block.hashCode()
+                hash[0] = hash[0] * 31 + (block.hashCode() ^ block.block().hashCode())
         );
 
         return hash[0];
