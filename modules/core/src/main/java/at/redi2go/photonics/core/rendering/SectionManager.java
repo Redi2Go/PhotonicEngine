@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering;
 
+import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
@@ -372,7 +373,12 @@ public class SectionManager implements RenderingComponent {
                 if (!notEmptySections.contains(sectionCoord)) return;
 
                 var previousValue = sectionValues.put(sectionCoord, element);
-                if (previousValue != null) return;
+                if (previousValue != null) {
+                    if (previousValue instanceof Disposable disposable)
+                        disposable.close();
+
+                    return;
+                }
 
                 requireCapacity(size + 1);
 

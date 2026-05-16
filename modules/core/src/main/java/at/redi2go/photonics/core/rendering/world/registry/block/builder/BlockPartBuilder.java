@@ -8,9 +8,6 @@ import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.block.palette.BlockPalette;
 import at.redi2go.photonics.core.rendering.world.block.palette.MutablePaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.joml.Vector3i;
 
 public class BlockPartBuilder implements VoxelConsumer {

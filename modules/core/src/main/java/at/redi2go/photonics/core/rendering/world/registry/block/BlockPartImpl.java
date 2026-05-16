@@ -3,48 +3,49 @@ package at.redi2go.photonics.core.rendering.world.registry.block;
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
-import at.redi2go.photonics.core.rendering.world.registry.MemoryOwner;
 import at.redi2go.photonics.core.rendering.world.registry.block.entry.SimpleBlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockPartTemplate;
+import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
+import org.apache.commons.lang3.NotImplementedException;
 import org.joml.Vector3i;
 
-public class BlockPartImpl implements BlockModel.Part {
-    private MemoryOwner.ManagedRef<BlockModelImpl> model;
-    private final MemoryOwner.ManagedRef<BlockHeader> header;
-    private final MemoryOwner.ManagedRef<BlockPartTemplate> template;
+import java.util.List;
+
+public class BlockPartImpl implements BlockModel.Part, Disposable {
+    private final BlockHeader blockHeader;
+    private final BlockPartTemplate partTemplate;
+
+    private BlockModelImpl model;
 
     public BlockPartImpl(
-            MemoryOwner.ManagedRef<BlockHeader> header,
-            MemoryOwner.ManagedRef<BlockPartTemplate> template
+            BlockHeader weakBlockHeader,
+            BlockPartTemplate partTemplate
     ) {
-        this.header = header;
-        this.template = template;
+        this.blockHeader = weakBlockHeader;
+        this.partTemplate = partTemplate;
     }
 
     void setModel(BlockModelImpl model) {
-        this.model = model.makeManagedRef();
+        this.model = model;
     }
 
-    public BlockModel.Part acquire() {
-        model.acquire();
-        header.acquire();
-        template.acquire();
 
-        return this;
+    void loadDependants(List<WorldObject<?>> output) {
+        output.add(blockHeader);
     }
 
     public int entryData() {
-        return header.get().voxelEntry();
+        return blockHeader.entryData();
     }
 
     @Override
     public Vector3i offset() {
-        return template.get().offset();
+        return partTemplate.offset();
     }
 
     @Override
     public int boundingVolume() {
-        return template.get().boundingVolume();
+        return partTemplate.boundingVolume();
     }
 
     @Override
@@ -54,8 +55,6 @@ public class BlockPartImpl implements BlockModel.Part {
 
     @Override
     public void close() {
-        model.decrementCount();
-        header.decrementCount();
-        template.decrementCount();
+        model.close();
     }
 }

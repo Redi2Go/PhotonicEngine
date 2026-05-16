@@ -1,17 +1,16 @@
 package at.redi2go.photonics.core.rendering.world.registry.block.template;
 
 import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
-import at.redi2go.photonics.core.rendering.world.block.BlockModel;
-import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
 import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.ManagedObject;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockModelImpl;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockPartImpl;
+import at.redi2go.photonics.core.rendering.world.registry.objects.NoMemory;
+import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
 
 import java.util.List;
 
-public class BlockModelTemplate extends ManagedObject<BlockModelTemplate> implements BlockProvider {
+public class BlockModelTemplate extends WorldObject<NoMemory> {
     private final long vertexHash;
 
     private final List<BlockPartTemplate> parts;
@@ -29,35 +28,31 @@ public class BlockModelTemplate extends ManagedObject<BlockModelTemplate> implem
         this.parts = parts;
         this.variants = new ConcurrentLong2ObjectMap<>();
 
-        acquireDependants();
-        parts.forEach(e -> e.setModelTemplate(this));
+        setMemory(() -> NoMemory.INSTANCE);
     }
 
     @Override
-    protected void loadDependants(List<ManagedRef<?>> output) {
-
+    protected void loadDependants(List<WorldObject<?>> output) {
+        for (var part : parts)
+            part.loadDependants(output);
     }
 
-    @Override
-    protected BlockModelTemplate getWrappedValue() {
-        return this;
-    }
-
-    @Override
-    public BlockModel createVariant(
+    public BlockModelImpl createVariant(
             TintBuilder.Result tint
     ) {
-        return variants.computeIfAbsent(tint.hash(), (hash) -> new BlockModelImpl(
-                registry,
-                makeManagedRef(),
+        var variant = variants.computeIfAbsent(tint.hash(), (hash) -> new BlockModelImpl(
+                worldRegistry,
+                this,
                 hash,
                 parts.stream()
                         .map(e -> new BlockPartImpl(
-                                e.createVariant(tint),
-                                e.makeManagedRef()
-                        ))
-                        .toList()
+                                e.createVariantWeak(worldRegistry, tint),
+                                e
+                        )).toList()
         ));
+
+        variant.acquireReference();
+        return variant;
     }
 
     public void removeVariant(long hash) {
@@ -68,7 +63,7 @@ public class BlockModelTemplate extends ManagedObject<BlockModelTemplate> implem
     protected boolean dispose() {
         if (!super.dispose()) return false;
 
-        registry.removeBlockProvider(vertexHash);
+        worldRegistry.removeModelTemplate(vertexHash);
         return true;
     }
 }

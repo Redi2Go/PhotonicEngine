@@ -2,7 +2,6 @@ package at.redi2go.photonics.core.rendering.world.tree;
 
 import at.redi2go.photonics.core.model.VoxelEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
-import at.redi2go.photonics.core.rendering.world.registry.block.entry.SimpleBlockEntry;
 
 public enum BlockMergeMode {
     OVERWRITE {

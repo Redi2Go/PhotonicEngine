@@ -10,6 +10,8 @@ public interface LongObjectMap<V> extends PrimitiveLongKeyMap {
 
     V put(long key, V value);
 
+    V putIfAbsent(long key, V value);
+
     V remove(long key);
 
     boolean remove(long key, V value);

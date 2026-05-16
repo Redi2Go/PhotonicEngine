@@ -7,16 +7,11 @@ import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
-import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
-import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
-import at.redi2go.photonics.core.rendering.world.block.BlockProvider;
-import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
@@ -129,7 +124,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             thread.interrupt();
     }
 
-    public class BuildResult {
+    public class BuildResult implements Disposable {
         private final Vector3i chunkPos;
         private final Vector3i chunkBlockPos;
         private final long hash;
@@ -227,6 +222,8 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
             if (!Objects.equals(previousHash, hash))
                 builtSectionQueue.offer(chunkPos, this);
+            else
+                close();
         }
 
         public @Nullable BlockModel getBlock(int x, int y, int z) {
@@ -258,17 +255,18 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             }
         }
 
-        public void discard() {
+        private static boolean containsBlock(int x, int y, int z) {
+            return VoxelModel.contains(x, y, z, 16, 16, 16);
+        }
+
+        @Override
+        public void close() {
             for (int i = 0; i < IChunkSection.SECTION_SIZE; i++) {
                 var block = blocks[i];
                 if (block == null) continue;
 
-                block.parts().forEach(Disposable::close);
+                block.close();
             }
-        }
-
-        private static boolean containsBlock(int x, int y, int z) {
-            return VoxelModel.contains(x, y, z, 16, 16, 16);
         }
     }
 }

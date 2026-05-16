@@ -83,6 +83,23 @@ public class ConcurrentLong2ObjectMap<V> extends PrimitiveConcurrentMap implemen
     }
 
     @Override
+    public V putIfAbsent(long key, V value) {
+        int bucket = getBucket(key);
+
+        V result;
+
+        Lock writeLock = locks[bucket].writeLock();
+        writeLock.lock();
+        try {
+            result = maps[bucket].putIfAbsent(key, value);
+        } finally {
+            writeLock.unlock();
+        }
+
+        return result;
+    }
+
+    @Override
     public V remove(long key) {
         int bucket = getBucket(key);
 

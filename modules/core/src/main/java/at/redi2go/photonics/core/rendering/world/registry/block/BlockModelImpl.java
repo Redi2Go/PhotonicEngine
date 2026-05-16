@@ -2,47 +2,51 @@ package at.redi2go.photonics.core.rendering.world.registry.block;
 
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMeshState;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
-import at.redi2go.photonics.core.rendering.world.registry.ManagedObject;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockModelTemplate;
+import at.redi2go.photonics.core.rendering.world.registry.objects.NoMemory;
+import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements BlockModel {
-    private final ManagedRef<BlockModelTemplate> template;
+public class BlockModelImpl extends WorldObject<NoMemory> implements BlockModel {
+    private final BlockModelTemplate template;
     private final long hash;
     private final PartsWrapper parts;
 
     private final List<BlockMeshState> meshes = new ArrayList<>();
 
     public BlockModelImpl(
-            WorldRegistry registry,
-            ManagedRef<BlockModelTemplate> template,
+            WorldRegistry worldRegistry,
+            BlockModelTemplate weakTemplate,
             long hash,
             List<BlockPartImpl> parts
     ) {
-        super(registry);
+        super(worldRegistry);
 
-        this.template = template;
+        this.template = weakTemplate;
         this.hash = hash;
-        this.parts = new PartsWrapper(parts);
 
+        this.parts = new PartsWrapper(parts);
         parts.forEach(e -> e.setModel(this));
 
-        acquireDependants();
+        setMemory(() -> NoMemory.INSTANCE);
     }
 
     @Override
-    protected void loadDependants(List<ManagedRef<?>> output) {
+    protected void loadDependants(List<WorldObject<?>> output) {
         output.add(template);
+
+        for (var part : parts.backing)
+            part.loadDependants(output);
     }
 
     @Override
-    protected BlockModelImpl getWrappedValue() {
-        return this;
+    public List<Part> parts() {
+        return parts;
     }
 
     public void addMeshState(BlockMeshState meshState) {
@@ -53,33 +57,31 @@ public class BlockModelImpl extends ManagedObject<BlockModelImpl> implements Blo
     protected boolean dispose() {
         if (!super.dispose()) return false;
 
-        template.get().removeVariant(hash);
-        meshes.forEach(registry::removeBlockModel);
+        template.removeVariant(hash);
+        meshes.forEach(worldRegistry::removeBlockModel);
 
         return true;
     }
 
-    @Override
-    public List<Part> parts() {
-        return parts;
-    }
-
     private class PartsWrapper extends AbstractList<BlockModel.Part> {
-        private final List<BlockPartImpl> parts;
+        private final List<BlockPartImpl> backing;
 
         private PartsWrapper(List<BlockPartImpl> parts) {
-            this.parts = parts;
+            this.backing = parts;
         }
 
         @Override
         public int size() {
-            return parts.size();
+            return backing.size();
         }
 
         @Override
         public BlockModel.Part get(int index) {
-            Objects.checkIndex(index, parts.size());
-            return parts.get(index).acquire();
+            Objects.checkIndex(index, backing.size());
+            var result = backing.get(index);
+            BlockModelImpl.this.acquireReference();
+
+            return result;
         }
     }
 }

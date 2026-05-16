@@ -1,10 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.registry.block.builder;
 
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.MemoryOwner;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteObject;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockModelTemplate;
@@ -89,28 +87,27 @@ public class BlockModelBuilder implements VoxelConsumer {
             var palette = builtPart.palette();
 
             int[] tintMappings = new int[palette.size()];
-            MemoryOwner.ManagedRef<PaletteObject.Entry>[] paletteArray = new MemoryOwner.ManagedRef[palette.size()];
+            PaletteObject[] weakPaletteArray = new PaletteObject[palette.size()];
 
-            for (int i = 0; i < paletteArray.length; i++) {
-                paletteArray[i] = worldRegistry.allocatePalette(palette.get(i));
+            for (int i = 0; i < weakPaletteArray.length; i++) {
+                weakPaletteArray[i] = worldRegistry.allocatePaletteWeak(palette.get(i));
 
                 int tint = palette.getTint(i);
                 tintMappings[i] = tintIndexes.get(tint);
             }
 
-            var blockVoxel = worldRegistry.allocateBlockVoxel(
+            var weakBlockVoxel = worldRegistry.allocateBlockVoxelWeak(
                     builtPart.hash(),
                     builtPart.voxelData()
             );
 
             partTemplates.add(
                 new BlockPartTemplate(
-                        worldRegistry,
                         offset,
                         builtPart.volume(),
                         tintMappings,
-                        List.of(paletteArray),
-                        blockVoxel
+                        List.of(weakPaletteArray),
+                        weakBlockVoxel
                 )
             );
         }

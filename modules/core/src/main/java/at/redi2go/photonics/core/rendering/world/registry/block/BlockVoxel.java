@@ -4,29 +4,17 @@ import at.redi2go.photonics.core.model.AbstractVoxelModel;
 import at.redi2go.photonics.core.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.world.RtVoxel;
 import at.redi2go.photonics.core.rendering.world.allocator.BlockVoxelMemory;
-import at.redi2go.photonics.core.rendering.world.registry.MemoryOwner;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
 import org.joml.Vector3ic;
 
-import java.util.List;
-
-public class BlockVoxel extends MemoryOwner<BlockVoxel, BlockVoxelMemory> implements RtVoxel {
+public class BlockVoxel extends WorldObject<BlockVoxelMemory> implements RtVoxel {
     private final long hashCode;
 
-    public BlockVoxel(WorldRegistry registry, long hashCode) {
-        super(registry);
+    public BlockVoxel(WorldRegistry worldRegistry, long hashCode) {
+        super(worldRegistry);
 
         this.hashCode = hashCode;
-    }
-
-    @Override
-    protected void loadDependants(List<ManagedRef<?>> output) {
-
-    }
-
-    @Override
-    protected BlockVoxel getWrappedValue() {
-        return this;
     }
 
     public int entryData() {
@@ -34,22 +22,24 @@ public class BlockVoxel extends MemoryOwner<BlockVoxel, BlockVoxelMemory> implem
     }
 
     public void allocate(int[] data) {
-        setMemory(registry.worldAllocator().allocateBlockVoxel());
-        var memory = memoryOrThrow();
+        var memory = setMemory(() -> worldRegistry.worldAllocator().allocateBlockVoxel());
 
         memory.setData(data);
         memory.upload();
 
-        registry.scheduleOptimization(() -> {
+        var optimizationService = worldRegistry.optimizationService();
+        optimizationService.scheduleOptimization(() -> {
             var wrapper = new ModelWrapper(data);
             wrapper.optimize();
 
-            var newMemory = memoryOrNull();
-            if (newMemory == null) return;
+            if (!tryAcquireReference()) return;
 
-            newMemory.setData(data);
-
-            registry.scheduleUpload(newMemory::upload);
+            try {
+                memory.setData(data);
+                optimizationService.scheduleUpload(memory::upload);
+            } finally {
+                close();
+            }
         });
     }
 
@@ -91,7 +81,7 @@ public class BlockVoxel extends MemoryOwner<BlockVoxel, BlockVoxelMemory> implem
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof BlockVoxel other && hashCode == other.hashCode;
+        return obj instanceof BlockVoxel other && other.hashCode == hashCode;
     }
 
     private static class ModelWrapper extends AbstractVoxelModel {

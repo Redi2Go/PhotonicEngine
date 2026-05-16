@@ -9,7 +9,6 @@ import at.redi2go.photonics.core.rendering.world.allocator.BlockHeaderMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.BlockVoxelMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldVoxelMemory;
-import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.registry.PaletteObject;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockVoxel;
 
@@ -113,7 +112,7 @@ public class BufferWorldAllocator implements WorldAllocator {
         }
 
         @Override
-        public void setPaletteEntry(int index, int tint, PaletteObject.Entry paletteEntry) {
+        public void setPaletteEntry(int index, int tint, PaletteObject paletteEntry) {
             Objects.checkIndex(index, paletteSize);
 
             var buffer = memory.buffer();

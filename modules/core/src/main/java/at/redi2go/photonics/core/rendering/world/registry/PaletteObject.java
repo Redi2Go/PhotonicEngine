@@ -3,49 +3,41 @@ package at.redi2go.photonics.core.rendering.world.registry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
+import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
 import org.joml.Vector4i;
 
 import java.util.List;
 
-public class PaletteObject extends MemoryOwner<PaletteObject.Entry, PaletteTextureView> {
+public class PaletteObject extends WorldObject<PaletteTextureView> {
     private final Entry entry;
 
-    public PaletteObject( WorldRegistry registry, PaletteEntry toCopy) {
-        super(registry);
+    public PaletteObject(WorldRegistry worldRegistry, PaletteEntry toCopy) {
+        super(worldRegistry);
 
         this.entry = new Entry(toCopy);
     }
 
-    @Override
-    protected void loadDependants(List<ManagedRef<?>> output) {
-
-    }
-
-    @Override
-    protected Entry getWrappedValue() {
+    public PaletteEntry getEntry() {
         return entry;
     }
 
-    public void allocate(PaletteTexture paletteTexture) {
-        setMemory(paletteTexture.reserveEntry());
-        entry.upload();
+    public int entryData() {
+        return memoryOrThrow().entryData();
     }
 
-    public class Entry extends PaletteEntry {
+    public void allocate() {
+        var memory = setMemory(() -> worldRegistry.paletteTexture().reserveEntry());
+
+        entry.writeTo(memory);
+        memory.upload();
+    }
+
+    private static class Entry extends PaletteEntry {
         private Entry(PaletteEntry toCopy) {
             copyFrom(toCopy);
         }
 
-        public void awaitAllocated() {
-            PaletteObject.this.awaitAllocated();
-        }
-
-        public int entryData() {
-            return memoryOrThrow().entryData();
-        }
-
-        private void upload() {
-            var texture = memoryOrThrow();
+        public void writeTo(PaletteTextureView texture) {
             var faceData = new Vector4i();
 
             for (int i = 0; i < faces.length; i++) {
@@ -64,8 +56,6 @@ public class PaletteObject extends MemoryOwner<PaletteObject.Entry, PaletteTextu
 
                 texture.writeFace(i, faceData);
             }
-
-            texture.upload();
         }
     }
 }

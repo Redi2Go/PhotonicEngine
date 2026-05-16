@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
@@ -26,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -129,8 +127,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
                     buildSections();
                     awaitUpload();
 
-                    //TODO: FIX ME!
-                    //registry.freeUnusedBlocks();
+                    registry.objectManager().freeUnusedObjects();
                 }
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
@@ -207,38 +204,37 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         Vector3i blockVoxelPos = new Vector3i();
 
         for (var section : sections) {
-            blockSorter.reset();
+            try (section) {
+                blockSorter.reset();
 
-            var chunkVoxelPos = new Vector3i(section.chunkBlockPos())
-                    .sub(iorigin)
-                    .mul(16);
+                var chunkVoxelPos = new Vector3i(section.chunkBlockPos())
+                        .sub(iorigin)
+                        .mul(16);
 
-            if (!rootVoxel.containsChunk(chunkVoxelPos)) {
-                section.discard();
-                continue;
+                if (!rootVoxel.containsChunk(chunkVoxelPos)) continue;
+
+                short region = toRegion(section.chunkPos());
+                section.forEachBlock((blockChunkPos, block) -> blockSorter.addBlock(
+                        chunkVoxelPos.add(blockChunkPos.mul(16), new Vector3i()),
+                        block
+                ));
+
+                blockSorter.forEachBlock((block -> {
+                    var parts = block.blockModel().parts();
+                    for (int i = 0; i < parts.size(); i++) {
+                        var part = parts.get(i);
+
+                        blockVoxelPos.set(block.x(), block.y(), block.z());
+                        blockVoxelPos.add(part.offset().mul(16, new Vector3i()));
+
+                        rootVoxel.insertBlock(
+                                blockVoxelPos.x, blockVoxelPos.y, blockVoxelPos.z,
+                                region,
+                                part.toEntry(region)
+                        );
+                    }
+                }));
             }
-
-            short region = toRegion(section.chunkPos());
-            section.forEachBlock((blockChunkPos, block) -> blockSorter.addBlock(
-                    chunkVoxelPos.add(blockChunkPos.mul(16), new Vector3i()),
-                    block
-            ));
-
-            blockSorter.forEachBlock((block -> {
-                var parts = block.blockModel().parts();
-                for (int i = 0; i < parts.size(); i++) {
-                    var part = parts.get(i);
-
-                    blockVoxelPos.set(block.x(), block.y(), block.z());
-                    blockVoxelPos.add(part.offset().mul(16, new Vector3i()));
-
-                    rootVoxel.insertBlock(
-                            blockVoxelPos.x, blockVoxelPos.y, blockVoxelPos.z,
-                            region,
-                            part.toEntry(region)
-                    );
-                }
-            }));
         }
     }
 
