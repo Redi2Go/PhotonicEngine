@@ -250,6 +250,8 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         var temp = new Vector3i();
 
         for (var chunk : chunks) {
+            if (chunk == null) continue;
+
             temp.set(chunk.x(), chunk.y(), chunk.z());
             minVoxel.min(temp);
 
