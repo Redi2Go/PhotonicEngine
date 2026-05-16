@@ -38,15 +38,14 @@ import java.util.function.Function;
 
 public class WorldRegistry implements RenderingComponent {
     private static final int OPTIMIZATION_THREAD_COUNT = 1;
-    private static final CompletionStage<@Nullable BlockModel> EMPTY_BLOCK_MODEL_FUTURE = CompletableFuture.completedFuture(null);
 
     private final WorldAllocator worldAllocator;
     private final PaletteTexture paletteTexture;
 
     private final BlockBakery bakery;
 
-    private final ConcurrentHashMap<BlockMeshState, CompletionStage<@Nullable BlockModel>> blockModelCache = new ConcurrentHashMap<>();
-    private final ConcurrentLong2ObjectMap<CompletionStage<BlockProvider>> vertexToBlockCache = new ConcurrentLong2ObjectMap<>(16);
+    private final ConcurrentHashMap<BlockMeshState, CompletableFuture<@Nullable BlockModel>> blockModelCache = new ConcurrentHashMap<>();
+    private final ConcurrentLong2ObjectMap<CompletableFuture<BlockProvider>> vertexToBlockCache = new ConcurrentLong2ObjectMap<>(16);
 
     private final ConcurrentHashMap<Object, MemoryOwner<?, ?>> hashedObjectCache = new ConcurrentHashMap<>();
     final Queue<Disposable> freeQueue = new ConcurrentLinkedQueue<>();
@@ -137,7 +136,6 @@ public class WorldRegistry implements RenderingComponent {
     }
 
     @SuppressWarnings("unchecked")
-    //TODO: Do not do work IN COMPUTE IF ABSENT
     public <T extends BlockMeshState> CompletionStage<BlockModel> getBlockModel(
             BlockMesher<T> blockMesher,
             Vector3i blockChunkOffset,
@@ -145,59 +143,81 @@ public class WorldRegistry implements RenderingComponent {
             IBlockState blockState,
             IBlockAndTintGetter blockAndTintGetter
     ) {
-        return blockModelCache.computeIfAbsent(
-                blockMesher.extractMeshState(
-                        blockChunkOffset,
-                        pos,
-                        blockState,
-                        blockAndTintGetter
-                ), (meshState) -> {
-                    var meshResult = bakery.meshBlock(
-                            blockMesher,
-                            (T) meshState,
-                            blockChunkOffset,
-                            pos,
-                            blockState,
-                            blockAndTintGetter
-                    );
-
-                    meshState.prepareCacheUse();
-                    if (meshResult == null) return EMPTY_BLOCK_MODEL_FUTURE;
-
-                    TintBuilder.Result tintInfo = meshResult.tintData();
-
-                    return cacheBlockProvider(meshResult)
-                            .thenApply((provider) -> {
-                                var variant = provider.createVariant(tintInfo);
-                                ((BlockModelImpl) variant).addMeshState(meshState);
-
-                                return variant;
-                            });
+        final boolean[] shouldMesh = {false};
+        
+        T meshState = blockMesher.extractMeshState(
+                blockChunkOffset,
+                pos,
+                blockState,
+                blockAndTintGetter
+        );
+        
+        var future = blockModelCache.computeIfAbsent(meshState,
+                (ignored) -> {
+                    shouldMesh[0] = true;
+                    return new CompletableFuture<>();
                 }
         );
+        
+        if (!shouldMesh[0]) return future;
+
+        var meshResult = bakery.meshBlock(
+                blockMesher,
+                meshState,
+                blockChunkOffset,
+                pos,
+                blockState,
+                blockAndTintGetter
+        );
+        
+        meshState.prepareCacheUse();
+        if (meshResult == null) {
+            future.complete(null);
+            return future;
+        }
+
+        TintBuilder.Result tintInfo = meshResult.tintData();
+
+        cacheBlockProvider(meshResult)
+                .handle((provider, e) -> {
+                    if (e != null) {
+                        future.completeExceptionally(e);
+                    } else {
+                        var variant = provider.createVariant(tintInfo);
+                        ((BlockModelImpl) variant).addMeshState(meshState);
+
+                        future.complete(variant);
+                    }
+
+                    return null;
+                });
+        
+        return future;
     }
 
     private CompletionStage<BlockProvider> cacheBlockProvider(BlockBakery.MeshResult blockMesh) {
-        var result = vertexToBlockCache.computeIfAbsent(blockMesh.vertexHash(), (hash) -> {
-            var future = new CompletableFuture<BlockProvider>();
-
-            try {
-                var builder = new BlockModelBuilder(this, hash, blockMesh.tintData());
-
-                blockMesh.bake(builder);
-                blockMesh.close();
-
-                future.complete(builder.build());
-            } catch (Throwable t) {
-                future.completeExceptionally(t);
-            }
-
-            return future;
+        final boolean[] shouldBake = {false};
+        var future = vertexToBlockCache.computeIfAbsent(blockMesh.vertexHash(), (ignored) -> {
+            shouldBake[0] = true;
+            return new CompletableFuture<>();
         });
+        
+        if (!shouldBake[0]) return future;
+
+        try {
+            var builder = new BlockModelBuilder(this, blockMesh.vertexHash(), blockMesh.tintData());
+
+            blockMesh.bake(builder);
+            blockMesh.close();
+
+            future.complete(builder.build());
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
+        }
 
         blockMesh.close();
 
-        return result;
+        return future;
     }
 
     public void removeBlockProvider(long vertexHash) {
