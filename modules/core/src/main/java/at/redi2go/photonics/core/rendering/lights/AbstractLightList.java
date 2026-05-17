@@ -1,6 +1,11 @@
 package at.redi2go.photonics.core.rendering.lights;
 
+import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.api.mc.core.IBlockPos;
+import at.redi2go.photonics.api.mc.world.level.IBlock;
+import at.redi2go.photonics.api.mc.world.level.ILevel;
+import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.PhConfigWatcher;
 import at.redi2go.photonics.core.config.lights.LightRegistry;
@@ -22,13 +27,12 @@ import org.joml.Vector4f;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Queue;
-import java.util.Vector;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public abstract class AbstractLightList implements Runnable, RenderingComponent {
     private static final int MAX_SECTIONS_PER_RUN = 48;
+    private static final IBlock BLOCK_LAVA = IBlock.fromIdOrThrow(Id.fromNamespaceAndPath("minecraft", "lava"));
 
     private final Thread compilerThread;
     private final ReentrantLock lock = new ReentrantLock();
@@ -149,6 +153,9 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     }
 
     private void addNewSections(List<SectionCopy> newSections) {
+        var level = Minecraft.getLevel();
+        if (level == null) return;
+
         for (var section : newSections) {
             var lights = tracedLightPositions.get(section.pos());
             lights.clear();
@@ -157,19 +164,63 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
                 var light = lightRegistry.get(block);
                 if (light == null) return;
 
-                lights.add(
-                        new TracedLightPosition(
-                                -1, //TODO: Get block id
-                                new Vector3d(blockPos.x(), blockPos.y(), blockPos.z()).add(0.5, 0.5, 0.5),
-                                block,
-                                light
-                        )
-                );
+                if (!shouldCullLight(section, level, blockPos))
+                    lights.add(
+                            new TracedLightPosition(
+                                    -1, //TODO: Get block id
+                                    new Vector3d(blockPos.x(), blockPos.y(), blockPos.z()).add(0.5, 0.5, 0.5),
+                                    block,
+                                    light
+                            )
+                    );
             });
 
             if (lights.isEmpty())
                 tracedLightPositions.removeAll(section.pos());
         }
+    }
+
+    private boolean shouldCullLight(
+            SectionCopy blockOwner,
+            ILevel level,
+            IBlockPos blockPos
+    ) {
+        IChunkSection section = blockOwner;
+        Vector3i sectionPos = blockOwner.pos();
+
+        for (var offset : NEIGHBORS) {
+            var neighborBlockPos = blockPos.offset(offset);
+            var blockSectionPos = SectionCopy.getSectionCoord(neighborBlockPos);
+
+            if (!blockSectionPos.equals(sectionPos)) {
+                if (blockSectionPos.equals(blockOwner.pos())) {
+                    section = blockOwner;
+                } else {
+                    var chunkAccess = level.getChunkOrNull(sectionPos.x, sectionPos.z);
+                    if (chunkAccess == null) continue;
+
+                    var newSection = chunkAccess.sections()[level.getSectionIndexFromSectionY(sectionPos.y)];
+                    if (newSection == null) continue;
+
+                    section = newSection;
+                }
+            }
+
+            if (section.hasOnlyAir()) continue;
+
+            var blockState = section.getBlockState(
+                    neighborBlockPos.x() & 15,
+                    neighborBlockPos.y() & 15,
+                    neighborBlockPos.z() & 15
+            );
+
+            if (blockState.is(BLOCK_LAVA)) continue;
+
+            if (blockState.isAir() || !blockState.isSuffocating(level, blockPos) || !blockState.isCollisionShapeFullBlock(level, blockPos))
+                return false;
+        }
+
+        return true;
     }
 
     private LightList trimLights() {
@@ -266,7 +317,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
     @Override
     public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
-        dynamicUniforms.uniform1i("light_list_size",  () -> mostRecentLights == null ? 0 : mostRecentLights.size(), uniformUpdater.newNotifier());
+        dynamicUniforms.uniform1i("light_list_size", () -> mostRecentLights == null ? 0 : mostRecentLights.size(), uniformUpdater.newNotifier());
     }
 
     @Override
@@ -276,4 +327,15 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
         lightsRegistryObserver.close();
     }
+
+    private static final Vector3i[] NEIGHBORS = new Vector3i[]{
+            new Vector3i(0, 1, 0),
+            new Vector3i(0, -1, 0),
+
+            new Vector3i(1, 0, 0),
+            new Vector3i(-1, 0, 0),
+
+            new Vector3i(0, 0, 1),
+            new Vector3i(0, 0, -1),
+    };
 }

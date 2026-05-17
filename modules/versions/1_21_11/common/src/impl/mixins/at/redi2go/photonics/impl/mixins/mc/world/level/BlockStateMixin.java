@@ -1,10 +1,14 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
 import at.redi2go.photonics.api.mc.IProperty;
+import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
+import at.redi2go.photonics.api.mc.world.level.IBlockGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import com.mojang.serialization.MapCodec;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,6 +29,16 @@ public abstract class BlockStateMixin extends BlockBehaviour.BlockStateBase impl
     @Override
     public IBlock block() {
         return (IBlock) getBlock();
+    }
+
+    @Override
+    public boolean isSuffocating(IBlockGetter blockGetter, IBlockPos blockPos) {
+        return isSuffocating((BlockGetter) blockGetter, (BlockPos) blockPos);
+    }
+
+    @Override
+    public boolean isCollisionShapeFullBlock(IBlockGetter blockGetter, IBlockPos blockPos) {
+        return isCollisionShapeFullBlock((BlockGetter) blockGetter, (BlockPos) blockPos);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package at.redi2go.photonics.api.mc.world.level;
 
 import at.redi2go.photonics.api.mc.IProperty;
+import at.redi2go.photonics.api.mc.core.IBlockPos;
 
 public interface IBlockState {
     IBlock block();
@@ -10,6 +11,10 @@ public interface IBlockState {
     }
 
     boolean isAir();
+
+    boolean isSuffocating(IBlockGetter blockGetter, IBlockPos blockPos);
+
+    boolean isCollisionShapeFullBlock(IBlockGetter blockGetter, IBlockPos blockPos);
 
     boolean hasProperty(IProperty<?> property);
 

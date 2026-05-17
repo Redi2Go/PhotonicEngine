@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.joml.Vector3i;
@@ -77,5 +78,13 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
         );
 
         return hash[0];
+    }
+
+    public static Vector3i getSectionCoord(IBlockPos blockPos) {
+        return new Vector3i(
+                blockPos.x() >> 4,
+                blockPos.y() >> 4,
+                blockPos.z() >> 4
+        );
     }
 }
