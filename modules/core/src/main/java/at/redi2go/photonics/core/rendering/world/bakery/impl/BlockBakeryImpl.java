@@ -281,10 +281,8 @@ public class BlockBakeryImpl implements BlockBakery {
             RasterState rasterState = new RasterState();
             Vertex[] tri = new Vertex[3];
 
-            while (hasNext()) {
-                checkInterrupted();
+            while (hasNext())
                 bakeQuad(rasterState, tri, voxelConsumer);
-            }
         }
 
         private void bakeQuad(
@@ -299,13 +297,11 @@ public class BlockBakeryImpl implements BlockBakery {
             int tint = rasterState.v0().tint();
             CpuTexture texture = currentTexture;
 
-            checkInterrupted();
             tri[0] = rasterState.v0();
             tri[1] = rasterState.v1();
             tri[2] = rasterState.v2();
             voxelizeTri(rasterState, tint, tri, texture, consumer);
 
-            checkInterrupted();
             tri[0] = rasterState.v2();
             tri[1] = rasterState.v3();
             tri[2] = rasterState.v0();
@@ -355,8 +351,6 @@ public class BlockBakeryImpl implements BlockBakery {
             for (int px = 0; px < max.x; px++) {
                 for (int py = 0; py < max.y; py++) {
                     for (int pz = 0; pz < max.z; pz++) {
-                        checkInterrupted();
-
                         int x = min.x + px;
                         int y = min.y + py;
                         int z = min.z + pz;
@@ -383,11 +377,6 @@ public class BlockBakeryImpl implements BlockBakery {
                     }
                 }
             }
-        }
-
-        private void checkInterrupted() throws InterruptedException {
-            if (Thread.interrupted())
-                throw new InterruptedException();
         }
 
         @Override
