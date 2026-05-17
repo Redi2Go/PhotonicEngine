@@ -3,19 +3,27 @@ package at.redi2go.photonics.core.rendering;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
-import at.redi2go.photonics.core.model.VoxelModel;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.joml.Vector3i;
 
-import java.util.function.BiConsumer;
-
-public class SectionCopy implements IChunkSection {
+public class SectionCopy implements PrioritizedTask, IChunkSection {
     private final Vector3i pos;
     private final IChunkSection copy;
+    private final long priority;
 
-    public SectionCopy(Vector3i pos, IChunkSection section) {
+    public SectionCopy(
+            Vector3i pos,
+            IChunkSection section,
+            long priority
+    ) {
         this.pos = pos;
         this.copy = section.createCopy();
+        this.priority = priority;
+    }
+
+    @Override
+    public long priority() {
+        return this.priority;
     }
 
     public Vector3i pos() {

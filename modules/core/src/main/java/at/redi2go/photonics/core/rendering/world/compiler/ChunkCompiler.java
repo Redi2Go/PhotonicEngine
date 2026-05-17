@@ -6,6 +6,7 @@ import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.model.VoxelModel;
+import at.redi2go.photonics.core.rendering.PrioritizedTask;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
@@ -34,7 +35,9 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
     private final WorldRegistry worldRegistry;
 
+    private final ConcurrentMap<Vector3i, Long> latestSection = new ConcurrentHashMap<>();
     private final ConcurrentMap<Vector3i, Long> sectionHashes = new ConcurrentHashMap<>();
+
     private final Thread[] threads = new Thread[THREAD_COUNT];
 
     public ChunkCompiler(
@@ -72,11 +75,13 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 ILevel level = Minecraft.getLevel();
                 if (level == null) continue;
 
+                if (!isLatestSection(section.pos(), section.priority())) continue;
+
                 // Computing the hash immediately is cheaper than meshing an entire section just to discard it
                 long hash = section.computeSectionHash();
-                if (Objects.equals(sectionHashes.get(section.pos()), hash)) continue;
+                if (isDuplicateSection(section.pos(), hash)) continue;
 
-                var buildResult = new BuildResult(section.pos(), section.blockPos(), hash);
+                var buildResult = new BuildResult(section.pos(), section.blockPos(), hash, section.priority());
 
                 BlockMesher.REGISTRY.setup();
 
@@ -109,12 +114,35 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         }
     }
 
+    private boolean isLatestSection(Vector3i pos, long priority) {
+        return priority > latestSection.getOrDefault(pos, Long.MIN_VALUE);
+    }
+
+    private boolean setLatestSection(Vector3i pos, long priority) {
+        return latestSection.compute(pos, (ignored, previous) -> {
+            if (previous == null) return priority;
+            if (priority > previous) return priority;
+
+            return previous;
+        }).equals(priority);
+    }
+
+    private boolean isDuplicateSection(Vector3i pos, long hash) {
+        return Objects.equals(sectionHashes.get(pos), hash);
+    }
+
+    private boolean setSectionHash(Vector3i pos, long hash) {
+        var previousHash = sectionHashes.put(pos, hash);
+        return !Objects.equals(previousHash, hash);
+    }
+
     private void unloadChunks() {
         while (!unloadQueue.isEmpty()) {
             var section = unloadQueue.poll();
             if (section == null) continue;
 
             sectionHashes.remove(section);
+            latestSection.remove(section);
         }
     }
 
@@ -124,19 +152,27 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             thread.interrupt();
     }
 
-    public class BuildResult implements Disposable {
+    public class BuildResult implements PrioritizedTask, Disposable {
         private final Vector3i chunkPos;
         private final Vector3i chunkBlockPos;
         private final long hash;
+        private final long priority;
+
         private final @Nullable BlockModel[] blocks = new BlockModel[IChunkSection.SECTION_SIZE];
 
         private final AtomicInteger pendingBlocks = new AtomicInteger();
         private final CompletableFuture<Void> future = new CompletableFuture<>();
 
-        public BuildResult(Vector3i chunkPos, Vector3i chunkBlockPos, long hash) {
+        public BuildResult(
+                Vector3i chunkPos,
+                Vector3i chunkBlockPos,
+                long hash,
+                long priority
+        ) {
             this.chunkPos = chunkPos;
             this.chunkBlockPos = chunkBlockPos;
             this.hash = hash;
+            this.priority = priority;
         }
 
         public Vector3i chunkPos() {
@@ -145,6 +181,11 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
         public Vector3i chunkBlockPos() {
             return chunkBlockPos;
+        }
+
+        @Override
+        public long priority() {
+            return priority;
         }
 
         private void submitBlockFuture(
@@ -218,12 +259,10 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
 
             future.get();
-            var previousHash = sectionHashes.put(chunkPos(), hash);
 
-            if (!Objects.equals(previousHash, hash))
+            if (setLatestSection(chunkPos, priority) && setSectionHash(chunkPos, hash)) {
                 builtSectionQueue.offer(chunkPos, this);
-            else
-                close();
+            } else close();
         }
 
         public @Nullable BlockModel getBlock(int x, int y, int z) {

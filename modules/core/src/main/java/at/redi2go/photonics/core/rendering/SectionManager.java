@@ -37,6 +37,7 @@ public class SectionManager implements RenderingComponent {
     private final List<TaskQueue<?>> taskQueues = new ArrayList<>();
 
     private final IntSupplier renderDistanceSupplier;
+    private long remeshCount = 0;
 
     public SectionManager(IntSupplier renderDistanceSupplier) {
         this.renderDistanceSupplier = renderDistanceSupplier;
@@ -109,7 +110,7 @@ public class SectionManager implements RenderingComponent {
                     discoveredSections.add(sectionCoord);
 
                     if (!notEmptySections.contains(sectionCoord))
-                        sectionsToUpdate.add(Pair.of(sectionCoord, new SectionCopy(sectionCoord, section)));
+                        sectionsToUpdate.add(Pair.of(sectionCoord, new SectionCopy(sectionCoord, section, remeshCount++)));
                 }
             }
         }
@@ -181,7 +182,7 @@ public class SectionManager implements RenderingComponent {
         var section = sections[sectionIndex];
         if (section.hasOnlyAir()) return Optional.empty();
 
-        return Optional.of(new SectionCopy(sectionPos, section));
+        return Optional.of(new SectionCopy(sectionPos, section, remeshCount++));
     }
 
     @Override
@@ -372,13 +373,26 @@ public class SectionManager implements RenderingComponent {
 
                 if (!notEmptySections.contains(sectionCoord)) return;
 
-                var previousValue = sectionValues.put(sectionCoord, element);
-                if (previousValue != null) {
-                    if (previousValue instanceof Disposable disposable)
-                        disposable.close();
+                boolean[] shouldAppendSection = {false};
+                sectionValues.compute(sectionCoord, (k, previous) -> {
+                    if (previous == null) {
+                        shouldAppendSection[0] = true;
+                        return element;
+                    }
 
-                    return;
-                }
+                    long previousPriority = previous instanceof PrioritizedTask p1 ? p1.priority() : Long.MIN_VALUE;
+                    long newPriority = element instanceof PrioritizedTask p2 ? p2.priority() : Long.MIN_VALUE;
+
+                    if (previousPriority > newPriority) {
+                        tryClose(element);
+                        return previous;
+                    } else {
+                        tryClose(previous);
+                        return element;
+                    }
+                });
+
+                if (!shouldAppendSection[0]) return;
 
                 requireCapacity(size + 1);
 
@@ -511,6 +525,12 @@ public class SectionManager implements RenderingComponent {
 
             return Objects.requireNonNull(sectionValues.remove(top.pos));
         }
+
+        private static void tryClose(Object value) {
+            if (value instanceof Disposable disposable)
+                disposable.close();
+        }
+
     }
 
     public class SectionQueue extends TaskQueue<SectionCopy> {
