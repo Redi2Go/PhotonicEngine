@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public abstract class AbstractLightList implements Runnable, RenderingComponent {
+    private static final int MAX_SECTIONS_PER_RUN = 48;
+
     private final Thread compilerThread;
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -97,7 +99,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
                 needsUpload |= reloadLights();
 
-                var loadedSections = sectionQueue.drain(Integer.MAX_VALUE);
+                var loadedSections = sectionQueue.drain(MAX_SECTIONS_PER_RUN);
                 if (!loadedSections.isEmpty()) {
                     needsUpload = true;
                     addNewSections(loadedSections);
