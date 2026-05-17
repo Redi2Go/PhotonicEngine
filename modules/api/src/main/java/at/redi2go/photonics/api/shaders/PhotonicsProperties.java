@@ -44,7 +44,7 @@ public interface PhotonicsProperties {
      // Forced on when getLightingMode() == LightingMode.BASIC
      boolean isLightBinningEnabled();
      boolean DEFAULT_IS_LIGHT_BINNING_ENABLED = false;
-     String IS_LIGHT_BINNING_ENABLED_KEY = "photonics.lightingMode";
+     String IS_LIGHT_BINNING_ENABLED_KEY = "photonics.enableLightBinning";
 
     int getMaxSamples();
     int DEFAULT_MAX_SAMPLES = 20;
