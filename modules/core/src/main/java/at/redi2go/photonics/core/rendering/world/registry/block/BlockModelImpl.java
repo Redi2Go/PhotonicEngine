@@ -11,13 +11,15 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BlockModelImpl extends WorldObject<NoMemory> implements BlockModel {
     private final BlockModelTemplate template;
     private final long hash;
     private final PartsWrapper parts;
 
-    private final List<BlockMeshState> meshes = new ArrayList<>();
+    private final Queue<BlockMeshState> meshes = new ConcurrentLinkedQueue<>();
 
     public BlockModelImpl(
             WorldRegistry worldRegistry,
@@ -58,7 +60,12 @@ public class BlockModelImpl extends WorldObject<NoMemory> implements BlockModel 
         if (!super.dispose()) return false;
 
         template.removeVariant(hash);
-        meshes.forEach(worldRegistry::removeBlockModel);
+        while (!meshes.isEmpty()) {
+            var mesh = meshes.remove();
+            if (mesh == null) break;
+
+            worldRegistry.removeBlockModel(mesh);
+        }
 
         return true;
     }
