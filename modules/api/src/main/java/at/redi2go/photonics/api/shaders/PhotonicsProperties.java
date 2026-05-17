@@ -52,7 +52,7 @@ public interface PhotonicsProperties {
 
     int getRestirInitialSamples();
     int DEFAULT_RESTIR_INITIAL_SAMPLES = 32;
-    String RESTIR_INITIAL_SAMPLES_KEY = "photonics.resitrInitialSamples";
+    String RESTIR_INITIAL_SAMPLES_KEY = "photonics.restirInitialSamples";
 
     int getRestirSpatialReuseSamples();
     int DEFAULT_RESTIR_SPATIAL_REUSE_SAMPLES = 5;

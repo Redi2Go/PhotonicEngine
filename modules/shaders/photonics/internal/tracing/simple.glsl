@@ -8,6 +8,8 @@ bool trace_light_vis(
 ) {
     RayIterator ray;
     ray_iter_begin(ray, rt_pos, direction);
+    ray.iterations = max(max_iterations, 0);
+
     RayResult result = missed_ray_result();
 
     vec4 running_tint_color = vec4(0);
