@@ -22,6 +22,7 @@ public class Rgba8Texture implements CpuTexture {
         int realV = Math.clamp(Math.round(v * (height - 0.5f)), 0, height - 1);
 
         int index = (width * realV) + realU;
+        if (index > color.length) return new TextureData(blockId, 0);
 
         return new TextureData(
                 blockId,
