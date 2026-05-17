@@ -2,7 +2,6 @@
 #include "/photonics/rendering/restir_di/restir.glsl"
 
 layout(location = 2) out vec4 reservoir_out;
-//layout(location = 3) out vec3 lighting_out;
 
 void main() {
     if (!prepare_frag(REUSE_ITERATION)) return;
@@ -16,7 +15,6 @@ void main() {
     }
 #endif
 
-//    lighting_out = vec3(0.0f);
     Reservoir reservoir = reservoir_new();
     reservoir_decode(
         reservoir,
