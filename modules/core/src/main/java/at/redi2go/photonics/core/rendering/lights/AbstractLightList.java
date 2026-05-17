@@ -6,6 +6,7 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlock;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
+import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.PhConfigWatcher;
 import at.redi2go.photonics.core.config.lights.LightRegistry;
@@ -156,6 +157,8 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
         var level = Minecraft.getLevel();
         if (level == null) return;
 
+        var shaderPack = IShaderPack.getCurrentPack();
+
         for (var section : newSections) {
             var lights = tracedLightPositions.get(section.pos());
             lights.clear();
@@ -167,7 +170,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
                 if (!shouldCullLight(section, level, blockPos))
                     lights.add(
                             new TracedLightPosition(
-                                    -1, //TODO: Get block id
+                                    shaderPack.map(e -> e.getBlockId(block)).orElse(-1),
                                     new Vector3d(blockPos.x(), blockPos.y(), blockPos.z()).add(0.5, 0.5, 0.5),
                                     block,
                                     light

@@ -2,6 +2,8 @@ package at.redi2go.photonics.api.shaders;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 
+import java.util.Optional;
+
 public interface IShaderPack {
     /**
      * The name of the shader pack
@@ -16,4 +18,8 @@ public interface IShaderPack {
     PhotonicsProperties properties();
 
     int getBlockId(IBlockState block);
+
+    static Optional<IShaderPack> getCurrentPack() {
+        throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
+    }
 }

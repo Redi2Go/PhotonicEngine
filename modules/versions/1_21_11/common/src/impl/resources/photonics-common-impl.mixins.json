@@ -54,7 +54,8 @@
     "mc.world.level.block.BlockEntityMixin",
     "mc.world.level.block.state.StateDefinitionMixin",
     "shaders.iris.AbsolutePackPathMixin",
-    "shaders.iris.IPathPackImpl"
+    "shaders.iris.IPathPackImpl",
+    "shaders.iris.IShaderPackImpl"
   ],
   "mixins": [
   ],
