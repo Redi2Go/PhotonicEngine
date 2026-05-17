@@ -51,13 +51,7 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
                 .build();
 
         this.denoiserPasses = properties.getRestirDenoiserPasses();
-
-//        // The hand always needs at least 7 denoiser passes.
-//        int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
-//        if (requestedDenoiserPasses != 0) {
-//            denoiserPasses = Math.max(requestedDenoiserPasses, 7);
-//        } else denoiserPasses = 0;
-
+        
         if (denoiserPasses != 0) {
             this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                     .addAttachment("denoise_color", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
