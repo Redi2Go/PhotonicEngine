@@ -20,6 +20,11 @@ public class UniformUpdater {
         needsUpdate = true;
     }
 
+    public void updateNow() {
+        needsUpdate = true;
+        updateAll();
+    }
+
     public void updateAll() {
         if (!needsUpdate) return;
         needsUpdate = false;
