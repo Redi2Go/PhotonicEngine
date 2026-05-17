@@ -24,6 +24,8 @@ vec3 frag_tex_normal = vec3(0.0f);
 bool frag_is_bad_angle = false;
 bool frag_is_hand = false;
 
+#define PH_VIEW_SIZE (vec2(viewWidth, viewHeight) * PH_RENDER_SCALE)
+
 bool is_bad_angle(vec3 rt_pos, vec3 normal) {
     float dist = distance(floor(rt_pos), floor(rt_camera_position));
 

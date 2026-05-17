@@ -20,7 +20,7 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
     ) {
         super(properties, atlasDownloader);
 
-        this.framebuffer = registerComponent(passFactory.newFramebuffer(1f)
+        this.framebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_position_history", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
                 .addAttachment("restir_normal_history", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
                 .addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
