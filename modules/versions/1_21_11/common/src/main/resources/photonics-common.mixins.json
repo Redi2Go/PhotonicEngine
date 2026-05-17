@@ -37,6 +37,7 @@
     "meshing.RenderSetupAccessor",
     "meshing.TextureSetupAccessor",
     "meshing.ReloadableTextureMixin",
+    "meshing.DynamicTextureMixin",
     "meshing.FeatureRenderDispatcherMixin",
     "meshing.OuterWrappedRenderTypeAccessor"
   ],

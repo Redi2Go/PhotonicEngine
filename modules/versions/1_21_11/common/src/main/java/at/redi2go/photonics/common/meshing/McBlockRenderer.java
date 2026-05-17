@@ -132,6 +132,7 @@ public class McBlockRenderer {
 
         if (blockState.hasBlockEntity()) {
             submitBlockEntity(
+                    pos,
                     blockState,
                     blockAndTintGetter,
                     builder
@@ -197,11 +198,34 @@ public class McBlockRenderer {
         poseStack.popPose();
     }
 
+    private static final Set<Block> FULL_BLOCK_ENTITY_REQUIRED_FOR = new BlockSetBuilder()
+            .addBlock(Blocks.PLAYER_HEAD)
+            .addBlock(Blocks.PLAYER_WALL_HEAD)
+            .build();
+
     private static final Set<Block> LEVEL_REQUIRED_FOR = new BlockSetBuilder()
             .addBlock(Blocks.CHEST)
             .build();
 
+    private BlockEntity copyBlockEntity(BlockState blockState) {
+        EntityBlock entityBlock = (EntityBlock) blockState.getBlock();
+        return entityBlock.newBlockEntity(new BlockPos(0, 0, 0), blockState);
+    }
+
+    private BlockEntity fetchBlockEntity(BlockPos blockPos, BlockState blockState) {
+        try {
+            var level = Minecraft.getInstance().level;
+            if (level == null || !level.isInValidBounds(blockPos)) return copyBlockEntity(blockState);
+
+            var chunk = level.getChunkAt(blockPos);
+            return chunk.getBlockEntity(blockPos);
+        } catch (Exception e) {
+            return copyBlockEntity(blockState);
+        }
+    }
+
     private void submitBlockEntity(
+            BlockPos blockPos,
             BlockState blockState,
             BlockAndTintGetter blockAndTintGetter,
             BlockBuilder builder
@@ -212,8 +236,10 @@ public class McBlockRenderer {
         levelRenderState.reset();
 
         try {
-            EntityBlock entityBlock = (EntityBlock) blockState.getBlock();
-            BlockEntity entity = entityBlock.newBlockEntity(new BlockPos(0, 0, 0), blockState);
+            BlockEntity entity = FULL_BLOCK_ENTITY_REQUIRED_FOR.contains(blockState.getBlock()) ?
+                    fetchBlockEntity(blockPos, blockState) :
+                    copyBlockEntity(blockState);
+
             if (entity == null) return;
 
             if (LEVEL_REQUIRED_FOR.contains(blockState.getBlock()))
