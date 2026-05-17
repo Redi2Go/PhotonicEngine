@@ -12,6 +12,6 @@ public interface BlockModel extends Disposable {
         Vector3i offset();
         int boundingVolume();
 
-        BlockEntry toEntry(short region);
+        BlockEntry toEntry(int region);
     }
 }

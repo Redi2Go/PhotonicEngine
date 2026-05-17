@@ -53,7 +53,7 @@ public class ChunkVoxel extends WorldVoxel {
     }
 
     @Override
-    public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
+    public void insertBlock(int x, int y, int z, int region, BlockEntry block) {
         initPos(x, y, z);
         containedRegions.add(region);
 
@@ -73,11 +73,6 @@ public class ChunkVoxel extends WorldVoxel {
     @Override
     public void insertChunk(int x, int y, int z, ChunkVoxel chunk) {
         throw new UnsupportedOperationException("insertChunk");
-    }
-
-    @Override
-    public void removeChunk(int x, int y, int z, short region) {
-        throw new UnsupportedOperationException("removeChunk");
     }
 
     @Override

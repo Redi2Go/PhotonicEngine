@@ -31,15 +31,6 @@ public class ChunkContainerVoxel extends WorldVoxel {
     }
 
     @Override
-    public void removeChunk(int x, int y, int z, short region) {
-        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
-        final var entry = getEntry(index);
-
-        setEntry(index, entry, null);
-        containedRegions.remove(region);
-    }
-
-    @Override
     public void removeChunkUnsafe(int x, int y, int z) {
         var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
         final var entry = getEntry(index);

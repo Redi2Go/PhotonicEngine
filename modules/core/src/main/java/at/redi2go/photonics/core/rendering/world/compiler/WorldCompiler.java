@@ -14,6 +14,8 @@ import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
 import at.redi2go.photonics.core.rendering.world.tree.ChunkManager;
 import at.redi2go.photonics.core.rendering.world.tree.ChunkVoxel;
 import at.redi2go.photonics.core.rendering.world.tree.WorldVoxel;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.joml.Vector3d;
@@ -46,6 +48,8 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     private final PaletteTexture paletteTexture;
 
     private final WorldRegistry registry;
+
+    private final RegionIdManager regionIds = new RegionIdManager();
 
     private final Queue<WorldVoxel> uploadQueue;
     private final WorldVoxel rootVoxel;
@@ -141,9 +145,11 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     private void clearUnloadedSections(List<Vector3i> unloadedSections) {
         if (iorigin == null) return;
 
-        ShortSet regions = new ShortOpenHashSet(unloadedSections.size());
-        for (var section : unloadedSections)
-            regions.add(toRegion(section));
+        IntSet regions = new IntOpenHashSet(unloadedSections.size());
+        for (var section : unloadedSections) {
+            regions.add(regionIds.getId(section));
+            regionIds.removeRegion(section);
+        }
 
         rootVoxel.removeRegions(regions);
     }
@@ -192,9 +198,9 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
-        ShortSet regions = new ShortOpenHashSet(sections.size());
+        IntSet regions = new IntOpenHashSet(sections.size());
         for (var section : sections)
-            regions.add(toRegion(section.chunkPos()));
+            regions.add(regionIds.getId(section.chunkPos()));
 
         rootVoxel.removeRegions(regions);
     }
@@ -213,7 +219,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
                 if (!rootVoxel.containsChunk(chunkVoxelPos)) continue;
 
-                short region = toRegion(section.chunkPos());
+                int region =regionIds.getId(section.chunkPos());
                 section.forEachBlock((blockChunkPos, block) -> blockSorter.addBlock(
                         chunkVoxelPos.add(blockChunkPos.mul(16), new Vector3i()),
                         block
@@ -353,16 +359,6 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         compilerThread.interrupt();
     }
 
-
-    // Util
-
-    private static short toRegion(Vector3i chunkPos) {
-        int hash = chunkPos.hashCode();
-        return (short) (hash ^ (hash >>> 16));
-    }
-
-
-    // Tasks
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {
         private final AtomicInteger pendingTasks = new AtomicInteger();

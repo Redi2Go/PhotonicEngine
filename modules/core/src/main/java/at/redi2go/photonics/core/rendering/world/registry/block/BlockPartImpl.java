@@ -49,7 +49,7 @@ public class BlockPartImpl implements BlockModel.Part, Disposable {
     }
 
     @Override
-    public BlockEntry toEntry(short region) {
+    public BlockEntry toEntry(int region) {
         return new SimpleBlockEntry(region, this);
     }
 

@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.model;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,11 +11,11 @@ public interface VoxelEntry extends Disposable {
 
     void insertBlock(
             int x, int y, int z,
-            short region,
+            int region,
             BlockEntry block
     );
 
-    @Nullable VoxelEntry removeRegions(ShortSet regions);
+    @Nullable VoxelEntry removeRegions(IntSet regions);
 
     @Nullable VoxelEntry build();
 

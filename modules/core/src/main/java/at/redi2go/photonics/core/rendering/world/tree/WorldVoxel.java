@@ -8,6 +8,8 @@ import at.redi2go.photonics.core.rendering.world.allocator.WorldVoxelMemory;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import org.jetbrains.annotations.NonNls;
@@ -33,7 +35,7 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     private final @Nullable VoxelEntry[] voxelData = new VoxelEntry[RtVoxel.ENTRIES_SIZE];
     private int voxelCount = 0;
 
-    protected final ShortSet containedRegions = new ShortOpenHashSet();
+    protected final IntSet containedRegions = new IntOpenHashSet();
 
     private WorldVoxelMemory memory;
     private boolean firstUpload = true;
@@ -61,7 +63,7 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
         return depth << 2;
     }
 
-    public boolean containsAnyRegion(ShortSet regions) {
+    public boolean containsAnyRegion(IntSet regions) {
         for (IntIterator it = regions.intIterator(); it.hasNext(); ) {
             if (containedRegions.contains((short) it.nextInt()))
                 return true;
@@ -169,7 +171,7 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
     // Block management methods
 
     @Override
-    public void insertBlock(int x, int y, int z, short region, BlockEntry block) {
+    public void insertBlock(int x, int y, int z, int region, BlockEntry block) {
         int index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
         containedRegions.add(region);
 
@@ -182,7 +184,7 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
 
 
     @Override
-    public @Nullable VoxelEntry removeRegions(ShortSet regions) {
+    public @Nullable VoxelEntry removeRegions(IntSet regions) {
         if (!containsAnyRegion(regions)) return this;
 
         for (int i = 0; i < RtVoxel.ENTRIES_SIZE; i++) {
@@ -215,14 +217,6 @@ public class WorldVoxel extends AbstractVoxelModel implements VoxelEntry, RtVoxe
 
         ((WorldVoxel) entry).insertChunk(x, y, z, chunk);
         containedRegions.addAll(chunk.containedRegions);
-    }
-
-    public void removeChunk(int x, int y, int z, short region) {
-        var index = VoxelModel.toVoxelIndex(x, y, z, magnitude());
-        var entry = getMutableEntry(index);
-
-        ((WorldVoxel) entry).removeChunk(x, y, z, region);
-        containedRegions.remove(region);
     }
 
     public void removeChunkUnsafe(int x, int y, int z) {
