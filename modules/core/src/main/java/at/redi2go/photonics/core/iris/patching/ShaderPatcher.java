@@ -49,6 +49,8 @@ public class ShaderPatcher {
     public List<IPackPath> getCreatedFiles() {
         List<IPackPath> createdFiles = new ArrayList<>();
 
+        createdFiles.add(IPackPath.fromAbsolutePath("/ph_lights.json"));
+
         if (patch != null)
             createdFiles.addAll(patch.getFiles());
 

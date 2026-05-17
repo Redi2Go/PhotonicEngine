@@ -169,7 +169,21 @@ public class PhConfig {
         for (var PhConfigWatcher : WATCHERS)
             PhConfigWatcher.reload(config);
     }
-    
+
+    public static synchronized void registerLightProvider(LightsProvider provider) {
+        LIGHTS_PROVIDERS.add(provider);
+        provider.registerChangeListener(PhConfig::onChangedSafe);
+
+        onChanged();
+    }
+
+    public static synchronized void removeLightProvider(LightsProvider provider) {
+        if (LIGHTS_PROVIDERS.remove(provider)) {
+            provider.clearListeners();
+            onChanged();
+        }
+    }
+
     public static boolean isMultiThreadingEnabled() {
         return INSTANCE.multiThreadingEnabled;
     }

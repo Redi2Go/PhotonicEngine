@@ -9,7 +9,6 @@ import java.util.function.Function;
 
 @Mixin(value = ShaderPack.class, remap = false)
 public interface ShaderPackAccessor {
-
     @Accessor
     Function<AbsolutePackPath, String> getSourceProvider();
 }
