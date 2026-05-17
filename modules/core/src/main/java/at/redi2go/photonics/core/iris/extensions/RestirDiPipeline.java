@@ -42,16 +42,16 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
 
         this.restirRenderer = passFactory.newRenderer("restir")
                 .addPass("initial sampling", "/photonics/rendering/restir_di/passes/sampling.fsh", null, restirFramebuffer)
-                .addPass("spatial reuse (setup)", "/photonics/rendering/restir_di/passes/spatial_reuse/setup.fsh", null, restirFramebuffer)
-                .addPass("spatial reuse #1", "/photonics/rendering/restir_di/passes/spatial_reuse/pass0.fsh", null, restirFramebuffer)
-                .addPass("spatial reuse #2", "/photonics/rendering/restir_di/passes/spatial_reuse/pass1.fsh", null, restirFramebuffer)
-                .addPass("spatial reuse #3", "/photonics/rendering/restir_di/passes/spatial_reuse/pass2.fsh", null, restirFramebuffer)
+                .addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer)
+                .addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer)
+                .addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer)
+                .addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer)
                 .addPass("lighting", "/photonics/rendering/restir_di/passes/lighting.fsh", null, restirFramebuffer)
                 .addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer)
                 .build();
 
         this.denoiserPasses = properties.getRestirDenoiserPasses();
-        
+
         if (denoiserPasses != 0) {
             this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                     .addAttachment("denoise_color", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
@@ -93,5 +93,9 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
                     atrousUpdater.newNotifier()
             );
         }
+    }
+
+    private @Nullable String spatialReusePass(String file) {
+        return properties.getRestirSpatialReuseSamples() < 0 ? null : "/photonics/rendering/restir_di/passes/spatial_reuse/" + file;
     }
 }
