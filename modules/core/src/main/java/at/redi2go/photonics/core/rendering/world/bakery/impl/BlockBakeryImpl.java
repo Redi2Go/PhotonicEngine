@@ -82,6 +82,7 @@ public class BlockBakeryImpl implements BlockBakery {
 
         private int currentBlockId = -1;
         private CpuTexture currentTexture = null;
+        private long currentTextureHash = 0;
 
         private int vertexCount = 0;
         private long vertexHash = 0;
@@ -168,6 +169,7 @@ public class BlockBakeryImpl implements BlockBakery {
             if (currentTexture == texture) return this;
 
             currentTexture = texture;
+            currentTextureHash = texture.hashCode();
             submitState(new TextureChange(texture));
 
             return this;
@@ -198,12 +200,14 @@ public class BlockBakeryImpl implements BlockBakery {
 
             long hash = vertexHash;
 
-            hash = hash * 31 + intAt(vertexIndex);
-            hash = hash * 31 + intAt(vertexIndex + 1);
-            hash = hash * 31 + intAt(vertexIndex + 2);
+            hash = hash * 31 + currentTextureHash;
 
-            hash = hash * 31 + intAt(vertexIndex + 4);
-            hash = hash * 31 + intAt(vertexIndex + 5);
+            hash = hash * 31 + intAt(index);
+            hash = hash * 31 + intAt(index + 1);
+            hash = hash * 31 + intAt(index + 2);
+
+            hash = hash * 31 + intAt(index + 4);
+            hash = hash * 31 + intAt(index + 5);
 
             vertexHash = hash;
         }
@@ -266,7 +270,7 @@ public class BlockBakeryImpl implements BlockBakery {
 
             while (index < end) {
                 tintBuilder.add(intAt(index));
-                index+= 6;
+                index += 6;
             }
 
             return tintBuilder.build();
@@ -381,7 +385,7 @@ public class BlockBakeryImpl implements BlockBakery {
             }
         }
 
-        private void checkInterrupted() throws InterruptedException{
+        private void checkInterrupted() throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
         }
