@@ -198,14 +198,19 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
                 int remaining = (pending & Integer.MAX_VALUE) + 1;
                 if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
-                    block.thenAccept((result) -> {
+                    block.handle((result, t) -> {
+                        if (t != null)
+                            Photonics.LOGGER.error("An error was thrown while meshing block", t);
+
                         try {
                             completeBlock(x, y, z, result);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
-                        } catch (Throwable t) {
-                            Photonics.LOGGER.error("Error while setting block", t);
+                        } catch (Throwable t2) {
+                            Photonics.LOGGER.error("Error while setting block", t2);
                         }
+
+                        return null;
                     });
 
                     return;

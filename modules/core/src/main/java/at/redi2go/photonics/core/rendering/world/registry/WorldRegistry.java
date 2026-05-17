@@ -206,13 +206,17 @@ public class WorldRegistry implements RenderingComponent {
             TintBuilder.Result tintInfo = meshResult.tintData();
             cacheModelTemplateWeak(meshResult)
                     .handle((template, e) -> {
-                        if (e != null) {
-                            future.completeExceptionally(e);
-                        } else {
-                            var variant = template.createVariantWeak(tintInfo);
-                            variant.addMeshState(meshState);
+                        try {
+                            if (e != null) {
+                                future.completeExceptionally(e);
+                            } else {
+                                var variant = template.createVariantWeak(tintInfo);
+                                variant.addMeshState(meshState);
 
-                            future.complete(variant);
+                                future.complete(variant);
+                            }
+                        } catch (Throwable t) {
+                            future.completeExceptionally(t);
                         }
 
                         return null;
