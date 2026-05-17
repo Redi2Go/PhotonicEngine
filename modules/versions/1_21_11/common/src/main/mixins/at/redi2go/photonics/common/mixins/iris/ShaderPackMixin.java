@@ -1,8 +1,10 @@
 package at.redi2go.photonics.common.mixins.iris;
 
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.api.shaders.LightingMode;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.core.Photonics;
@@ -15,6 +17,7 @@ import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.ShaderPack;
 import net.irisshaders.iris.shaderpack.include.AbsolutePackPath;
 import net.irisshaders.iris.shaderpack.include.IncludeProcessor;
+import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.compress.utils.Lists;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -77,6 +80,11 @@ public abstract class ShaderPackMixin implements IShaderPack {
         return Iris.getIrisConfig()
                 .getShaderPackName()
                 .orElse("<unknown>");
+    }
+
+    @Override
+    public int getBlockId(IBlockState block) {
+        return IrisUtil.getBlockId((BlockState) block);
     }
 
     @Override
