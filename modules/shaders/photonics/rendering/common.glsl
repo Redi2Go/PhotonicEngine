@@ -35,15 +35,15 @@ bool is_bad_angle(vec3 rt_pos, vec3 normal) {
 
 bool prepare_frag(int rnd_seed) {
     frag_tex_coord = ivec2(gl_FragCoord.xy);
-    if (!is_in_world_at(frag_tex_coord)) return false;
+    if (!is_in_world_at()) return false;
 
     frag_rnd_state = new_rand_state(gl_FragCoord.xy, frameCounter, 0);
 
-    frag_player_pos = get_player_position(gl_FragCoord.xy);
+    frag_player_pos = load_player_position();
     frag_rt_pos = frag_player_pos + rt_camera_position;
-    get_fragment_data(gl_FragCoord.xy, frag_geo_normal, frag_tex_normal);
+    load_fragment_data(frag_geo_normal, frag_tex_normal);
 
-    frag_is_hand = is_hand_at(gl_FragCoord.xy);
+    frag_is_hand = is_hand_at();
 
     // Attempts to correct bias from depth
 

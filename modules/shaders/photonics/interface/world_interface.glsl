@@ -1,11 +1,10 @@
 //HEAD
 
-bool is_in_world(vec2 tex_coord);
+bool is_in_world();
 
-vec3 get_player_position(vec2 tex_coord);
+vec3 load_player_position();
 
-void get_fragment_data(
-    vec2 tex_coord,
+void load_fragment_data(
     out vec3 geometry_normal,
     out vec3 texture_normal
 );
