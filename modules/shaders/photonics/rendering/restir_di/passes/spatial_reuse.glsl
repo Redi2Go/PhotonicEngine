@@ -29,9 +29,9 @@ void main() {
     const float ph_spatial_reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE * (REUSE_ITERATION + 1);
     for (int i = 0; i < PH_RESTIR_SPATIAL_REUSE_SAMPLES; i++) {
         vec2 offset = 2.0 * vec2(rand_next_float(frag_rnd_state), rand_next_float(frag_rnd_state)) - 1f;
-        vec2 uv = frag_tex_coord + offset * ph_spatial_reuse_radius;
+        ivec2 texel = ivec2(frag_tex_coord + offset * ph_spatial_reuse_radius);
 
-        if (!reservoir_reuse(temp_reservoir, uv)) continue;
+        if (!reservoir_reuse(temp_reservoir, texel)) continue;
 
         reservoir_update(
             reservoir,

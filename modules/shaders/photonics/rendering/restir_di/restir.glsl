@@ -17,6 +17,15 @@ uniform sampler2D prev_restir_lighting;
 uniform sampler2D prev_restir_lighting_variance;
 
 
+uniform sampler2D denoise_color;
+uniform sampler2D denoise_variance;
+
+uniform sampler2D prev_denoise_color;
+uniform sampler2D prev_denoise_variance;
+
+uniform sampler2D restir_position_history;
+uniform sampler2D restir_normal_history;
+
 uniform sampler2D prev_restir_position_history;
 uniform sampler2D prev_restir_normal_history;
 
@@ -179,16 +188,14 @@ void reservoir_decode(inout Reservoir reservoir, vec4 color, vec3 sample_pos, bo
     reservoir.samples = color.w;
 }
 
-bool reservoir_reuse(inout Reservoir reservoir, vec2 texel) {
+bool reservoir_reuse(inout Reservoir reservoir, ivec2 texel) {
     if (!frag_is_bad_angle) {
         vec3 sample_player_pos = get_player_position(texel);
         vec3 d = sample_player_pos - frag_player_pos;
         if (dot(d, d) >= 0.3f) return false;
     }
 
-    vec3 n;
-    vec3 ignored_tex_normal;
-    get_fragment_data(texel, n, ignored_tex_normal);
+    vec3 n = ph_decode_normal(texelFetch(restir_normal_history, texel, 0).xy);
 
     if (dot(n, frag_geo_normal) < 0.99f) return false;
 
@@ -196,7 +203,7 @@ bool reservoir_reuse(inout Reservoir reservoir, vec2 texel) {
         reservoir,
         texelFetch(
             restir_reservoirs,
-            ivec2(texel),
+            texel,
             0
         ),
         frag_rt_pos,
@@ -211,23 +218,22 @@ bool reservoir_reproject(inout Reservoir reservoir) {
     vec2 uv = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter(), previous_player_pos).xy;
 
     if (clamp(uv, 0, 1) != uv) return false;
-    vec2 prev_texel = uv * PH_VIEW_SIZE;
-    ivec2 prev_itexel = ivec2(prev_texel);
+    ivec2 prev_texel = ivec2(uv * PH_VIEW_SIZE);
 
     if (!frag_is_bad_angle) {
-        vec3 projected_player_pos = texelFetch(prev_restir_position_history, prev_itexel, 0).xyz;
+        vec3 projected_player_pos = texelFetch(prev_restir_position_history, prev_texel, 0).xyz;
         vec3 d = projected_player_pos - previous_player_pos;
         if (dot(d, d) >= 0.3f) return false;
     }
 
-    vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, prev_itexel, 0).xy);
+    vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, prev_texel, 0).xy);
     if (dot(n, frag_geo_normal) < 0.99f) return false;
 
     reservoir_decode(
         reservoir,
         texelFetch(
             prev_restir_reservoirs,
-            prev_itexel,
+            prev_texel,
             0
         ),
         frag_rt_pos,
