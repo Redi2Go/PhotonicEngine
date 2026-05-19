@@ -18,6 +18,7 @@
     "iris.pipeline.uniforms.UniformHolderMixin",
     "iris.pipeline.uniforms.UniformUpdateFrequencyMixin",
 
+    "iris.ShaderPackSourceNamesMixin",
     "iris.pipeline.IrisRenderingPipelineMixin",
     "iris.pipeline.PipelineManagerMixin",
     "iris.pipeline.passes.composite.CompositeRendererMixin",
