@@ -34,7 +34,7 @@ void main() {
                 );
             }
 
-            previous_reservoir.samples = min(20f * reservoir.samples, previous_reservoir.samples);
+            previous_reservoir.samples = min(20.0f * reservoir.samples, previous_reservoir.samples);
 
             reservoir_update(
             temporal_reservoir,

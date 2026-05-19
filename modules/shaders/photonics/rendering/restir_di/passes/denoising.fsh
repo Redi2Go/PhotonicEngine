@@ -71,8 +71,8 @@ vec3 ph_decode_lighting_normal(vec4 packed_normals) {
 
 void main() {
     if (SKIP_DENOISER) {
-        color_out = vec3(0f);
-        variance_out = 1f;
+        color_out = vec3(0.0f);
+        variance_out = 1.0f;
 
         return;
     }
@@ -83,7 +83,7 @@ void main() {
         return;
     } else if (atrous_iteration == -1) {
         vec3 color = texelFetch(restir_lighting, frag_tex_coord, 0).rgb;
-        if (any(isnan(color))) color = vec3(0f); // TODO: Find cause of this nan
+        if (any(isnan(color))); // TODO: Find cause of this nan
 
         color_out = color;
         variance_out = texelFetch(restir_lighting_variance, frag_tex_coord, 0).z;

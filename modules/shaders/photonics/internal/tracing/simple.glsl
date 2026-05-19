@@ -11,7 +11,7 @@ bool trace_light_vis(
     RayResult result = missed_ray_result();
 
     vec4 running_tint_color = vec4(0);
-    light_transmittance = 1f;
+    light_transmittance = 1.0f;
 
     while (ray_iter_has_next_block(ray, light_rt_pos)) {
         result = ray_iter_next_block(ray, light_rt_pos);
@@ -33,7 +33,7 @@ bool trace_light_vis(
     if (!ray_result_is_hit(result)) return false;
     if (floor(ray_result_position(result)) != floor(light_rt_pos)) return false;
 
-    tint_color = running_tint_color.a == 0.0f ? vec3(1f) : running_tint_color.rgb;
+    tint_color = running_tint_color.a == 0.0f ? vec3(1.0f) : running_tint_color.rgb;
 
     return true;
 }

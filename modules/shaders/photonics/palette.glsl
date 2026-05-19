@@ -22,7 +22,7 @@ int voxel_data_block_id(VoxelData voxel_data) {
 }
 
 vec4 voxel_data_albedo(VoxelData voxel_data) {
-    return vec4(ph_unpack_int_color(voxel_data.y)) / 255f;
+    return vec4(ph_unpack_int_color(voxel_data.y)) / 255.0f;
     //return unpackUnorm4x8(voxel_data.y);
 }
 

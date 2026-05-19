@@ -29,8 +29,8 @@ uniform sampler2D restir_normal_history;
 uniform sampler2D prev_restir_position_history;
 uniform sampler2D prev_restir_normal_history;
 
-float light_importance = 1f / light_list_size;
-const float MAX_RESERVOIR_SAMPLES = 20f * PH_RESTIR_INITIAL_SAMPLES;
+float light_importance = 1.0f / light_list_size;
+const float MAX_RESERVOIR_SAMPLES = 20.0f * PH_RESTIR_INITIAL_SAMPLES;
 
 struct LightSample {
     int index; // Index of the light
@@ -42,7 +42,7 @@ struct LightSample {
     float weight;
 };
 
-LightSample NULL_SAMPLE = LightSample(-1, vec3(0f), vec3(0f), vec3(0f), vec3(0f), 0f);
+LightSample NULL_SAMPLE = LightSample(-1, vec3(0.0f), vec3(0f), vec3(0f), vec3(0f), 0f);
 
 void light_sample_compute_weight(inout LightSample smple) {
     smple.weight = ph_luminance(smple.color);

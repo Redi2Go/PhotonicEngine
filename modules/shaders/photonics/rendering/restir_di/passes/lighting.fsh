@@ -37,7 +37,7 @@ void main() {
         reservoir_compute_weight(reservoir);
         lighting_out = vec3(reservoir.light.color * tint_color * light_transmittance * reservoir.weight);
     } else {
-        lighting_out = vec3(0f);
+        lighting_out = vec3(0.0f);
     }
 
 #ifdef PH_RESTIR_COMBINED_GI

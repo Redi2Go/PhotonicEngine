@@ -15,10 +15,10 @@ vec3 ph_compute_attenuation(
     float distance_squared = dot(to_light, to_light);
     float light_dist_inv = inversesqrt(distance_squared);
     vec3 light_dir = to_light * light_dist_inv;
-    if (dot(light_dir, geometry_normal) < 0.01f) return vec3(0f);
+    if (dot(light_dir, geometry_normal) < 0.01f) return vec3(0.0f);
 
-    float att = 1f / (distance_squared * light.falloff * light.attenuation.y + light.attenuation.x);
-    att *= clamp(dot(texture_normal, light_dir), 0f, 1f);
+    float att = 1.0f / (distance_squared * light.falloff * light.attenuation.y + light.attenuation.x);
+    att *= clamp(dot(texture_normal, light_dir), 0.0f, 1.0f);
 
     return att * light.color;
 }

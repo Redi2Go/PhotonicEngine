@@ -134,9 +134,9 @@ Light ray_result_light_data(RayResult hit) {
 }
 
 float ph_signed_nudge(float value) {
-    if (value <= 0f)
+    if (value <= 0.0f)
         return min(value, -0.0001f);
-    else if (value >= 0)
+    else if (value >= 0.0f)
         return max(value, 0.0001);
     else
         return value;

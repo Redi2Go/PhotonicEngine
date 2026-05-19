@@ -17,8 +17,8 @@ layout(location = 4) out vec4 lighting_variance_frag_out;
 
 void main() {
     if (SKIP_ACCUMULATION) {
-        lighting_frag_out = vec4(0f);
-        lighting_variance_frag_out = vec4(0f);
+        lighting_frag_out = vec4(0.0f);
+        lighting_variance_frag_out = vec4(0.0f);
 
         return;
     }
