@@ -119,6 +119,32 @@ public final class BlockLightInfo implements Comparable<BlockLightInfo> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+
+        return obj instanceof BlockLightInfo other &&
+                Float.compare(intensity, other.intensity) == 0 &&
+                Float.compare(radius, other.radius) == 0 &&
+                Float.compare(falloff, other.falloff) == 0
+                && isTraced == other.isTraced
+                && requestedTrace == other.requestedTrace
+                && color.equals(other.color);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = color.hashCode();
+
+        result = 31 * result + Float.hashCode(intensity);
+        result = 31 * result + Float.hashCode(radius);
+        result = 31 * result + Float.hashCode(falloff);
+        result = 31 * result + Boolean.hashCode(isTraced);
+        result = 31 * result + Boolean.hashCode(requestedTrace);
+
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "BlockLightInfo{" +
                 "predicate=" + predicate +

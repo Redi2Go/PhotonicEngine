@@ -4,6 +4,7 @@ import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
+import at.redi2go.photonics.core.config.lights.BlockLightInfo;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
@@ -22,7 +23,6 @@ import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockMo
 import at.redi2go.photonics.core.rendering.world.registry.objects.ObjectManager;
 import at.redi2go.photonics.core.rendering.world.registry.objects.WorldObject;
 import at.redi2go.photonics.core.rendering.world.registry.optimization.OptimizationService;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
@@ -102,7 +102,6 @@ public class WorldRegistry implements RenderingComponent {
     }
 
 
-
     public PaletteObject allocatePaletteWeak(PaletteEntry entry) {
         entry.computeHashCode();
 
@@ -122,6 +121,7 @@ public class WorldRegistry implements RenderingComponent {
     }
 
     public BlockHeader allocateBlockHeaderWeak(
+            BlockLightOwner blockLight,
             int[] tint,
             List<PaletteObject> weakPalette,
             BlockVoxel weakBlockVoxel,
@@ -129,9 +129,17 @@ public class WorldRegistry implements RenderingComponent {
             long tintHash
     ) {
         return cacheObjectWeak(
-                new BlockHeader(this, tint, weakPalette, weakBlockVoxel, voxelHash, tintHash),
+                new BlockHeader(this, blockLight, tint, weakPalette, weakBlockVoxel, voxelHash, tintHash),
                 e -> e,
                 BlockHeader::allocate
+        );
+    }
+
+    public BlockLightOwner allocateBlockLightWeak(BlockLightInfo lightInfo, int blockId) {
+        return cacheObjectWeak(
+                new BlockLightOwner(this, lightInfo, blockId),
+                e -> e,
+                BlockLightOwner::allocate
         );
     }
 
@@ -181,7 +189,7 @@ public class WorldRegistry implements RenderingComponent {
 
         CompletableFuture<@Nullable BlockModel> future = new CompletableFuture<>();
 
-        try(var lock = objectManager.acquireLock()) {
+        try (var lock = objectManager.acquireLock()) {
             if (meshState.shouldCache()) {
                 var resultFuture = blockModelCache.putIfAbsent(meshState, future);
                 if (resultFuture != null)
@@ -210,7 +218,7 @@ public class WorldRegistry implements RenderingComponent {
                             if (e != null) {
                                 future.completeExceptionally(e);
                             } else {
-                                var variant = template.createVariantWeak(tintInfo);
+                                var variant = template.createVariantWeak(blockState, tintInfo);
                                 variant.addMeshState(meshState);
 
                                 future.complete(variant);

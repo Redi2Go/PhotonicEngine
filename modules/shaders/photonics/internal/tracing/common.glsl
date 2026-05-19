@@ -3,6 +3,7 @@
 
 #include "/photonics/uniforms.glsl"
 #include "/photonics/palette.glsl"
+#include "/photonics/internal/light.glsl"
 #include "/photonics/utility/color.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
@@ -17,8 +18,22 @@ const uint PH_SIGN_BIT = 1 << 31;
 
 const ivec3 PH_WORLD_BOUNDS = ivec3(16 << (PH_LAST_INDEX << 2));
 
-#define RayResult uvec4
-const RayResult ph_ray_miss = uvec4(0);
+struct RayResult {
+    uint _x;
+    uint _y;
+    uint _z;
+
+    uint _data1;
+    uint _data2;
+};
+
+RayResult ph_ray_miss = RayResult(
+    0,
+    0,
+    0,
+    0,
+    0
+);
 
 const uint ph_ray_result_position_mask = 0x7fffffffu;
 
@@ -31,11 +46,17 @@ RayResult new_ray_result(
     vec3 position,
     VoxelNormal normal,
     uint palette_header_ptr,
+    uint light_ptr,
     bool transparent
 ) {
-    return uvec4(
-        floatBitsToUint(position) | ((uvec3(normal) & ph_ray_result_normal_mask) << ph_ray_result_normal_shift),
-        palette_header_ptr | (transparent ? PH_SIGN_BIT : 0)
+    uvec3 pos = floatBitsToUint(position) | ((uvec3(normal) & ph_ray_result_normal_mask) << ph_ray_result_normal_shift);
+
+    return RayResult(
+        pos.x,
+        pos.y,
+        pos.z,
+        palette_header_ptr | (transparent ? PH_SIGN_BIT : 0),
+        light_ptr
     );
 }
 
@@ -44,15 +65,15 @@ RayResult missed_ray_result() {
 }
 
 bool ray_result_is_hit(RayResult hit) {
-    return hit.w != 0;
+    return hit._data1 != 0;
 }
 
 vec3 ray_result_position(RayResult hit) {
-    return uintBitsToFloat(uvec3(hit.xyz) & ph_ray_result_position_mask);
+    return uintBitsToFloat(uvec3(hit._x, hit._y, hit._z) & ph_ray_result_position_mask);
 }
 
 VoxelNormal _ray_result_voxel_normal(RayResult hit) {
-    uvec3 normal_bits = (hit.xyz >> ph_ray_result_normal_shift) & ph_ray_result_normal_mask;
+    uvec3 normal_bits = (uvec3(hit._x, hit._y, hit._z) >> ph_ray_result_normal_shift) & ph_ray_result_normal_mask;
     return normal_bits.x | normal_bits.y | normal_bits.z;
 }
 
@@ -61,7 +82,7 @@ vec3 ray_result_normal(RayResult hit) {
 }
 
 bool ray_result_is_transparent(RayResult hit) {
-    return (hit.w & PH_SIGN_BIT) != 0;
+    return (hit._data1 & PH_SIGN_BIT) != 0;
 }
 
 
@@ -70,7 +91,7 @@ layout (std430) restrict readonly buffer ph_world_voxel_buffer {
 };
 
 VoxelData ray_result_voxel_data(RayResult hit) {
-    uint palette_ptr = hit.w & ~PH_SIGN_BIT;
+    uint palette_ptr = hit._data1 & ~PH_SIGN_BIT;
 
     uint tint = ph_world_buffer[palette_ptr];
     uint palette_entry = ph_world_buffer[palette_ptr + 1];
@@ -81,10 +102,36 @@ VoxelData ray_result_voxel_data(RayResult hit) {
     return voxel_data;
 }
 
+Light ray_result_light_data(RayResult hit) {
+    if (hit._data2 == 0) return new_invalid_light();
 
+    uint light_ptr = hit._data2;
 
+    uint light_type = ph_world_buffer[light_ptr];
+    uint block_id = ph_world_buffer[light_ptr + 1];
 
+    uvec4 color_full = uvec4(
+        ph_world_buffer[light_ptr + 2],
+        ph_world_buffer[light_ptr + 3],
+        ph_world_buffer[light_ptr + 4],
+        ph_world_buffer[light_ptr + 5]
+    );
 
+    uvec4 attenuation_full = uvec4(
+        ph_world_buffer[light_ptr + 6],
+        ph_world_buffer[light_ptr + 7],
+        ph_world_buffer[light_ptr + 8],
+        ph_world_buffer[light_ptr + 9]
+    );
+
+    return new_light_from_vec4(
+        vec4(ray_result_position(hit), uintBitsToFloat(block_id)),
+        uintBitsToFloat(color_full),
+        uintBitsToFloat(attenuation_full),
+        0, // index
+        int(light_type)
+    );
+}
 
 float ph_signed_nudge(float value) {
     if (value <= 0f)

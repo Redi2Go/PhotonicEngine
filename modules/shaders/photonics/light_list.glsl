@@ -25,7 +25,8 @@ Light light_list_get(int index) {
         ph_lights_array[index + 0],
         ph_lights_array[index + 1],
         ph_lights_array[index + 2],
-        real_index
+        real_index,
+        LIGHT_TYPE_TRACED
     );
 }
 

@@ -9,5 +9,7 @@ public interface WorldAllocator extends RenderingComponent {
 
     BlockHeaderMemory allocateBlockHeader(int paletteSize);
 
+    WorldLightMemory allocateWorldLight();
+
     void upload();
 }

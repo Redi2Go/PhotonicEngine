@@ -165,7 +165,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
             section.forEachBlock((blockChunkOffset, blockPos, block) -> {
                 var light = lightRegistry.get(block);
-                if (light == null) return;
+                if (light == null || !light.isTraced()) return;
 
                 if (!shouldCullLight(section, level, blockPos))
                     lights.add(

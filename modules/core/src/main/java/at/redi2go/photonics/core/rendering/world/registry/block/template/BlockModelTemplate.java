@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.registry.block.template;
 
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.collect.ConcurrentLong2ObjectMap;
 import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
@@ -38,6 +39,7 @@ public class BlockModelTemplate extends WorldObject<NoMemory> {
     }
 
     public BlockModelImpl createVariantWeak(
+            IBlockState blockState,
             TintBuilder.Result tint
     ) {
         return variants.computeIfAbsent(tint.hash(), (hash) -> new BlockModelImpl(
@@ -46,7 +48,7 @@ public class BlockModelTemplate extends WorldObject<NoMemory> {
                 hash,
                 parts.stream()
                         .map(e -> new BlockPartImpl(
-                                e.createVariantWeak(worldRegistry, tint),
+                                e.createVariantWeak(worldRegistry, blockState, tint),
                                 e
                         )).toList()
         ));

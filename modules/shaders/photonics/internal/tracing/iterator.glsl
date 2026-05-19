@@ -116,7 +116,6 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     uint[PH_WORLD_DEPTH + 1] entry_ptrs = uint[PH_WORLD_DEPTH + 1](0);
 
     uint block_header_ptr = 0;
-    uint block_palette_size = 0;
 
     ph_trace_depth = PH_LAST_INDEX;
     ph_trace_ipos = ivec3(ray.position);
@@ -146,6 +145,7 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
                     ray.position * ph_16_rcp,
                     ph_encode_voxel_normal(normal),
                     palette_header_ptr,
+                    ph_world_buffer[block_header_ptr + 1],
                     (ptr & 1u) == 1
                 );
 
@@ -157,6 +157,7 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
                         vec3(target),
                         0,
                         1,
+                        0,
                         false
                     );
 
@@ -166,12 +167,11 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
 
                 //Block header:
                 //ptr + 0 = block voxel ptr
-                //ptr + 1 = palette size
+                //ptr + 1 = light data ptr
 
                 block_header_ptr = ptr;
 
                 entry_ptrs[ph_trace_depth] = ph_world_buffer[block_header_ptr + 0];
-                block_palette_size = ph_world_buffer[block_header_ptr + 1];
             } else entry_ptrs[ph_trace_depth] = ptr;
 
             ph_trace_depth--;
