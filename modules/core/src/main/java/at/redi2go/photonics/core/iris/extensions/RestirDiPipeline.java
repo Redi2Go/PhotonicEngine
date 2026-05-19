@@ -50,7 +50,11 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
                 .addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer)
                 .build();
 
-        this.denoiserPasses = properties.getRestirDenoiserPasses();
+        // The hand always needs at least 7 denoiser passes.
+        int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
+        if (requestedDenoiserPasses != 0) {
+            denoiserPasses = Math.max(requestedDenoiserPasses, 7);
+        } else denoiserPasses = 0;
 
         if (denoiserPasses != 0) {
             this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())

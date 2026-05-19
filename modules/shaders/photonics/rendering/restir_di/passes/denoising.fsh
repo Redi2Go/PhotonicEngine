@@ -76,8 +76,12 @@ void main() {
 
         return;
     }
+    if (!frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES) {
+        color_out = texelFetch(prev_denoise_color, frag_tex_coord, 0).rgb;
+        variance_out = texelFetch(prev_denoise_variance, frag_tex_coord, 0).x;
 
-    if (atrous_iteration == -1) {
+        return;
+    } else if (atrous_iteration == -1) {
         vec3 color = texelFetch(restir_lighting, frag_tex_coord, 0).rgb;
         if (any(isnan(color))) color = vec3(0f); // TODO: Find cause of this nan
 
