@@ -27,20 +27,20 @@ void main() {
 
             if (reservoir_is_valid(reservoir)) {
                 reservoir_update(
-                temporal_reservoir,
-                reservoir.light,
-                reservoir.light.weight * reservoir.weight * reservoir.samples,
-                reservoir.samples
+                    temporal_reservoir,
+                    reservoir.light,
+                    reservoir.light.weight * reservoir.weight * reservoir.samples,
+                    reservoir.samples
                 );
             }
 
             previous_reservoir.samples = min(20.0f * reservoir.samples, previous_reservoir.samples);
 
             reservoir_update(
-            temporal_reservoir,
-            previous_reservoir.light,
-            previous_reservoir.light.weight * previous_reservoir.weight * previous_reservoir.samples,
-            previous_reservoir.samples
+                temporal_reservoir,
+                previous_reservoir.light,
+                previous_reservoir.light.weight * previous_reservoir.weight * previous_reservoir.samples,
+                previous_reservoir.samples
             );
 
             reservoir = temporal_reservoir;

@@ -76,6 +76,7 @@ void main() {
 
         return;
     }
+
     if (!frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES) {
         color_out = texelFetch(prev_denoise_color, frag_tex_coord, 0).rgb;
         variance_out = texelFetch(prev_denoise_variance, frag_tex_coord, 0).x;
