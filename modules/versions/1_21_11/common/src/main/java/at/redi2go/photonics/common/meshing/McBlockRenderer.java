@@ -80,6 +80,9 @@ public class McBlockRenderer {
             BlockState blockState,
             BlockAndTintGetter blockAndTintGetter
     ) {
+        if (blockState.getBlock() == Blocks.END_GATEWAY)
+            return EmptyMeshState.INSTANCE;
+
         int blockId = IrisUtil.getBlockId(blockState);
         FluidState fluidState = blockState.getFluidState();
 
@@ -94,7 +97,8 @@ public class McBlockRenderer {
         if (blockState.hasBlockEntity()) return new DynamicMeshState(blockId, fluidState, parts);
         if (WHITELISTED_FLUIDS.contains(fluidState.getType())) return new DynamicMeshState(blockId, fluidState, parts);
 
-        if (parts.isEmpty()) return EmptyMeshState.INSTANCE;
+        if (parts.isEmpty())
+            return EmptyMeshState.INSTANCE;
 
         var meshState = new SimpleMeshState(blockState.getBlock(), blockId, parts);
         meshState.computeHash(
