@@ -64,7 +64,7 @@ LightSample light_sample_new(Light light, vec3 sample_pos) {
         sample_pos,
         light.position,
         frag_geo_normal,
-        frag_tex_normal
+        frag_is_hand ? frag_geo_normal : frag_tex_normal
     );
 
     result.dir = normalize(result.dir);

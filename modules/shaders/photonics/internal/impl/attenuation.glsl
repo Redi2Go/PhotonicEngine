@@ -1,7 +1,5 @@
 #include "/photonics/modifiers/attenuation_modifier.glsl"
 
-#define ph_frag_is_hand false
-
 #ifdef PH_ATTENUATION_MODIFIER_DISABLED
 vec3 ph_compute_attenuation(
     Light light,
@@ -20,7 +18,7 @@ vec3 ph_compute_attenuation(
     if (dot(light_dir, geometry_normal) < 0.01f) return vec3(0f);
 
     float att = 1f / (distance_squared * light.falloff * light.attenuation.y + light.attenuation.x);
-    att *= clamp(dot(ph_frag_is_hand ? geometry_normal : texture_normal, light_dir), 0f, 1f);
+    att *= clamp(dot(texture_normal, light_dir), 0f, 1f);
 
     return att * light.color;
 }
