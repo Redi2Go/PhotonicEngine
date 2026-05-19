@@ -40,15 +40,26 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
                 .addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
                 .build());
 
-        this.restirRenderer = passFactory.newRenderer("restir")
-                .addPass("initial sampling", "/photonics/rendering/restir_di/passes/sampling.fsh", null, restirFramebuffer)
-                .addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer)
-                .addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer)
-                .addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer)
-                .addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer)
-                .addPass("lighting", "/photonics/rendering/restir_di/passes/lighting.fsh", null, restirFramebuffer)
-                .addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer)
-                .build();
+        var restirBuilder = passFactory.newRenderer("restir");
+
+        restirBuilder.addPass("initial sampling", "/photonics/rendering/restir_di/passes/sampling.fsh", null, restirFramebuffer);
+
+        if (properties.getRestirSpatialReuseSamples() != 0) {
+            restirBuilder.addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer);
+            restirBuilder.addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer);
+            restirBuilder.addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer);
+            restirBuilder.addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer);
+        }
+
+        restirBuilder.addPass("direct", "/photonics/rendering/restir_di/passes/direct.fsh", null, restirFramebuffer);
+
+        if (properties.useRestirCombinedGi()) {
+            restirBuilder.addPass("indirect", "/photonics/rendering/restir_di/passes/combined_indirect.fsh", null, restirFramebuffer);
+        }
+
+        restirBuilder.addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer);
+
+        this.restirRenderer = restirBuilder.build();
 
         // The hand always needs at least 7 denoiser passes.
         int requestedDenoiserPasses = properties.getRestirDenoiserPasses();

@@ -46,7 +46,7 @@ void sample_indirect(
     vec3 running_bounce_color = vec3(1.0f);
     vec3 sun_direction = get_sun_direction();
 
-    int bounce_count = 0;
+    int bounce_count = -1;
     bool is_tracing_sun = false;
 
     RayIterator ray;
@@ -57,11 +57,11 @@ void sample_indirect(
     );
     ray.iterations = PH_MAX_GI_ITERATIONS;
 
-    ray.position += ray.direction * 0.1f;
+    ray.position += ray.direction * 0.3f;
 
 
     RayResult last_hit = missed_ray_result();
-    while (ray.iterations != 0) {
+    while (ray.iterations != 0 && bounce_count < PH_MAX_GI_BOUNCES) {
         last_hit = ray_iter_next(ray);
 
         VoxelData voxel_data;
@@ -106,10 +106,8 @@ void sample_indirect(
             indirect_color += nee_color * running_bounce_color * running_light_transmittance;
         }
 
-        running_bounce_color *= albedo.rgb;
-
         bounce_count += 1;
-        if (ray.iterations == 0 || bounce_count > PH_MAX_GI_BOUNCES) return;
+        running_bounce_color *= albedo.rgb;
 
         sample_rt_pos = ray_result_position(last_hit);
         geo_normal = ray_result_normal(last_hit);
@@ -118,6 +116,6 @@ void sample_indirect(
             ray,
             next_direction(rnd_state, is_tracing_sun, sun_direction, sample_rt_pos, geo_normal)
         );
-        ray.position += ray.direction * 0.1f;
+        ray.position += ray.direction * 0.3f;
     }
 }
