@@ -40,10 +40,9 @@ void sample_indirect(
     inout uint rnd_state
 ) {
 
-    vec4 running_tint_color = vec4(0.0f);
-    float running_light_transmittance = 1.0f;
-
+    vec3 running_tint_color = vec3(1.0f);
     vec3 running_bounce_color = vec3(1.0f);
+
     vec3 sun_direction = get_sun_direction();
 
     int bounce_count = 0;
@@ -73,8 +72,7 @@ void sample_indirect(
             albedo = voxel_data_albedo(voxel_data);
 
             if (ray_result_is_transparent(last_hit)) {
-                running_light_transmittance *= 1.0f - albedo.a;
-                ray_iter_apply_transparency(running_tint_color, albedo);
+                running_tint_color *= albedo.rgb;
                 ray_iter_skip_block(ray);
 
                 continue;
@@ -100,10 +98,7 @@ void sample_indirect(
         }
 
         if (nee_color != vec3(0.0f)) {
-            if (running_tint_color != vec4(0.0))
-                nee_color *= running_tint_color.rgb;
-
-            indirect_color += nee_color * running_bounce_color * running_light_transmittance;
+            indirect_color += nee_color * running_bounce_color * running_tint_color;
         }
 
         running_bounce_color *= albedo.rgb;
