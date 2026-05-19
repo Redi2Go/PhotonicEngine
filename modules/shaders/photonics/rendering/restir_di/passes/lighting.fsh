@@ -3,6 +3,7 @@
 #include "/photonics/rendering/common.glsl"
 #include "/photonics/rendering/indirect_lighting.glsl"
 #include "/photonics/rendering/restir_di/restir.glsl"
+#include "/photonics/modifiers/restir_gi_modifier.glsl"
 
 layout(location = 2) out vec4 reservoir_out;
 layout(location = 3) out vec3 lighting_out;
@@ -41,7 +42,14 @@ void main() {
     }
 
 #ifdef PH_RESTIR_COMBINED_GI
-    sample_indirect(lighting_out, frag_rt_pos, frag_geo_normal, frag_rnd_state);
+    vec3 indirect_color;
+    sample_indirect(indirect_color, frag_rt_pos, frag_geo_normal, frag_rnd_state);
+
+#ifndef PH_RESTIR_GI_MODIFIER_DISABLED
+    modify_restir_gi(indirect_color);
+#endif
+
+    lighting_out+= indirect_color;
 #endif
 
     reservoir_out = reservoir_encode(reservoir);
