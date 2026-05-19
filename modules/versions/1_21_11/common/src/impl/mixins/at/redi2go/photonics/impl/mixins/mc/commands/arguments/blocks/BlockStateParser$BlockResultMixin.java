@@ -23,13 +23,6 @@ public abstract class BlockStateParser$BlockResultMixin implements IBlockStatePa
         return (IBlockState) shadow$blockState();
     }
 
-    @Shadow public abstract Map<Property<?>, Comparable<?>> shadow$properties();
-
-    @Override
-    public Map<IProperty<?>, Comparable<?>> properties() {
-        return (Map<IProperty<?>, Comparable<?>>) (Map<?, ?>) shadow$properties();
-    }
-
     @Shadow public abstract CompoundTag shadow$nbt();
 
     @Override
