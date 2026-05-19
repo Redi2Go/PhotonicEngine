@@ -159,20 +159,23 @@ subprojects {
                 addSources(project(corePath))
             }
 
-            named<RemapJarTask>("remapJar") {
-                archiveFileName = "$jarName-unshaded.jar"
-            }
-
-            named<RemapSourcesJarTask>("remapSourcesJar") {
-                archiveFileName = "$jarName-sources.jar"
-            }
-
             shadowJar {
-                archiveFileName = "$jarName.jar"
+                archiveFileName = "$jarName-shaded.jar"
                 configurations = listOf(project.configurations.getByName("shadow"))
 
 
                 from(impl.output)
+            }
+
+            named<RemapJarTask>("remapJar") {
+                archiveFileName = "$jarName.jar"
+
+                dependsOn(shadowJar)
+                inputFile = shadowJar.get().archiveFile;
+            }
+
+            named<RemapSourcesJarTask>("remapSourcesJar") {
+                archiveFileName = "$jarName-sources.jar"
             }
         }
     }
