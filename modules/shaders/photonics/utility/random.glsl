@@ -1,7 +1,7 @@
 #ifndef PH_RAND_UTILITY_INCLUDE
 #define PH_RAND_UTILITY_INCLUDE
 
-uint new_rand_state(vec2 frag, int frame, int seed) {
+uint ph_new_rand_state(vec2 frag, int frame, int seed) {
     return uint(
         uint(gl_FragCoord.x) * uint(1973) +
         uint(gl_FragCoord.y) * uint(9277) +
@@ -10,7 +10,7 @@ uint new_rand_state(vec2 frag, int frame, int seed) {
     ) | uint(1);
 }
 
-uint rand_next_uint(inout uint rand_state)
+uint ph_rand_next_uint(inout uint rand_state)
 {
     uint state = rand_state;
     rand_state = rand_state * 747796405u + 2891336453u;
@@ -18,24 +18,24 @@ uint rand_next_uint(inout uint rand_state)
     return (word >> 22u) ^ word;
 }
 
-float rand_next_float(inout uint rand_state) {
-    uint x = rand_next_uint(rand_state);
+float ph_rand_next_float(inout uint rand_state) {
+    uint x = ph_rand_next_uint(rand_state);
     rand_state = x;
 
     return float(x) * uintBitsToFloat(0x2f800000u);
 }
 
-int rand_next_int(inout uint rand_state, float min, float max) {
-    return int(min + (rand_next_float(rand_state) * (max - min)));
+int ph_rand_next_int(inout uint rand_state, float min, float max) {
+    return int(min + (ph_rand_next_float(rand_state) * (max - min)));
 }
 
 const float ph_light_jitter_radius = 1.0f / 8.0f;
 
-void rand_sample_position(inout uint rand_state, inout vec3 light_position, vec3 sample_pos) {
+void ph_rand_sample_position(inout uint rand_state, inout vec3 light_position, vec3 sample_pos) {
     light_position = floor(light_position) + 0.5f;
 
     // Fetch a blue noise value for this frame.
-    vec2 rnd_sample      = vec2(rand_next_float(rand_state), rand_next_float(rand_state));
+    vec2 rnd_sample      = vec2(ph_rand_next_float(rand_state), ph_rand_next_float(rand_state));
 
     vec3 sample_dir = light_position - sample_pos;
 
@@ -51,13 +51,13 @@ void rand_sample_position(inout uint rand_state, inout vec3 light_position, vec3
     light_position = light_position + disk_point.x * sample_tangent + disk_point.y * sample_bitangent;
 }
 
-vec3 rand_direction(inout uint state, vec3 normal)
+vec3 ph_rand_direction(inout uint state, vec3 normal)
 {
     const float c_pi = 3.14159265359f;
     const float c_twopi = 2.0f * c_pi;
 
-    float z = rand_next_float(state) * 2.0f - 1.0f;
-    float a = rand_next_float(state) * c_twopi;
+    float z = ph_rand_next_float(state) * 2.0f - 1.0f;
+    float a = ph_rand_next_float(state) * c_twopi;
     float r = sqrt(1.0f - z * z);
     float x = r * cos(a);
     float y = r * sin(a);

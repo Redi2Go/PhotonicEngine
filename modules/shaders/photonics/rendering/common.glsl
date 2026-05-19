@@ -37,7 +37,7 @@ bool prepare_frag(int rnd_seed) {
     frag_tex_coord = ivec2(gl_FragCoord.xy);
     if (!is_in_world_at()) return false;
 
-    frag_rnd_state = new_rand_state(gl_FragCoord.xy, frameCounter, 0);
+    frag_rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 0);
 
     frag_player_pos = load_player_position();
     frag_rt_pos = frag_player_pos + rt_camera_position;

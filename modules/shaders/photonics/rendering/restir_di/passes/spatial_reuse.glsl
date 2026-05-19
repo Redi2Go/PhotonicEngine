@@ -35,7 +35,7 @@ void main() {
 #endif
 
     for (int i = 0; i < reuse_samples; i++) {
-        vec2 offset = 2.0 * vec2(rand_next_float(frag_rnd_state), rand_next_float(frag_rnd_state)) - 1f;
+        vec2 offset = 2.0 * vec2(ph_rand_next_float(frag_rnd_state), ph_rand_next_float(frag_rnd_state)) - 1f;
         ivec2 texel = ivec2(frag_tex_coord + offset * ph_spatial_reuse_radius);
 
         if (!reservoir_reuse(temp_reservoir, texel)) continue;

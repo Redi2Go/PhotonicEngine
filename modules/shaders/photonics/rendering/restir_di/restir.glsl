@@ -84,7 +84,7 @@ LightSample light_sample_new(Light light, vec3 sample_pos) {
 
 void light_sample_trace_hit(inout LightSample smple, out vec3 tint_color, out float light_transmittance, bool jitter) {
     if (jitter) {
-        rand_sample_position(frag_rnd_state, smple.light_pos, smple.sample_pos);
+        ph_rand_sample_position(frag_rnd_state, smple.light_pos, smple.sample_pos);
         smple.dir = normalize(smple.light_pos - smple.sample_pos);
     }
 
@@ -131,7 +131,7 @@ bool reservoir_update(
     reservoir.weight_sum+= weight;
     reservoir.samples+= samples;
 
-    if (rand_next_float(frag_rnd_state) < (weight / reservoir.weight_sum)) {
+    if (ph_rand_next_float(frag_rnd_state) < (weight / reservoir.weight_sum)) {
         reservoir.light = smple;
 
         return true;
@@ -142,7 +142,7 @@ bool reservoir_update(
 
 void reservoir_init(inout Reservoir reservoir, vec3 rt_pos) {
     for (int i = 0; i < 32; i++) {
-        int rand_index = rand_next_int(frag_rnd_state, 0, light_list_size);
+        int rand_index = ph_rand_next_int(frag_rnd_state, 0, light_list_size);
         LightSample smple = light_sample_new(light_list_get(rand_index), rt_pos);
 
         reservoir_update(
