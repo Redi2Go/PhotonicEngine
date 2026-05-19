@@ -1,6 +1,7 @@
 #version 430
 
 #include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/indirect_lighting.glsl"
 #include "/photonics/rendering/restir_di/restir.glsl"
 
 layout(location = 2) out vec4 reservoir_out;
@@ -38,6 +39,10 @@ void main() {
     } else {
         lighting_out = vec3(0f);
     }
+
+#ifdef PH_RESTIR_COMBINED_GI
+    sample_indirect(lighting_out, frag_rt_pos, frag_geo_normal, frag_rnd_state);
+#endif
 
     reservoir_out = reservoir_encode(reservoir);
 }
