@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntIntBiConsumer;
 import org.joml.Vector3i;
 
 import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +51,24 @@ public class LightList extends AbstractList<TracedLightPosition> {
         }
 
         return mapping;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(lights);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LightList other)) return false;
+        if (other.size() != size()) return false;
+
+        for (int i = 0; i < size(); i++) {
+            if (!other.lights[i].equals(lights[i]))
+                return false;
+        }
+
+        return true;
     }
 
     public static class Mapping {

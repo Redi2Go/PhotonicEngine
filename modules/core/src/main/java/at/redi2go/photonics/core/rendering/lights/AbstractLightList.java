@@ -20,6 +20,10 @@ import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -28,6 +32,8 @@ import org.joml.Vector4f;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -46,6 +52,8 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     private final Supplier<WorldOrigin> worldOriginSupplier;
 
     private final SectionManager.SectionQueue sectionQueue;
+
+    private final Object2LongMap<Vector3i> sectionHashes = new Object2LongOpenHashMap<>();
 
     private final ListMultimap<Vector3i, TracedLightPosition> tracedLightPositions;
     private final UniformUpdater uniformUpdater = new UniformUpdater();
@@ -105,10 +113,8 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
                 needsUpload |= reloadLights();
 
                 var loadedSections = sectionQueue.drain(MAX_SECTIONS_PER_RUN);
-                if (!loadedSections.isEmpty()) {
+                if (!loadedSections.isEmpty() && addNewSections(loadedSections))
                     needsUpload = true;
-                    addNewSections(loadedSections);
-                }
 
                 if (needsUpload) {
                     var newLights = trimLights();
@@ -125,6 +131,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     private void unloadSections(List<Vector3i> unloadedSections) {
         for (var section : unloadedSections) {
             tracedLightPositions.removeAll(section);
+            sectionHashes.removeLong(section);
         }
     }
 
@@ -153,13 +160,18 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
         return true;
     }
 
-    private void addNewSections(List<SectionCopy> newSections) {
+    private boolean addNewSections(List<SectionCopy> newSections) {
         var level = Minecraft.getLevel();
-        if (level == null) return;
+        if (level == null) return false;
 
         var shaderPack = IShaderPack.getCurrentPack();
+        boolean changed = false;
 
         for (var section : newSections) {
+            var sectionHash = section.computeSectionHash();
+            if (sectionHashes.put(section.pos(), sectionHash) == sectionHash) continue;
+
+            changed = true;
             var lights = tracedLightPositions.get(section.pos());
             lights.clear();
 
@@ -181,6 +193,8 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
             if (lights.isEmpty())
                 tracedLightPositions.removeAll(section.pos());
         }
+
+        return changed;
     }
 
     private boolean shouldCullLight(
@@ -255,6 +269,8 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     protected abstract void prepareUpload();
 
     private void storeLights(LightList lights) throws InterruptedException {
+        if (Objects.equals(mostRecentLights, lights)) return;
+
         lock.lockInterruptibly();
 
         try {
