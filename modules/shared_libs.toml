@@ -12,6 +12,8 @@ fastutil = "8.5.18"
 dataFixerUpper = "1.0.19"
 brigadier = "1.0.18"
 
+fastutil-concurrent-wrapper = "0.2.3"
+
 [plugins]
 idea-gradle = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "idea-gradle" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
@@ -21,7 +23,9 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 joml = { module = "org.joml:joml", version.ref = "joml" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 semver = { module = "com.vdurmont:semver4j", version.ref = "semver" }
+
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
+fastutil-concurrent-wrapper = { module = "com.trivago:fastutil-concurrent-wrapper", version.ref = "fastutil-concurrent-wrapper" }
 
 dataFixerUpper = { module = "com.mojang:datafixerupper", version.ref = "dataFixerUpper" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }

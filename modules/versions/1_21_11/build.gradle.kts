@@ -11,6 +11,9 @@ architectury {
         fabricLoader(mainLibs.fabric.loader)
 
         shadow(sharedLibs.semver)
+        shadow(sharedLibs.fastutil.concurrent.wrapper) {
+            isTransitive = false
+        }
 
         runtimeOnly(mainLibs.antlr4.runtime)
         implementation(mainLibs.glsl.transformer)

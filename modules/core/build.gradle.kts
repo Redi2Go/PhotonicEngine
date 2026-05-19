@@ -26,12 +26,11 @@ dependencies {
     implementation(sharedLibs.fastutil)
     implementation(sharedLibs.dataFixerUpper)
     implementation(sharedLibs.brigadier)
+    implementation(sharedLibs.fastutil.concurrent.wrapper)
 
     implementation(projects.modules.api)
     implementation(coreLibs.jetrains.annotations)
     implementation(coreLibs.slf4j.api)
-
-    implementation(coreLibs.fastutil.concurrent.wrapper)
 }
 
 
