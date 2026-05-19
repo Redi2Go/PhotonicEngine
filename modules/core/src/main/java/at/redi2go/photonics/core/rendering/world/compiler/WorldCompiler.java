@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,7 +54,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
     private final Queue<WorldVoxel> uploadQueue;
     private final WorldVoxel rootVoxel;
-    private final Set<ChunkVoxel> chunks = new HashSet<>();
+    private final Set<ChunkVoxel> chunks = ConcurrentHashMap.newKeySet();
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
