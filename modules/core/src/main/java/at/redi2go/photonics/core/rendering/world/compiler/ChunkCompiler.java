@@ -199,7 +199,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 int remaining = (pending & Integer.MAX_VALUE) + 1;
                 if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
                     block.handle((result, t) -> {
-                        if (t != null)
+                        if (t != null && !(t instanceof IgnoredInterruptedException))
                             Photonics.LOGGER.error("An error was thrown while meshing block", t);
 
                         try {
