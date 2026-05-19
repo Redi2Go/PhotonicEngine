@@ -22,7 +22,7 @@ public class PhotonicsClientFabric implements ClientModInitializer {
             Photonics.init(
                     new Semver(photonics.get().getMetadata().getVersion().getFriendlyString()),
                     isDevEnv,
-                    isDevEnv ? photonics.get().getRootPaths().getFirst().resolve("assets") : Path.of(Photonics.class.getResource("/assets").toURI())
+                    photonics.get().getRootPaths().getFirst().resolve("assets")
             );
         } catch(URISyntaxException e) {
             throw new IllegalStateException(e);
