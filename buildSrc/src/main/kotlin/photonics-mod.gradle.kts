@@ -69,6 +69,7 @@ subprojects {
         val modulesPath = rootProject.childProjects["modules"]!!.projectDir
         val patchesPath = modulesPath.resolve("patches")
         val shadersPath = modulesPath.resolve("shaders")
+        val resourcesPath = modulesPath.resolve("resources")
 
         repositories {
             mavenCentral()
@@ -130,6 +131,10 @@ subprojects {
                     from(shadersPath) {
                         // This is under /shaders/photonics to make it easier to access with IPackPath
                         into("/assets/photonics/shaders")
+                    }
+
+                    from(resourcesPath) {
+                        into("/")
                     }
                 }
             }
