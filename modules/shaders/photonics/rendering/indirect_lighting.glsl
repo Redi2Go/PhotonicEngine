@@ -81,7 +81,7 @@ void sample_indirect(
             }
         }
 
-        vec3 nee_color;
+        vec3 nee_color = vec3(0.0f);
         if (ray_result_is_hit(last_hit) && ray_iter_is_in_bounds(ray)) {
             Light hit_light = ray_result_light_data(last_hit);
             if (light_is_valid(hit_light) && hit_light.type == LIGHT_TYPE_NOT_TRACED) {
@@ -92,8 +92,8 @@ void sample_indirect(
                     -geo_normal,
                     -geo_normal
                 ) * 3.0f;
-            } else nee_color = vec3(0.0f);
-        } else {
+            }
+        } else if (ray.iterations != 0) {
             albedo = vec4(1.0f);
             ray.iterations = 0;
             nee_color = is_tracing_sun ? get_sun_color() : get_sky_color() * 0.4f;
