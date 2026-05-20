@@ -90,14 +90,6 @@ subprojects {
         add("runtimeOnly", project(corePath))
 
         ext.set("proj", this@subprojects)
-
-        val fabricLoader = _fabricLoader
-
-        // Fabric loader is needed on common for mixin dependency.
-        // Why not just include the mixin dependency raw? I have no clue, ask architectury.
-        if (fabricLoader != null && (project.name == "common" || project.name == "fabric")) {
-            add("modImplementation", fabricLoader)
-        }
     }
 
     tasks {
