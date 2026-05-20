@@ -1,10 +1,7 @@
 [versions]
-# Check for latest at https://maven.architectury.dev/architectury-plugin/architectury-plugin.gradle.plugin
-architectury-gradle = "3.5-SNAPSHOT"
-
 # Check for latest at https://maven.architectury.dev/dev/architectury/loom/dev.architectury.loom.gradle.plugin
-architectury-loom = "1.14-SNAPSHOT"
+loom = "1.16.1"
 
 [plugins]
-architectury-gradle = { id = "architectury-plugin", version.ref = "architectury-gradle" }
-architectury-loom = { id = "dev.architectury.loom", version.ref = "architectury-loom" }
+loom-gradle = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
+loom-remap = { id = "net.fabricmc.fabric-loom-remap", version.ref = "loom" }

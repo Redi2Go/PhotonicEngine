@@ -1,3 +1,8 @@
+plugins {
+    id("net.fabricmc.fabric-loom-remap")
+    `photonics-fabric`
+}
+
 val mainLibs = libs12111
 
 dependencies {

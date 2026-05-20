@@ -37,8 +37,7 @@ dependencies {
     implementation(plugin(sharedLibs.plugins.idea.gradle))
     implementation(plugin(sharedLibs.plugins.shadow))
 
-    implementation(plugin(mcLibs.plugins.architectury.gradle))
-    implementation(plugin(mcLibs.plugins.architectury.loom))
+    implementation(plugin(mcLibs.plugins.loom.gradle))
 }
 
 fun plugin(plugin: Provider<PluginDependency>): Provider<String> =

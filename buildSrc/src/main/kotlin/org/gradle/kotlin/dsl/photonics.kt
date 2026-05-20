@@ -1,11 +1,11 @@
 package org.gradle.kotlin.dsl
 
-import dev.architectury.plugin.ArchitectPluginExtension
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.accessors.runtime.addConfiguredDependencyTo
 import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
@@ -13,8 +13,20 @@ import org.gradle.language.jvm.tasks.ProcessResources
 
 var DependencyHandlerScope._fabricLoader: Any? by Extensions
 
+interface PhotonicsExtension {
+    val _dependencyBlock: Property<Action<PhotonicsCommonDependenciesScope>>
+
+    val minecraft: Property<String>
+
+    val javaVersion: Property<JavaVersion>
+
+    fun commonDependencies(action: Action<PhotonicsCommonDependenciesScope>) {
+        this._dependencyBlock = action;
+    }
+}
+
 @JvmInline
-value class ArchitecturyCommonDependenciesScope(
+value class PhotonicsCommonDependenciesScope(
     private val backing: DependencyHandlerScope
 ) {
     val project: Project
@@ -70,12 +82,4 @@ value class ArchitecturyCommonDependenciesScope(
         add("testImplementation", dependencyNotation!!, configureAction)
     fun testRuntimeOnly(dependencyNotation: Any?, configureAction: Action<ExternalModuleDependency> = Action { }) =
         add("testRuntimeOnly", dependencyNotation!!, configureAction)
-}
-
-var ArchitectPluginExtension._dependencyBlock: Action<ArchitecturyCommonDependenciesScope>? by Extensions
-var ArchitectPluginExtension._resourceBlock: Action<ProcessResources>? by Extensions
-var ArchitectPluginExtension.javaVersion: JavaVersion? by Extensions
-
-fun ArchitectPluginExtension.commonDependencies(action: Action<ArchitecturyCommonDependenciesScope>) {
-    _dependencyBlock = action
 }
