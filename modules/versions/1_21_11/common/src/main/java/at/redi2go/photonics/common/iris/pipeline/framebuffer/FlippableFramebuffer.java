@@ -44,11 +44,6 @@ public class FlippableFramebuffer implements InternalIrisFramebuffer {
     }
 
     @Override
-    public void onFrameBegin() {
-        recalculateSizes();
-    }
-
-    @Override
     public void registerCustomTextures(ISamplerHolder samplers) {
         var writeAttachments = write.attachments();
 

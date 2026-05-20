@@ -26,6 +26,10 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
         this.attachments = ImmutableList.copyOf(attachments);
         this.sizeSupplier = sizeSupplier;
 
+        setDrawBuffers();
+    }
+
+    private void setDrawBuffers() {
         int[] drawBuffers = new int[attachments.size()];
         for (int i = 0; i < attachments.size(); i++) {
             addColorAttachment(i, ((IGlTexture) attachments.get(i).texture()).handle());
@@ -42,6 +46,12 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
     @Override
     public Vector2ic viewportSize() {
         return new Vector2i(currentSize);
+    }
+
+    @Override
+    public void bind() {
+        recalculateSizes();
+        super.bind();
     }
 
     @Override
@@ -65,11 +75,8 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
         currentSize.set(newSize);
         for (FramebufferAttachment attachment : attachments)
             attachment.resize(newSize);
-    }
 
-    @Override
-    public void onFrameBegin() {
-        recalculateSizes();
+        setDrawBuffers();
     }
 
     @Override
