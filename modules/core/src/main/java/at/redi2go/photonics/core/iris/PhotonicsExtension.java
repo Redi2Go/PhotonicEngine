@@ -10,6 +10,7 @@ import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
+import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 
 import java.util.function.Supplier;
@@ -23,14 +24,15 @@ public interface PhotonicsExtension extends RenderingComponent {
     static PhotonicsExtension create(
             PhotonicsProperties properties,
             Supplier<AtlasDownloader> atlasDownloader,
+            Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
             IrisPipelineFactory passFactory
     ) {
         if (!properties.isPhotonicsEnabled()) return new Disabled();
 
         return switch (properties.getLightingMode()) {
-            case OFF -> new OffPipeline(properties, atlasDownloader.get());
-            case BASIC -> new BasicPipeline(properties, atlasDownloader.get(), passFactory);
-            case RESTIR -> new RestirDiPipeline(properties, atlasDownloader.get(), passFactory);
+            case OFF -> new OffPipeline(properties, atlasDownloader.get(), handheldItemSupplierSupplier.get());
+            case BASIC -> new BasicPipeline(properties, atlasDownloader.get(), handheldItemSupplierSupplier.get(), passFactory);
+            case RESTIR -> new RestirDiPipeline(properties, atlasDownloader.get(), handheldItemSupplierSupplier.get(), passFactory);
         };
     }
 

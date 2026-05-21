@@ -2,6 +2,7 @@ package at.redi2go.photonics.common.mixins.iris.pipeline;
 
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
+import at.redi2go.photonics.common.HandheldLightSupplierImpl;
 import at.redi2go.photonics.common.iris.IrisPackLightsImpl;
 import at.redi2go.photonics.common.iris.pipeline.IrisPipelineFactoryImpl;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
@@ -67,6 +68,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         photonics = PhotonicsExtension.create(
                 properties,
                 AtlasDownloaderImpl::new,
+                HandheldLightSupplierImpl::new,
                 new IrisPipelineFactoryImpl(renderers)
         );
     }

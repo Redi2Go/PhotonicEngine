@@ -14,4 +14,12 @@ uniform vec3 world_min_voxel;
 uniform vec3 light_list_offset;
 uniform int light_list_size;
 
+uniform bool left_handed;
+
+uniform bool off_hand_has_light;
+uniform mat4 ph_off_hand_light;
+
+uniform bool main_hand_has_light;
+uniform mat4 ph_main_hand_light;
+
 #endif

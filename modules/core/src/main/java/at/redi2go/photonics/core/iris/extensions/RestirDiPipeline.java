@@ -9,6 +9,7 @@ import at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
+import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,18 +28,28 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
     public RestirDiPipeline(
             PhotonicsProperties properties,
             AtlasDownloader atlasDownloader,
+            HandheldItemSupplier handheldItemSupplier,
             IrisPipelineFactory passFactory
     ) {
-        super(properties, atlasDownloader);
+        super(properties, atlasDownloader, handheldItemSupplier);
 
-        this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("restir_position_history", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .addAttachment("restir_normal_history", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .addAttachment("restir_lighting", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .addAttachment("restir_lighting_variance", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                .build());
+        var restirFramebufferBuilder = passFactory.newFramebuffer(properties.getRenderScale());
+
+        restirFramebufferBuilder.addAttachment("restir_position_history", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_normal_history", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_lighting", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_lighting_variance", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+
+        if (properties.isHandheldLightEnabled()) {
+            restirFramebufferBuilder.addAttachment("restir_handheld", ITextureFormat.rgb16f(), AttachmentUsage.CREATE_SAMPLER);
+        }
+
+        this.restirFramebuffer = registerComponent(restirFramebufferBuilder.build());
+
+
+
 
         var restirBuilder = passFactory.newRenderer("restir");
 
@@ -55,6 +66,10 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
 
         if (properties.useRestirCombinedGi()) {
             restirBuilder.addPass("indirect", "/photonics/rendering/restir_di/passes/combined_indirect.fsh", null, restirFramebuffer);
+        }
+
+        if (properties.isHandheldLightEnabled()) {
+            restirBuilder.addPass("handheld", "/photonics/rendering/restir_di/passes/handheld.fsh", null, restirFramebuffer);
         }
 
         restirBuilder.addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer);

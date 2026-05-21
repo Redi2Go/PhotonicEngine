@@ -6,6 +6,8 @@ import at.redi2go.photonics.api.mc.world.level.ILevelReader;
 import at.redi2go.photonics.core.config.lights.color.LightColor;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;
 import org.jetbrains.annotations.NonNls;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
@@ -111,6 +113,17 @@ public final class BlockLightInfo implements Comparable<BlockLightInfo> {
                 new Vector4f(getColorAsVector(), intensity / 100f),
                 new Vector4f(getAttenuationAsVector(), falloff(), radiusInBlocks())
         };
+    }
+
+    public Matrix4fc toMatrix4(Vector3f position, int blockId) {
+        var arrayData = toVector4Array(position, blockId);
+
+        return new Matrix4f(
+            arrayData[0],
+            arrayData[1],
+            arrayData[2],
+            new Vector4f(0f)
+        );
     }
 
     @Override

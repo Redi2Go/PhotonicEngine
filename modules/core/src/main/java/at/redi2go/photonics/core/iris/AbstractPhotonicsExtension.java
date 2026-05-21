@@ -2,14 +2,17 @@ package at.redi2go.photonics.core.iris;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.api.shaders.LightingMode;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
+import at.redi2go.photonics.core.rendering.HandheldLightComponent;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.lights.BufferLightList;
+import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferPaletteTexture;
 import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
@@ -33,6 +36,7 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
     public AbstractPhotonicsExtension(
             PhotonicsProperties properties,
             AtlasDownloader atlasDownloader,
+            HandheldItemSupplier handheldItemSupplier,
             @Nullable RenderingComponent... components
     ) {
         this.properties = properties;
@@ -75,6 +79,14 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
                         worldCompiler::origin
                 )
         );
+
+        if (properties.getLightingMode() != LightingMode.OFF && properties.isHandheldLightEnabled())
+            registerComponent(
+                    new HandheldLightComponent(
+                            handheldItemSupplier,
+                            properties
+                    )
+            );
     }
 
     protected <T extends RenderingComponent> T registerComponent(T component) {

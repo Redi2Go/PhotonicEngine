@@ -63,6 +63,26 @@ Light new_light_from_vec4(
     #endif
 }
 
+Light get_main_hand_light() {
+    return new_light_from_vec4(
+        ph_main_hand_light[0],
+        ph_main_hand_light[1],
+        ph_main_hand_light[2],
+        -1,
+        LIGHT_TYPE_TRACED
+    );
+}
+
+Light get_off_hand_light() {
+    return new_light_from_vec4(
+        ph_off_hand_light[0],
+        ph_off_hand_light[1],
+        ph_off_hand_light[2],
+        -2,
+        LIGHT_TYPE_TRACED
+    );
+}
+
 Light new_invalid_light() {
     return Light(LIGHT_TYPE_INVALID, 0, 0, vec3(0.0f), vec3(0.0f), 0.0f, vec2(0.0f), 0.0f, 0.0f);
 }
