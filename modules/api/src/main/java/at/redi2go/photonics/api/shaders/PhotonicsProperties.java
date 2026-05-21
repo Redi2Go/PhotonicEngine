@@ -23,7 +23,7 @@ public interface PhotonicsProperties {
 
     boolean useSeparateHandheldRays();
     boolean DEFAULT_SEPARATE_HANDHELD_RAYS = false;
-    String SEPARATE_HANDHELD_RAYS_KEY = "photonics.separateHandheldRays";
+    String SEPARATE_HANDHELD_RAYS_KEY = "photonics.useSeparateHandheldRays";
 
     boolean isGiEnabled();
     boolean DEFAULT_IS_GI_ENABLED = true;
