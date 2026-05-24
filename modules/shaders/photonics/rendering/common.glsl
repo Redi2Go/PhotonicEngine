@@ -35,7 +35,7 @@ bool is_bad_angle(vec3 rt_pos, vec3 normal) {
 
 bool prepare_frag(int rnd_seed) {
     frag_tex_coord = ivec2(gl_FragCoord.xy);
-    if (!is_in_world_at()) return false;
+    if (!is_in_world()) return false;
 
     frag_rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 0);
 
