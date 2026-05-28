@@ -100,7 +100,7 @@ vec3 light_sample_at(
 ) {
     return ph_compute_attenuation(
         light,
-        sample_pos - source_pos,
+        source_pos - sample_pos,
         sample_pos,
         source_pos,
         geometry_normal,

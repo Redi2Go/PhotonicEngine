@@ -88,9 +88,9 @@ void sample_indirect(
                 nee_color = light_sample_at(
                     hit_light,
                     sample_rt_pos,
-                    ray_result_position(last_hit),
-                    -geo_normal,
-                    -geo_normal
+                    floor(ray_result_position(last_hit)) + 0.5f,
+                    geo_normal,
+                    geo_normal
                 ) * 3.0f;
             }
         } else if (ray.iterations != 0) {
