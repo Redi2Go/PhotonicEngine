@@ -40,7 +40,7 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
         restirFramebufferBuilder.addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
         restirFramebufferBuilder.addAttachment("restir_lighting", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
         restirFramebufferBuilder.addAttachment("restir_lighting_variance", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
+        restirFramebufferBuilder.addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.CREATE_SAMPLER);
 
         if (properties.isHandheldLightEnabled()) {
             restirFramebufferBuilder.addAttachment("restir_handheld", ITextureFormat.rgb16f(), AttachmentUsage.CREATE_SAMPLER);
