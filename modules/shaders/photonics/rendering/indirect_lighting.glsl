@@ -96,7 +96,7 @@ void sample_indirect(
         } else if (ray.iterations != 0) {
             albedo = vec4(1.0f);
             ray.iterations = 0;
-            nee_color = is_tracing_sun ? get_sun_color() * 4.0f : get_sky_color() * 2f;
+            nee_color = is_tracing_sun ? get_sun_color() * 4.0f : get_sky_color();;
         }
 
         if (nee_color != vec3(0.0f)) {
