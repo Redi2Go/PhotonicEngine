@@ -116,6 +116,6 @@ void sample_indirect(
             ray,
             next_direction(rnd_state, is_tracing_sun, sun_direction, sample_rt_pos, geo_normal)
         );
-        ray.position += ray.direction * 0.3f;
+        ray.position += ray.direction * 0.0001f;
     }
 }
