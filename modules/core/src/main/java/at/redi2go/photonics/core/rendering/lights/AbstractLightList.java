@@ -20,8 +20,6 @@ import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.joml.Vector3d;
@@ -32,7 +30,6 @@ import org.joml.Vector4f;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -183,7 +180,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
                     lights.add(
                             new TracedLightPosition(
                                     shaderPack.map(e -> e.getBlockId(block)).orElse(-1),
-                                    new Vector3d(blockPos.x(), blockPos.y(), blockPos.z()).add(0.5, 0.5, 0.5),
+                                    new Vector3d(blockPos.ph$x(), blockPos.ph$y(), blockPos.ph$z()).add(0.5, 0.5, 0.5),
                                     block,
                                     light
                             )
@@ -206,34 +203,34 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
         Vector3i sectionPos = blockOwner.pos();
 
         for (var offset : NEIGHBORS) {
-            var neighborBlockPos = blockPos.offset(offset);
+            var neighborBlockPos = blockPos.ph$offset(offset);
             var blockSectionPos = SectionCopy.getSectionCoord(neighborBlockPos);
 
             if (!blockSectionPos.equals(sectionPos)) {
                 if (blockSectionPos.equals(blockOwner.pos())) {
                     section = blockOwner;
                 } else {
-                    var chunkAccess = level.getChunkOrNull(sectionPos.x, sectionPos.z);
+                    var chunkAccess = level.ph$getChunkOrNull(sectionPos.x, sectionPos.z);
                     if (chunkAccess == null) continue;
 
-                    var newSection = chunkAccess.sections()[level.getSectionIndexFromSectionY(sectionPos.y)];
+                    var newSection = chunkAccess.ph$sections()[level.ph$getSectionIndexFromSectionY(sectionPos.y)];
                     if (newSection == null) continue;
 
                     section = newSection;
                 }
             }
 
-            if (section.hasOnlyAir()) continue;
+            if (section.ph$hasOnlyAir()) continue;
 
-            var blockState = section.getBlockState(
-                    neighborBlockPos.x() & 15,
-                    neighborBlockPos.y() & 15,
-                    neighborBlockPos.z() & 15
+            var blockState = section.ph$getBlockState(
+                    neighborBlockPos.ph$x() & 15,
+                    neighborBlockPos.ph$y() & 15,
+                    neighborBlockPos.ph$z() & 15
             );
 
-            if (blockState.is(BLOCK_LAVA)) continue;
+            if (blockState.ph$is(BLOCK_LAVA)) continue;
 
-            if (blockState.isAir() || !blockState.isSuffocating(level, blockPos) || !blockState.isCollisionShapeFullBlock(level, blockPos))
+            if (blockState.ph$isAir() || !blockState.ph$isSuffocating(level, blockPos) || !blockState.ph$isCollisionShapeFullBlock(level, blockPos))
                 return false;
         }
 

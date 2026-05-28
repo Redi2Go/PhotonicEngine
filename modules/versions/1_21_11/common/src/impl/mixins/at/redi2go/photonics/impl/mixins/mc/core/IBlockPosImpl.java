@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(value = IBlockPos.class, remap = false)
+@Mixin(value = IBlockPos.class)
 public interface IBlockPosImpl {
     @Overwrite
     static IBlockPos zero() {

@@ -6,11 +6,11 @@ import at.redi2go.photonics.api.mc.world.level.block.state.IStateDefinition;
 import java.util.Optional;
 
 public interface IBlock {
-    Id id();
+    Id ph$id();
 
-    IStateDefinition<IBlock, IBlockState> stateDefinition();
+    IStateDefinition<IBlock, IBlockState> ph$stateDefinition();
 
-    IBlockState defaultBlockState();
+    IBlockState ph$defaultBlockState();
 
     static Optional<IBlock> fromId(Id id) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN

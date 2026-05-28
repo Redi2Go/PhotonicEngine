@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
 
@@ -26,7 +25,7 @@ public class BufferWorldAllocator implements WorldAllocator {
     private final IGpuBufferHeap heap;
 
     public BufferWorldAllocator(long byteSize) {
-        this.heap = IRenderSystem.getDevice().createBufferHeap(
+        this.heap = IRenderSystem.getDevice().ph$createBufferHeap(
                 () -> "Photonics World Buffer",
                 byteSize,
                 0

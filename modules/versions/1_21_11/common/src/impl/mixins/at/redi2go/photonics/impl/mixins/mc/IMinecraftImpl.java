@@ -8,7 +8,7 @@ import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(value = Minecraft.class, remap = false)
+@Mixin(value = Minecraft.class)
 public interface IMinecraftImpl {
     @Overwrite
     static void schedule(Runnable runnable) {

@@ -5,15 +5,15 @@ import at.redi2go.photonics.api.Disposable;
 import java.nio.ByteBuffer;
 
 public interface IGpuBuffer extends Disposable {
-    long size();
+    long ph$size();
 
-    @BufferUsage int usage();
+    @BufferUsage int ph$usage();
 
-    boolean isClosed();
+    boolean ph$isClosed();
 
-    IGpuBufferSlice slice(long offset, long length);
+    IGpuBufferSlice ph$slice(long offset, long length);
 
     interface MappedView extends Disposable {
-        ByteBuffer data();
+        ByteBuffer ph$data();
     }
 }

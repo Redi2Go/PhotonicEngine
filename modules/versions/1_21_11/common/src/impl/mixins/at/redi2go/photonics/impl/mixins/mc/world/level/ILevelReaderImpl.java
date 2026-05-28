@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @SuppressWarnings("DataFlowIssue")
-@Mixin(value = ILevelReader.class, remap = false)
+@Mixin(value = ILevelReader.class)
 public interface ILevelReaderImpl {
     @Overwrite
     static ILevelReader createFacade(IBlockState blockState) {

@@ -33,12 +33,13 @@ import java.util.OptionalDouble;
 import java.util.function.Supplier;
 
 @Mixin(GlDevice.class)
-@Implements(@Interface(iface = IGpuDevice.class, prefix = "ph$"))
-public abstract class GlDeviceMixin implements GpuDevice, GpuDeviceImpl {
+public abstract class GlDeviceMixin implements GpuDevice, GpuDeviceImpl, IGpuDevice {
+    @Override
     public ICommandEncoder ph$createCommandEncoder() {
         return (ICommandEncoder) createCommandEncoder();
     }
 
+    @Override
     public IGpuSampler ph$createSampler(
             IAddressMode addressModeU,
             IAddressMode addressModeV,
@@ -57,6 +58,7 @@ public abstract class GlDeviceMixin implements GpuDevice, GpuDeviceImpl {
         );
     }
 
+    @Override
     public IGpuTexture2D ph$createTexture2D(
             @Nullable Supplier<String> label,
             int usage,
@@ -68,6 +70,7 @@ public abstract class GlDeviceMixin implements GpuDevice, GpuDeviceImpl {
         return new GlTexture2D(label, usage, textureFormat, new Vector2i(width, height), mipLevels);
     }
 
+    @Override
     public IGpuTexture3D ph$createTexture3D(
             @Nullable Supplier<String> label,
             int usage, ITextureFormat textureFormat,
@@ -78,12 +81,14 @@ public abstract class GlDeviceMixin implements GpuDevice, GpuDeviceImpl {
         return new GlTexture3D(label, usage, textureFormat, new Vector3i(width, height, depth), mipLevels);
     }
 
+    @Override
     public IGpuBuffer ph$createBuffer(@Nullable Supplier<String> label, long byteSize, int usage) {
         return (IGpuBuffer) createBuffer(label, usage, byteSize);
     }
 
+    @Override
     public IGpuBufferHeap ph$createBufferHeap(@Nullable Supplier<String> label, long byteSize, int usage) {
-        return new GlBufferHeap((IGpuDevice) this, label, byteSize, usage);
+        return new GlBufferHeap(this, label, byteSize, usage);
     }
 
     @Override

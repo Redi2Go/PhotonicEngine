@@ -2,7 +2,6 @@ package at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.debug;
 
 import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlDebugLabelExt;
 import at.redi2go.photonics.impl.mc.blaze3d.opengl.textures.IGlTexture;
-import com.mojang.blaze3d.opengl.GlDebugLabel;
 import net.minecraft.util.StringUtil;
 import org.lwjgl.opengl.KHRDebug;
 import org.spongepowered.asm.mixin.Final;
@@ -21,6 +20,6 @@ public abstract class GlCoreDebugLabelMixin {
     private int maxLabelLength;
 
     public void ph$applyLabel(IGlTexture texture) {
-        KHRDebug.glObjectLabel(GL_TEXTURE, texture.handle(), StringUtil.truncateStringIfNecessary(texture.label(), this.maxLabelLength, true));
+        KHRDebug.glObjectLabel(GL_TEXTURE, texture.handle(), StringUtil.truncateStringIfNecessary(texture.ph$label(), this.maxLabelLength, true));
     }
 }

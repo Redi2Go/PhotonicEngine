@@ -28,27 +28,27 @@ public record TagLightPredicate(
     public boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader) {
         // Copied from BlockPredicateArgument.TagPredicate
 
-        final IBlockState state = levelReader.getBlockState(pos);
-        if (!state.is(block())) return false;
+        final IBlockState state = levelReader.ph$getBlockState(pos);
+        if (!state.ph$is(block())) return false;
 
         for (Map.Entry<String, String> entry : vagueProperties.entrySet()) {
-            final IProperty<?> property = block().stateDefinition().getProperty(entry.getKey());
+            final IProperty<?> property = block().ph$stateDefinition().ph$getProperty(entry.getKey());
             if (property == null) return false;
 
-            final var value = property.getValue(entry.getValue()).orElse(null);
+            final var value = property.ph$getValue(entry.getValue()).orElse(null);
             if (value == null) return false;
 
-            if (!value.equals(state.getValue(property))) return false;
+            if (!value.equals(state.ph$getValue(property))) return false;
         }
 
         if (nbt == null) return true;
 
-        final IBlockEntity blockEntity = levelReader.getBlockEntity(pos);
+        final IBlockEntity blockEntity = levelReader.ph$getBlockEntity(pos);
         if (blockEntity == null) return false;
 
         return ICompoundTag.isEqual(
                 nbt,
-                blockEntity.saveWithFullMetadata(levelReader.registryAccess())
+                blockEntity.ph$saveWithFullMetadata(levelReader.ph$registryAccess())
         );
     }
 }

@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import java.nio.file.Path;
 
-@Mixin(value = ModLoader.class, remap = false)
+@Mixin(value = ModLoader.class)
 public interface IModLoaderImpl {
     @Overwrite
     static Path getGameDir() {

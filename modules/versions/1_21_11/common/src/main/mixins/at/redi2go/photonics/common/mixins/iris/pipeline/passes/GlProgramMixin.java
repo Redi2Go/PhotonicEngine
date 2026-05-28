@@ -9,11 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GlProgram.class)
 public abstract class GlProgramMixin {
-    @Inject(
-            method = "bind",
-            at = @At("TAIL"),
-            remap = false
-    )
+    @Inject(method = "bind", at = @At("TAIL"))
     public void applyTail(CallbackInfo ci) {
         IrisUtil.bindBuffers(((GlProgram<?>) (Object) this).handle());
     }

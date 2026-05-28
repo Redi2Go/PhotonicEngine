@@ -23,9 +23,9 @@ public class WorldOrigin extends Vector3d {
 
     public Vector3d applyOffset(IBlockPos pos) {
         return new Vector3d(
-                (double) pos.x() - x,
-                (double) pos.y() - y,
-                (double) pos.z() - z
+                (double) pos.ph$x() - x,
+                (double) pos.ph$y() - y,
+                (double) pos.ph$z() - z
         );
     }
 

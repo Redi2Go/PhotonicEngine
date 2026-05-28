@@ -31,7 +31,7 @@ public class BufferLightList extends AbstractLightList {
         super(sectionManager, maxLights, worldOriginSupplier);
 
         this.listHeap = IRenderSystem.getDevice()
-                .createBufferHeap(
+                .ph$createBufferHeap(
                         () -> "Photonics Light List",
                         (long) maxLights * LIGHT_BYTE_SIZE,
                         0
@@ -41,7 +41,7 @@ public class BufferLightList extends AbstractLightList {
 
 
         this.mappingHeap = IRenderSystem.getDevice()
-                .createBufferHeap(
+                .ph$createBufferHeap(
                         () -> "Photonics Light Mapping",
                         (long) maxLights * 4,
                         0

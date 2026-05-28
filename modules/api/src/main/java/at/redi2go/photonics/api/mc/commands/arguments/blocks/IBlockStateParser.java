@@ -14,19 +14,19 @@ import java.util.Map;
 
 public interface IBlockStateParser {
     interface BlockResult {
-        IBlockState blockState();
+        IBlockState ph$blockState();
 
-        Map<IProperty<?>, Comparable<?>> properties();
+        Map<IProperty<?>, Comparable<?>> ph$properties();
 
-        @Nullable ICompoundTag nbt();
+        @Nullable ICompoundTag ph$nbt();
     }
 
     interface TagResult {
-        IHolderSet<IBlock> tag();
+        IHolderSet<IBlock> ph$tag();
 
-        Map<String, String> vagueProperties();
+        Map<String, String> ph$vagueProperties();
 
-        @Nullable ICompoundTag nbt();
+        @Nullable ICompoundTag ph$nbt();
     }
 
     static Either<BlockResult, TagResult> parse(

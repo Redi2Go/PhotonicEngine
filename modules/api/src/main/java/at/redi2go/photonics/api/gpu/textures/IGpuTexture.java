@@ -3,29 +3,29 @@ package at.redi2go.photonics.api.gpu.textures;
 import at.redi2go.photonics.api.Disposable;
 
 public sealed interface IGpuTexture<D> extends Disposable permits IGpuTexture2D, IGpuTexture3D {
-    String label();
+    String ph$label();
 
-    @TextureUsage int usage();
+    @TextureUsage int ph$usage();
 
-    int mipLevels();
+    int ph$mipLevels();
 
-    ITextureFormat format();
+    ITextureFormat ph$format();
 
-    D size(int mipLevel);
+    D ph$size(int mipLevel);
 
-    default D size() {
-        return size(0);
+    default D ph$size() {
+        return ph$size(0);
     }
 
-    void resize(D newSize);
+    void ph$resize(D newSize);
 
     default WithSampler<D> withSampler(IGpuSampler sampler) {
-        if (isClosed()) throw new IllegalStateException("closed");
+        if (ph$isClosed()) throw new IllegalStateException("closed");
 
         return new WithSampler<>(this, sampler);
     }
 
-    boolean isClosed();
+    boolean ph$isClosed();
 
     record WithSampler<D>(IGpuTexture<D> texture, IGpuSampler sampler) {
 

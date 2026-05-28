@@ -6,6 +6,8 @@ import at.redi2go.photonics.api.mc.world.level.block.IBlockEntity;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -16,7 +18,7 @@ public abstract class BlockEntityMixin implements IBlockEntity {
     public abstract CompoundTag saveWithFullMetadata(HolderLookup.Provider provider);
 
     @Override
-    public ICompoundTag saveWithFullMetadata(IHolderLookup.Provider provider) {
+    public ICompoundTag ph$saveWithFullMetadata(IHolderLookup.Provider provider) {
         return (ICompoundTag) (Object) saveWithFullMetadata((HolderLookup.Provider) provider);
     }
 }

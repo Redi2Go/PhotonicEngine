@@ -17,16 +17,16 @@ public record BasicLightPredicate(
 
     @Override
     public boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader) {
-        return levelReader.getBlockState(pos).is(this.block);
+        return levelReader.ph$getBlockState(pos).ph$is(this.block);
     }
 
     @SuppressWarnings("DataFlowIssue") // nbt is immutable
     public static boolean isBasic(IBlockStateParser.BlockResult blockResult) {
-        return blockResult.properties().isEmpty() && (blockResult.nbt() == null || blockResult.nbt().isEmpty());
+        return blockResult.ph$properties().isEmpty() && (blockResult.ph$nbt() == null || blockResult.ph$nbt().ph$isEmpty());
     }
 
     @SuppressWarnings("DataFlowIssue") // nbt is immutable
     public static boolean isBasic(IBlockStateParser.TagResult tagResult) {
-        return tagResult.vagueProperties().isEmpty() && (tagResult.nbt() == null || tagResult.nbt().isEmpty());
+        return tagResult.ph$vagueProperties().isEmpty() && (tagResult.ph$nbt() == null || tagResult.ph$nbt().ph$isEmpty());
     }
 }

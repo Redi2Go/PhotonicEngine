@@ -8,24 +8,38 @@ import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.core.HolderSet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Map;
+
 @SuppressWarnings("unchecked")
 @Mixin(BlockStateParser.TagResult.class)
-public abstract class BlockStateParser$TagResultMixin implements IBlockStateParser.TagResult {
-    @Shadow public abstract HolderSet<Block> shadow$tag();
+public abstract class BlockStateParser$TagResultMixin implements IBlockStateParser.TagResult  {
+    @Shadow
+    public abstract HolderSet<Block> tag();
+
+    @Shadow
+    public abstract Map<String, String> vagueProperties();
+
+    @Shadow
+    public abstract @Nullable CompoundTag nbt();
 
     @Override
-    public IHolderSet<IBlock> tag() {
-        return (IHolderSet<IBlock>) (Object) shadow$tag();
+    public IHolderSet<IBlock> ph$tag() {
+        return (IHolderSet) tag();
     }
 
-    @Shadow public abstract CompoundTag shadow$nbt();
+    @Override
+    public Map<String, String> ph$vagueProperties() {
+        return vagueProperties();
+    }
 
     @Override
-    public @Nullable ICompoundTag nbt() {
-        return (ICompoundTag) (Object) shadow$nbt();
+    public @Nullable ICompoundTag ph$nbt() {
+        return (ICompoundTag) (Object) nbt();
     }
 }

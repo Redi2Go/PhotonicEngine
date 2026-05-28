@@ -20,7 +20,7 @@ public class BufferPaletteTexture implements PaletteTexture {
             int width,
             int height
     ) {
-        heap = IRenderSystem.getDevice().createBufferHeap(
+        heap = IRenderSystem.getDevice().ph$createBufferHeap(
                 () -> "Palette Texture",
                 width * height * ENTRY_BYTE_SIZE,
                 0

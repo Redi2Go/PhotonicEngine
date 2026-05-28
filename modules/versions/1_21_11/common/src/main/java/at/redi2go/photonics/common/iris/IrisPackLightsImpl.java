@@ -182,7 +182,7 @@ public class IrisPackLightsImpl extends AbstractIrisPackLights {
 
         @Override
         public boolean test(IBlockPos pos, ILevelReader levelReader) {
-            final BlockState state = (BlockState) levelReader.getBlockState(pos);
+            final BlockState state = (BlockState) levelReader.ph$getBlockState(pos);
             if (!state.is(mcBlock)) return false;
 
             for (Map.Entry<String, String> entry : vagueProperties.entrySet()) {

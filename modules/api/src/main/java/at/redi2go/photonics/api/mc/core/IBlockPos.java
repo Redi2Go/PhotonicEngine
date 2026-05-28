@@ -4,14 +4,14 @@ import org.joml.Vector3fc;
 import org.joml.Vector3i;
 
 public interface IBlockPos {
-    int x();
-    int y();
-    int z();
+    int ph$x();
+    int ph$y();
+    int ph$z();
 
-    IBlockPos offset(int x, int y, int z);
+    IBlockPos ph$offset(int x, int y, int z);
 
-    default IBlockPos offset(Vector3i offset) {
-        return offset(offset.x(), offset.y(), offset.z());
+    default IBlockPos ph$offset(Vector3i offset) {
+        return ph$offset(offset.x(), offset.y(), offset.z());
     }
 
     static IBlockPos zero() {

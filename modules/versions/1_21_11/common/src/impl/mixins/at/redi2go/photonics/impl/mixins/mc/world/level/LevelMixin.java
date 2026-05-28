@@ -6,6 +6,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -15,7 +17,7 @@ public abstract class LevelMixin implements ILevel {
     public abstract @Nullable ChunkAccess getChunk(int i, int j, ChunkStatus chunkStatus, boolean bl);
 
     @Override
-    public @Nullable IChunkAccess getChunkOrNull(int x, int y) {
+    public @Nullable IChunkAccess ph$getChunkOrNull(int x, int y) {
         return (IChunkAccess) getChunk(x, y, ChunkStatus.FULL, false);
     }
 }

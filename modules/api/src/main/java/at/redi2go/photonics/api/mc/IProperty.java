@@ -3,5 +3,5 @@ package at.redi2go.photonics.api.mc;
 import java.util.Optional;
 
 public interface IProperty<T extends Comparable<T>> {
-    Optional<T> getValue(String name);
+    Optional<T> ph$getValue(String name);
 }

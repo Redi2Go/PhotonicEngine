@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
@@ -27,7 +25,7 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
             long byteSize,
             @BufferUsage int usage
     ) {
-        this.gpuBuffer = device.createBuffer(label, byteSize, usage);
+        this.gpuBuffer = device.ph$createBuffer(label, byteSize, usage);
         this.buffer = ByteBuffer.allocateDirect(Math.toIntExact(byteSize))
                 .order(ByteOrder.nativeOrder());
     }
@@ -38,7 +36,7 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
 
     @Override
     public long capacity() {
-        return gpuBuffer.size();
+        return gpuBuffer.ph$size();
     }
 
     @Nullable
@@ -60,11 +58,11 @@ public class DefaultGpuBufferHeap extends AbstractGpuBufferHeap {
     @Override
     public void upload() {
         var regionsToUpload = Region.takeFrom(uploadQueue);
-        ICommandEncoder encoder = IRenderSystem.getDevice().createCommandEncoder();
+        ICommandEncoder encoder = IRenderSystem.getDevice().ph$createCommandEncoder();
 
         for (var region : regionsToUpload) {
-            encoder.writeToBuffer(
-                    gpuBuffer.slice(region.begin(), region.length()),
+            encoder.ph$writeToBuffer(
+                    gpuBuffer.ph$slice(region.begin(), region.length()),
                     buffer.slice((int) region.begin(), (int) region.length())
             );
         }

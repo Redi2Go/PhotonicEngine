@@ -37,7 +37,7 @@ public class GlBufferHeap extends AbstractGpuBufferHeap {
             long byteSize,
             @BufferUsage int usage
     ) {
-        this.gpuBuffer = device.createBuffer(label, byteSize, usage | BufferUsage.MAP_WRITE | NO_PERSISTENCE_MAPPING);
+        this.gpuBuffer = device.ph$createBuffer(label, byteSize, usage | BufferUsage.MAP_WRITE | NO_PERSISTENCE_MAPPING);
         this.buffer = ByteBuffer.allocateDirect(Math.toIntExact(byteSize))
                 .order(ByteOrder.nativeOrder());
 
@@ -50,7 +50,7 @@ public class GlBufferHeap extends AbstractGpuBufferHeap {
 
     @Override
     public long capacity() {
-        return gpuBuffer.size();
+        return gpuBuffer.ph$size();
     }
 
     @Nullable

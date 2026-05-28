@@ -82,8 +82,8 @@ public interface BlockMesher<T extends BlockMeshState> {
         }
 
         public Optional<BlockMesher<?>> get(IBlock block) {
-            return Optional.<BlockMesher<?>>ofNullable(blockRegistry.get(block.id()))
-                    .or(() -> Optional.ofNullable(namespaceRegistry.get(block.id().namespace())))
+            return Optional.<BlockMesher<?>>ofNullable(blockRegistry.get(block.ph$id()))
+                    .or(() -> Optional.ofNullable(namespaceRegistry.get(block.ph$id().ph$namespace())))
                     .or(() -> Optional.ofNullable(defaultMesher));
         }
     }

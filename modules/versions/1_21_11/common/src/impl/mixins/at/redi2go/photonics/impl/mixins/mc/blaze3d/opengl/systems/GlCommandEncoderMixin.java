@@ -28,8 +28,7 @@ import org.spongepowered.asm.mixin.Unique;
 import java.nio.ByteBuffer;
 
 @Mixin(GlCommandEncoder.class)
-@Implements(@Interface(iface = ICommandEncoder.class, prefix = "ph$"))
-public abstract class GlCommandEncoderMixin implements CommandEncoder {
+public abstract class GlCommandEncoderMixin implements CommandEncoder, ICommandEncoder {
     @Shadow
     private boolean inRenderPass;
 
@@ -47,6 +46,7 @@ public abstract class GlCommandEncoderMixin implements CommandEncoder {
             throw new IllegalStateException("Close the existing render pass before creating a new one!");
     }
 
+    @Override
     public void ph$clearColorTexture(IGpuTexture<?> gpuTexture, Vector4fc clearColor) {
         checkNotInRenderPass();
 
@@ -59,26 +59,32 @@ public abstract class GlCommandEncoderMixin implements CommandEncoder {
         GlStateManager._glBindFramebuffer(36160, 0);
     }
 
+    @Override
     public void ph$writeToBuffer(IGpuBuffer buffer, ByteBuffer byteBuffer) {
         writeToBuffer(((GpuBuffer) buffer).slice(), byteBuffer);
     }
 
+    @Override
     public void ph$writeToBuffer(IGpuBufferSlice slice, ByteBuffer byteBuffer) {
         writeToBuffer((GpuBufferSlice) (Object) slice, byteBuffer);
     }
 
+    @Override
     public IGpuBuffer.MappedView ph$mapBuffer(IGpuBuffer buffer, boolean readable, boolean writeable) {
         return (IGpuBuffer.MappedView) mapBuffer((GpuBuffer) buffer, readable, writeable);
     }
 
+    @Override
     public IGpuBuffer.MappedView ph$mapBuffer(IGpuBufferSlice bufferSlice, boolean readable, boolean writeable) {
         return (IGpuBuffer.MappedView) mapBuffer((GpuBufferSlice) (Object) bufferSlice, readable, writeable);
     }
 
+    @Override
     public void ph$copyToBuffer(IGpuBufferSlice slice1, IGpuBufferSlice slice2) {
         copyToBuffer((GpuBufferSlice) (Object) slice1, (GpuBufferSlice) (Object) slice2);
     }
 
+    @Override
     public void ph$writeToTexture(
             IGpuTexture2D texture,
             ByteBuffer data,
@@ -88,6 +94,7 @@ public abstract class GlCommandEncoderMixin implements CommandEncoder {
         throw new NotImplementedException("TODO");
     }
 
+    @Override
     public void ph$writeToTexture(IGpuTexture3D texture, ByteBuffer data, Vector3ic offset, Vector3ic size) {
         throw new NotImplementedException("TODO");
     }

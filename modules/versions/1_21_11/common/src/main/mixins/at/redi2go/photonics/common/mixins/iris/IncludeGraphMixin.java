@@ -68,7 +68,7 @@ public abstract class IncludeGraphMixin {
         var result = patcher.readShaderFile(
                 packPath,
                 p -> {
-                    var fsPath = p.resolved(root);
+                    var fsPath = p.ph$resolved(root);
                     if (!Files.exists(fsPath)) return null;
 
                     return original.call(fsPath);
@@ -76,7 +76,7 @@ public abstract class IncludeGraphMixin {
         );
 
         if (result == null)
-            throw new FileNotFoundException(packPath.pathString());
+            throw new FileNotFoundException(packPath.ph$pathString());
 
         return result;
     }

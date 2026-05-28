@@ -34,7 +34,7 @@ public class LightRegistry {
     }
 
     public @Nullable BlockLightInfo get(IBlockPos pos, ILevelReader level) {
-        final List<BlockLightInfo> values = lights.get(level.getBlockState(pos).block());
+        final List<BlockLightInfo> values = lights.get(level.ph$getBlockState(pos).ph$block());
         for (var light : values) {
             if (light.intensity() == 0f) return null;
             if (light.emitsLight(pos, level)) return light;
@@ -48,7 +48,7 @@ public class LightRegistry {
     }
 
     public @Nullable BlockLightInfo getDefault(IBlock block) {
-        return get(block.defaultBlockState());
+        return get(block.ph$defaultBlockState());
     }
 
     /**

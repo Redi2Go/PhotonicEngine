@@ -52,7 +52,7 @@ public interface LightPredicate extends Comparable<LightPredicate> {
 
     private static List<LightPredicate> fromBlockResult(int priority, IBlockStateParser.BlockResult blockResult) {
         if (BasicLightPredicate.isBasic(blockResult) && priority == DEFAULT_PRIORITY) {
-            return List.of(new BasicLightPredicate(blockResult.blockState().block(), priority));
+            return List.of(new BasicLightPredicate(blockResult.ph$blockState().ph$block(), priority));
         }
 
         final int adjustedPriority;
@@ -64,9 +64,9 @@ public interface LightPredicate extends Comparable<LightPredicate> {
 
         return List.of(
                 new LightPredicateImpl(
-                        blockResult.blockState(),
-                        List.copyOf(blockResult.properties().keySet()),
-                        blockResult.nbt(),
+                        blockResult.ph$blockState(),
+                        List.copyOf(blockResult.ph$properties().keySet()),
+                        blockResult.ph$nbt(),
                         adjustedPriority
                 )
         );
@@ -74,9 +74,9 @@ public interface LightPredicate extends Comparable<LightPredicate> {
 
     private static List<LightPredicate> fromTagResult(int priority, IBlockStateParser.TagResult tagResult) {
         if (BasicLightPredicate.isBasic(tagResult) && priority == DEFAULT_PRIORITY) {
-            return tagResult.tag()
-                    .stream()
-                    .map(holder -> new BasicLightPredicate(holder.value(), priority))
+            return tagResult.ph$tag()
+                    .ph$stream()
+                    .map(holder -> new BasicLightPredicate(holder.ph$value(), priority))
                     .collect(Collectors.toUnmodifiableList());
         }
 
@@ -87,12 +87,12 @@ public interface LightPredicate extends Comparable<LightPredicate> {
         else
             adjustedPriority = priority;
 
-        return tagResult.tag()
-                .stream()
+        return tagResult.ph$tag()
+                .ph$stream()
                 .map(holder -> new TagLightPredicate(
-                        holder.value(),
-                        tagResult.nbt(),
-                        tagResult.vagueProperties(),
+                        holder.ph$value(),
+                        tagResult.ph$nbt(),
+                        tagResult.ph$vagueProperties(),
                         adjustedPriority))
                 .collect(Collectors.toUnmodifiableList());
     }

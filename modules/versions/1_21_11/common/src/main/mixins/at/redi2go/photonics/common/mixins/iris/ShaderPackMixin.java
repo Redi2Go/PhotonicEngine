@@ -187,8 +187,7 @@ public abstract class ShaderPackMixin implements IShaderPack {
                     value = "INVOKE",
                     target = "Lnet/irisshaders/iris/shaderpack/preprocessor/JcppProcessor;glslPreprocessSource(Ljava/lang/String;Ljava/lang/Iterable;)Ljava/lang/String;",
                     shift = At.Shift.BEFORE
-            ),
-            remap = false
+            )
     )
     private static void dimensionDefinesPre(List disabledPrograms, IncludeProcessor includeProcessor, Iterable finalEnvironmentDefines1, AbsolutePackPath path, CallbackInfoReturnable<String> cir) {
         isPhotonicsSource = path.getPathString().contains("photonics");
@@ -199,8 +198,7 @@ public abstract class ShaderPackMixin implements IShaderPack {
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/irisshaders/iris/shaderpack/preprocessor/JcppProcessor;glslPreprocessSource(Ljava/lang/String;Ljava/lang/Iterable;)Ljava/lang/String;"
-            ),
-            remap = false
+            )
     )
     private static void dimensionDefines(
             Args args

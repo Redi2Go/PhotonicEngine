@@ -123,7 +123,7 @@ public class LightGroup {
             int priority
     ) {
         final var block = predicate.block();
-        final var blockString = block.id().toString();
+        final var blockString = block.ph$id().toString();
 
         Objects.requireNonNull(color, "no light color for" + blockString);
         Objects.requireNonNull(intensity, "no intensity for" + blockString);

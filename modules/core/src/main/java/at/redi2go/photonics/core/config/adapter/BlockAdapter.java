@@ -11,7 +11,7 @@ import java.io.IOException;
 public class BlockAdapter extends TypeAdapter<IBlock> {
     @Override
     public void write(JsonWriter out, IBlock value) throws IOException {
-        out.value(value.id().toString());
+        out.value(value.ph$id().toString());
     }
 
     @Override

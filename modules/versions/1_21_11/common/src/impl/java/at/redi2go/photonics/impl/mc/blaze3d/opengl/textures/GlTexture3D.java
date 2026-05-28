@@ -18,7 +18,7 @@ public class GlTexture3D extends AbstractGlTexture<Vector3ic> implements IGpuTex
     }
 
     @Override
-    public Vector3ic size(int mipLevel) {
+    public Vector3ic ph$size(int mipLevel) {
         return new Vector3i(
                 size.x() >> mipLevel,
                 size.y() >> mipLevel,

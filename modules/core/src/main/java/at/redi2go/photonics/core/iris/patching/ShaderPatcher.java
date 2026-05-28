@@ -62,7 +62,7 @@ public class ShaderPatcher {
                 var relativePath = includedShaders.relativize(file);
                 createdFiles.add(
                         IPackPath.fromAbsolutePath("/photonics")
-                                .resolve(relativePath.toString().replace('\\', '/'))
+                                .ph$resolve(relativePath.toString().replace('\\', '/'))
                 );
             });
         } catch (IOException e) {
@@ -88,7 +88,7 @@ public class ShaderPatcher {
             IPackPath packPath,
             Function<IPackPath, @Nullable String> shaderSourceSupplier
     ) {
-        Path realPath = packPath.resolved(PHOTONICS_SHADERS_PATH);
+        Path realPath = packPath.ph$resolved(PHOTONICS_SHADERS_PATH);
         Path relativePath = PHOTONICS_SHADERS_PATH.resolve("photonics")
                 .relativize(realPath);
 
@@ -133,7 +133,7 @@ public class ShaderPatcher {
             IPackPath path,
             Function<IPackPath, @Nullable String> shaderSourceSupplier
     ) {
-        if (path.startsWith("/photonics")) return readPhotonicsFile(path, shaderSourceSupplier);
+        if (path.ph$startsWith("/photonics")) return readPhotonicsFile(path, shaderSourceSupplier);
         if (patch == null) return shaderSourceSupplier.apply(path);
 
         return patch.applyPatches(
@@ -160,7 +160,7 @@ public class ShaderPatcher {
     ) {
         try {
             Files.writeString(
-                    file.resolved(PATCHED_DEBUG_PATH),
+                    file.ph$resolved(PATCHED_DEBUG_PATH),
                     source
             );
         } catch (IOException e) {

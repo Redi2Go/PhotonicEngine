@@ -91,19 +91,19 @@ public class SectionManager implements RenderingComponent {
 
                 discoveredChunks.add(new Vector2i(sectionX, sectionZ));
 
-                var chunk = level.getChunkOrNull(sectionX, sectionZ);
+                var chunk = level.ph$getChunkOrNull(sectionX, sectionZ);
                 if (chunk == null) continue;
 
-                IChunkSection[] sections = chunk.sections();
+                IChunkSection[] sections = chunk.ph$sections();
 
                 for (int py = -rd; py <= rd; py++) {
                     int sectionY = cameraPos.y + py;
-                    int sectionIndex = level.getSectionIndexFromSectionY(sectionY);
+                    int sectionIndex = level.ph$getSectionIndexFromSectionY(sectionY);
                     if (sectionIndex < 0) continue;
                     if (sectionIndex >= sections.length) break;
 
                     var section = sections[sectionIndex];
-                    if (section.hasOnlyAir()) continue;
+                    if (section.ph$hasOnlyAir()) continue;
 
                     var sectionCoord = new Vector3i(sectionX, sectionY, sectionZ);
 
@@ -170,17 +170,17 @@ public class SectionManager implements RenderingComponent {
     }
 
     private Optional<SectionCopy> createCopy(Vector3i sectionPos, ILevel level) {
-        var chunk = level.getChunkOrNull(sectionPos.x, sectionPos.z);
+        var chunk = level.ph$getChunkOrNull(sectionPos.x, sectionPos.z);
         if (chunk == null) return Optional.empty();
 
-        var sections = chunk.sections();
+        var sections = chunk.ph$sections();
 
-        var sectionIndex = level.getSectionIndexFromSectionY(sectionPos.y);
+        var sectionIndex = level.ph$getSectionIndexFromSectionY(sectionPos.y);
         if (sectionIndex < 0) return Optional.empty();
         if (sectionIndex >= sections.length) return Optional.empty();
 
         var section = sections[sectionIndex];
-        if (section.hasOnlyAir()) return Optional.empty();
+        if (section.ph$hasOnlyAir()) return Optional.empty();
 
         return Optional.of(new SectionCopy(sectionPos, section, remeshCount++));
     }

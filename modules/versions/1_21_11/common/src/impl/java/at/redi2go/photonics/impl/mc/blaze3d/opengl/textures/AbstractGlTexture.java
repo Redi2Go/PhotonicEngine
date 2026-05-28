@@ -7,8 +7,6 @@ import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlDebugLabelExt;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import org.jetbrains.annotations.NonNls;
-import org.joml.Vector2i;
-import org.joml.Vector2ic;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -63,24 +61,24 @@ public abstract class AbstractGlTexture<D> implements Disposable, IGlTexture {
         return handle;
     }
 
-    public String label() {
+    public String ph$label() {
         return label;
     }
 
     @TextureUsage
-    public int usage() {
+    public int ph$usage() {
         return usage;
     }
 
-    public int mipLevels() {
+    public int ph$mipLevels() {
         return mipLevels;
     }
 
-    public ITextureFormat format() {
+    public ITextureFormat ph$format() {
         return (ITextureFormat) (Object) textureFormat;
     }
 
-    public void resize(D newSize) {
+    public void ph$resize(D newSize) {
         if (closed) throw new IllegalStateException("closed");
         if (size.equals(newSize)) return;
 
@@ -90,7 +88,7 @@ public abstract class AbstractGlTexture<D> implements Disposable, IGlTexture {
         createTextureObject();
     }
 
-    public boolean isClosed() {
+    public boolean ph$isClosed() {
         return closed;
     }
 

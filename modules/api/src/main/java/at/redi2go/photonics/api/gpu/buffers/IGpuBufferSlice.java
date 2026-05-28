@@ -1,10 +1,10 @@
 package at.redi2go.photonics.api.gpu.buffers;
 
 public interface IGpuBufferSlice {
-    IGpuBuffer buffer();
+    IGpuBuffer ph$buffer();
 
-    long offset();
-    long length();
+    long ph$offset();
+    long ph$length();
 
-    IGpuBufferSlice slice(long offset, long length);
+    IGpuBufferSlice ph$slice(long offset, long length);
 }

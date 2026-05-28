@@ -5,7 +5,7 @@ import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(value = Id.class, remap = false)
+@Mixin(value = Id.class)
 public interface IdImpl {
     @Overwrite
     static Id fromNamespaceAndPath(String namespace, String path) {

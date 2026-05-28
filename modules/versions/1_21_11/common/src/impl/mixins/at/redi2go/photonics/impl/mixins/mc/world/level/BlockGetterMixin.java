@@ -9,22 +9,24 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlockGetter.class)
 public interface BlockGetterMixin extends IBlockGetter {
-    @Shadow BlockState shadow$getBlockState(BlockPos pos);
+    @Shadow BlockState getBlockState(BlockPos pos);
+
+    @Shadow BlockEntity getBlockEntity(BlockPos pos);
 
     @Override
-    default IBlockState getBlockState(IBlockPos pos) {
-        return (IBlockState) shadow$getBlockState((BlockPos) pos);
+    default IBlockState ph$getBlockState(IBlockPos pos) {
+        return (IBlockState) getBlockState((BlockPos) pos);
     }
 
-    @Shadow BlockEntity shadow$getBlockEntity(BlockPos pos);
-
     @Override
-    default @Nullable IBlockEntity getBlockEntity(IBlockPos pos) {
-        return (IBlockEntity) shadow$getBlockEntity((BlockPos) pos);
+    default @Nullable IBlockEntity ph$getBlockEntity(IBlockPos pos) {
+        return (IBlockEntity) getBlockEntity((BlockPos) pos);
     }
 }

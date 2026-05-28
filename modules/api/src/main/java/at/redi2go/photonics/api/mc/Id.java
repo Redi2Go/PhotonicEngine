@@ -1,9 +1,9 @@
 package at.redi2go.photonics.api.mc;
 
 public interface Id {
-    String namespace();
+    String ph$namespace();
 
-    String path();
+    String ph$path();
 
     static Id fromNamespaceAndPath(String namespace, String path) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN

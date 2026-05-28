@@ -1,5 +1,5 @@
 package at.redi2go.photonics.api.mc.world.level;
 
 public interface ILevelHeightAccessor {
-    int getSectionIndexFromSectionY(int sectionY);
+    int ph$getSectionIndexFromSectionY(int sectionY);
 }

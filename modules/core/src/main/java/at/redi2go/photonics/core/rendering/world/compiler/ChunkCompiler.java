@@ -86,9 +86,9 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 BlockMesher.REGISTRY.setup();
 
                 section.forEachBlock((blockChunkOffset, blockPos, block) -> {
-                    if (block.isAir()) return;
+                    if (block.ph$isAir()) return;
 
-                    BlockMesher.REGISTRY.get(block.block())
+                    BlockMesher.REGISTRY.get(block.ph$block())
                             .ifPresent(mesher -> buildResult.submitBlockFuture(
                                     blockChunkOffset.x(),
                                     blockChunkOffset.y(),

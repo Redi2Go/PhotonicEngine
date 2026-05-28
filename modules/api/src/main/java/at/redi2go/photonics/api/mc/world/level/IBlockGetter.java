@@ -5,8 +5,8 @@ import at.redi2go.photonics.api.mc.world.level.block.IBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 public interface IBlockGetter extends ILevelHeightAccessor {
-    IBlockState getBlockState(IBlockPos pos);
+    IBlockState ph$getBlockState(IBlockPos pos);
 
     @Nullable
-    IBlockEntity getBlockEntity(IBlockPos pos);
+    IBlockEntity ph$getBlockEntity(IBlockPos pos);
 }

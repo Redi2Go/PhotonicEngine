@@ -9,19 +9,19 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public interface IPackPath {
-    Optional<IPackPath> parent();
+    Optional<IPackPath> ph$parent();
 
-    IPackPath resolve(String path);
+    IPackPath ph$resolve(String path);
 
-    Path resolved(Path root);
+    Path ph$resolved(Path root);
 
-    boolean startsWith(IPackPath path);
+    boolean ph$startsWith(IPackPath path);
 
-    default boolean startsWith(String absolutePath) {
-        return startsWith(fromAbsolutePath(absolutePath));
+    default boolean ph$startsWith(String absolutePath) {
+        return ph$startsWith(fromAbsolutePath(absolutePath));
     }
 
-    String pathString();
+    String ph$pathString();
 
     static IPackPath fromAbsolutePath(String absolutePath) {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN

@@ -9,24 +9,27 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(BlockPos.class)
-@Implements(@Interface(iface = IBlockPos.class, prefix = "ph$"))
-public abstract class BlockPosMixin extends Vec3i {
+public abstract class BlockPosMixin extends Vec3i implements IBlockPos {
     private BlockPosMixin(int i, int j, int k) {
         super(i, j, k);
     }
 
+    @Override
     public int ph$x() {
         return getX();
     }
 
+    @Override
     public int ph$y() {
         return getY();
     }
 
+    @Override
     public int ph$z() {
         return getZ();
     }
 
+    @Override
     public IBlockPos ph$offset(int x, int y, int z) {
         return (IBlockPos) offset(x, y, z);
     }

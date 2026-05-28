@@ -5,15 +5,15 @@ import at.redi2go.photonics.api.Disposable;
 import java.util.OptionalDouble;
 
 public interface IGpuSampler extends Disposable {
-    IAddressMode addressModeU();
+    IAddressMode ph$addressModeU();
 
-    IAddressMode addressModeV();
+    IAddressMode ph$addressModeV();
 
-    IFilterMode minFilter();
+    IFilterMode ph$minFilter();
 
-    IFilterMode magFilter();
+    IFilterMode ph$magFilter();
 
-    int maxAnisotropy();
+    int ph$maxAnisotropy();
 
-    OptionalDouble maxLod();
+    OptionalDouble ph$maxLod();
 }

@@ -26,29 +26,29 @@ public record LightPredicateImpl(
 
     @Override
     public IBlock block() {
-        return blockState.block();
+        return blockState.ph$block();
     }
 
     @Override
     public boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader) {
         // Copied from BlockPredicateArgument.BlockPredicate
 
-        final IBlockState state = levelReader.getBlockState(pos);
-        if (!state.is(block())) return false;
+        final IBlockState state = levelReader.ph$getBlockState(pos);
+        if (!state.ph$is(block())) return false;
 
         for (IProperty<?> property : properties) {
-            if (!blockState.hasProperty(property) || !blockState.getValue(property).equals(state.getValue(property)))
+            if (!blockState.ph$hasProperty(property) || !blockState.ph$getValue(property).equals(state.ph$getValue(property)))
                 return false;
         }
 
         if (nbt == null) return true;
 
-        final IBlockEntity blockEntity = levelReader.getBlockEntity(pos);
+        final IBlockEntity blockEntity = levelReader.ph$getBlockEntity(pos);
         if (blockEntity == null) return false;
 
         return ICompoundTag.isEqual(
                 nbt,
-                blockEntity.saveWithFullMetadata(levelReader.registryAccess())
+                blockEntity.ph$saveWithFullMetadata(levelReader.ph$registryAccess())
         );
     }
 }

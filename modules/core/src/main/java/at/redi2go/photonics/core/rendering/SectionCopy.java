@@ -2,7 +2,6 @@ package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.joml.Vector3i;
@@ -18,7 +17,7 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
             long priority
     ) {
         this.pos = pos;
-        this.copy = section.createCopy();
+        this.copy = section.ph$createCopy();
         this.priority = priority;
     }
 
@@ -36,17 +35,17 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
     }
 
     @Override
-    public IBlockState getBlockState(int x, int y, int z) {
-        return copy.getBlockState(x, y, z);
+    public IBlockState ph$getBlockState(int x, int y, int z) {
+        return copy.ph$getBlockState(x, y, z);
     }
 
     @Override
-    public boolean hasOnlyAir() {
+    public boolean ph$hasOnlyAir() {
         return false;
     }
 
     @Override
-    public IChunkSection createCopy() {
+    public IChunkSection ph$createCopy() {
         return this;
     }
 
@@ -64,7 +63,7 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
                     );
 
                     chunkOffset.set(px, py, pz);
-                    blockConsumer.accept(chunkOffset, blockPos, getBlockState(px, py, pz));
+                    blockConsumer.accept(chunkOffset, blockPos, ph$getBlockState(px, py, pz));
                 }
             }
         }
@@ -74,7 +73,7 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
         final long[] hash = {0};
 
         forEachBlock((ignored, ignored1, block) ->
-                hash[0] = hash[0] * 31 + (block.hashCode() ^ block.block().hashCode())
+                hash[0] = hash[0] * 31 + (block.hashCode() ^ block.ph$block().hashCode())
         );
 
         return hash[0];
@@ -82,9 +81,9 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
 
     public static Vector3i getSectionCoord(IBlockPos blockPos) {
         return new Vector3i(
-                blockPos.x() >> 4,
-                blockPos.y() >> 4,
-                blockPos.z() >> 4
+                blockPos.ph$x() >> 4,
+                blockPos.ph$y() >> 4,
+                blockPos.ph$z() >> 4
         );
     }
 }

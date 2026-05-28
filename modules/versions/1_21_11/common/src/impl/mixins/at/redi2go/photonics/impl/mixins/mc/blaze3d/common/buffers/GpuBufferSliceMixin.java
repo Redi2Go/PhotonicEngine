@@ -10,17 +10,32 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(GpuBufferSlice.class)
-@Implements(@Interface(iface = IGpuBufferSlice.class, prefix = "ph$"))
-public abstract class GpuBufferSliceMixin {
-    @Shadow public abstract GpuBuffer shadow$buffer();
+public abstract class GpuBufferSliceMixin implements IGpuBufferSlice {
+    @Shadow public abstract GpuBuffer buffer();
 
+    @Shadow public abstract long offset();
+
+    @Shadow public abstract long length();
+
+    @Shadow public abstract GpuBufferSlice slice(long l, long m);
+
+    @Override
     public IGpuBuffer ph$buffer() {
-        return (IGpuBuffer) shadow$buffer();
+        return (IGpuBuffer) buffer();
     }
 
-    @Shadow public abstract GpuBufferSlice shadow$slice(long l, long m);
+    @Override
+    public long ph$offset() {
+        return offset();
+    }
 
+    @Override
+    public long ph$length() {
+        return length();
+    }
+
+    @Override
     public IGpuBufferSlice ph$slice(long offset, long length) {
-        return (IGpuBufferSlice) (Object) shadow$slice(offset, length);
+        return (IGpuBufferSlice) (Object) slice(offset, length);
     }
 }

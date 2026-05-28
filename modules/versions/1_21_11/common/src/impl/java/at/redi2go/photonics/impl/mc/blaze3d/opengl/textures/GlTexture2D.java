@@ -27,7 +27,7 @@ public class GlTexture2D extends AbstractGlTexture<Vector2ic> implements IGpuTex
     }
 
     @Override
-    public Vector2ic size(int mipLevel) {
+    public Vector2ic ph$size(int mipLevel) {
         return new Vector2i(
                 size.x() >> mipLevel,
                 size.y() >> mipLevel

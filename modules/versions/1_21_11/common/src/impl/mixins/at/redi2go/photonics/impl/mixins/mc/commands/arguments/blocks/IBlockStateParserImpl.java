@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @SuppressWarnings("unchecked")
-@Mixin(value = IBlockStateParser.class, remap = false)
+@Mixin(value = IBlockStateParser.class)
 public interface IBlockStateParserImpl {
     @Overwrite
     static Either<IBlockStateParser.BlockResult, IBlockStateParser.TagResult> parse(

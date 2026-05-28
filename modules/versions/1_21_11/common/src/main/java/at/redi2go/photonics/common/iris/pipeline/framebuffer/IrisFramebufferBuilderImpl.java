@@ -33,7 +33,7 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
             throw new IllegalArgumentException("cannot create prev sampler without flipping");
 
         final var writeAttachment = IRenderSystem.getDevice()
-                .createTexture2D(
+                .ph$createTexture2D(
                         () -> name + " #1",
                         TextureUsage.RENDER_ATTACHMENT,
                         format,
@@ -45,7 +45,7 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
 
         if ((usage & AttachmentUsage.FLIP) != 0) {
             readAttachment = IRenderSystem.getDevice()
-                    .createTexture2D(
+                    .ph$createTexture2D(
                             () -> name + " #2",
                             TextureUsage.RENDER_ATTACHMENT,
                             format,
