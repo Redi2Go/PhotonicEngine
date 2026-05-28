@@ -141,7 +141,7 @@ bool reservoir_update(
 }
 
 void reservoir_init(inout Reservoir reservoir, vec3 rt_pos) {
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < PH_RESTIR_INITIAL_SAMPLES; i++) {
         int rand_index = ph_rand_next_int(frag_rnd_state, 0, light_list_size);
         LightSample smple = light_sample_new(light_list_get(rand_index), rt_pos);
 
