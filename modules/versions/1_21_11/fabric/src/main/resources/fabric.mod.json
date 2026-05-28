@@ -11,6 +11,7 @@
     "sources": "https://github.com/Redi2Go/PhotonicEngine"
   },
   "license": "All-Rights-Reserved",
+  "icon": "assets/photonics/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
