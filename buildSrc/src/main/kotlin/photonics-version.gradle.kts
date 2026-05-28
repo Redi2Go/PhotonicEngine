@@ -39,7 +39,7 @@ subprojects {
 
     val commonPath = "${parent!!.path}:common"
 
-    val jarName = "photonics-${project.version}-${project.name}+MC-${photonics.minecraft}"
+    val jarName = { "photonics-${project.version}-${project.name}+MC-${photonics.minecraft.get()}" }
 
     val modulesPath = rootProject.childProjects["modules"]!!.projectDir
     val patchesPath = modulesPath.resolve("patches")
@@ -136,7 +136,7 @@ subprojects {
         }
 
         shadowJar {
-            archiveFileName = "$jarName-shaded.jar"
+            archiveFileName = provider { "${jarName()}-shaded.jar" }
             configurations = listOf(project.configurations.getByName("shadow"))
 
 

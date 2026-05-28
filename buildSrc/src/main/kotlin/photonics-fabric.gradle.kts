@@ -17,7 +17,7 @@ dependencies {
     }
 }
 
-val jarName = "photonics-${project.version}-${project.name}+MC-${phConfig.minecraft}"
+val jarName = "photonics-${project.version}-${project.name}+MC-${phConfig.minecraft.get()}"
 
 tasks {
     named<RemapJarTask>("remapJar") {
