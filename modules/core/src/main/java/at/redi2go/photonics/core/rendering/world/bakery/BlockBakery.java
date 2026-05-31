@@ -6,7 +6,6 @@ import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.rendering.world.bakery.impl.BlockBakeryImpl;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
@@ -22,8 +21,6 @@ public interface BlockBakery {
 
     interface MeshResult extends Disposable {
         long vertexHash();
-
-        TintBuilder.Result tintData();
 
         void bake(VoxelConsumer voxelConsumer) throws InterruptedException;
     }

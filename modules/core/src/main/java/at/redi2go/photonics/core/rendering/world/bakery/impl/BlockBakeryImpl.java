@@ -4,7 +4,6 @@ import at.redi2go.photonics.api.mc.Id;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.bakery.BaryPos;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBakery;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
@@ -17,10 +16,8 @@ import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
-import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.joml.RoundingMode;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -206,6 +203,8 @@ public class BlockBakeryImpl implements BlockBakery {
             hash = hash * 31 + intAt(index + 1);
             hash = hash * 31 + intAt(index + 2);
 
+            hash = hash * 31 + intAt(index + 3);
+
             hash = hash * 31 + intAt(index + 4);
             hash = hash * 31 + intAt(index + 5);
 
@@ -259,22 +258,6 @@ public class BlockBakeryImpl implements BlockBakery {
 
 
         // Baking
-
-
-        @Override
-        public TintBuilder.Result tintData() {
-            TintBuilder tintBuilder = new TintBuilder();
-
-            int index = 3;
-            int end = vertexCount * 6;
-
-            while (index < end) {
-                tintBuilder.add(intAt(index));
-                index += 6;
-            }
-
-            return tintBuilder.build();
-        }
 
         @Override
         public void bake(VoxelConsumer voxelConsumer) throws InterruptedException {
@@ -372,8 +355,10 @@ public class BlockBakeryImpl implements BlockBakery {
                         var textureData = sample(texture, currentBlockId, tri, baryPos);
                         if (textureData == null) continue;
 
+                        textureData = textureData.withTint(tint);
+
                         if (VoxelColor.a(textureData.color()) != 0)
-                            consumer.acceptVoxel(x, y, z, normalIndex, tint, textureData);
+                            consumer.acceptVoxel(x, y, z, normalIndex, textureData);
                     }
                 }
             }

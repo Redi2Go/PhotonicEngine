@@ -13,13 +13,13 @@ import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.lights.BufferLightList;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
-import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferPaletteTexture;
-import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferWorldAllocator;
+import at.redi2go.photonics.core.old.world.allocator.buffer.BufferPaletteTexture;
+import at.redi2go.photonics.core.old.world.allocator.buffer.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
-import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
+import at.redi2go.photonics.core.old.world.compiler.ChunkCompiler;
+import at.redi2go.photonics.core.old.world.compiler.WorldCompiler;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
-import at.redi2go.photonics.core.rendering.world.registry.optimization.OptimizationService;
+import at.redi2go.photonics.core.old.world.registry.optimization.OptimizationService;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

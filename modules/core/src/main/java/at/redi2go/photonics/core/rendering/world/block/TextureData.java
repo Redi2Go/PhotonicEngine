@@ -11,6 +11,13 @@ public record TextureData(
         return VoxelColor.gt(color, other.color());
     }
 
+    public TextureData withTint(int tint) {
+        return new TextureData(
+                blockId,
+                VoxelColor.applyTint(color, tint)
+        );
+    }
+
     public static int fastEquals(
             TextureData p1,
             TextureData p2

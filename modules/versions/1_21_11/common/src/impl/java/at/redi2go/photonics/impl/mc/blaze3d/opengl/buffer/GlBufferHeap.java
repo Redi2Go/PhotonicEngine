@@ -25,7 +25,7 @@ public class GlBufferHeap extends AbstractGpuBufferHeap {
     public static final int NO_PERSISTENCE_MAPPING = 1 << 20;
 
     private final IGpuBuffer gpuBuffer;
-    private final ByteBuffer buffer;
+    public final ByteBuffer buffer;
 
     private final int handle;
 

@@ -1,0 +1,70 @@
+package at.redi2go.photonics.core.rendering.world.registry.block;
+
+import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
+import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
+import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.registry.object.InnerWorldObject;
+import at.redi2go.photonics.core.rendering.world.registry.object.WorldObject;
+import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
+import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeNode;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3i;
+
+import java.util.List;
+
+public class BlockLayer extends BlockNodeObject {
+    private final long hash;
+    private final int boundingVolume;
+
+    BlockLayer(
+            @Nullable VoxelLayer[] entries,
+            int size,
+            long hash,
+            int boundingVolume,
+            BlockRegistry blockRegistry
+    ) {
+        super(blockRegistry, VOXEL_DEPTH + 1);
+
+        System.arraycopy(entries, 0, data, 0, ENTRIES_SIZE);
+
+        this.size = size;
+        this.hash = hash;
+
+        this.boundingVolume = boundingVolume;
+    }
+
+    public int boundingVolume() {
+        return boundingVolume;
+    }
+
+    @Override
+    protected boolean useChildMask() {
+        return true;
+    }
+
+    @Override
+    protected int extraFieldCount() {
+        return 0;
+    }
+
+    @Override
+    public void uploadTo(VoxelEntryMemory memory) {
+        memory.setEntryFlag(false);
+        super.uploadTo(memory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(hash);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o == this || (o instanceof BlockLayer other && other.hash == hash);
+    }
+
+    @Override
+    protected VoxelTreeNode createNode(Vector3i pos) {
+        throw new UnsupportedOperationException("createNode");
+    }
+}

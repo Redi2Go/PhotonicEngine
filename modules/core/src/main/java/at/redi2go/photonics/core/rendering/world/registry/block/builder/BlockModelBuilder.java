@@ -2,121 +2,61 @@ package at.redi2go.photonics.core.rendering.world.registry.block.builder;
 
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.block.TextureData;
-import at.redi2go.photonics.core.rendering.world.block.palette.TintBuilder;
-import at.redi2go.photonics.core.rendering.world.registry.PaletteObject;
-import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
-import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockModelTemplate;
-import at.redi2go.photonics.core.rendering.world.registry.block.template.BlockPartTemplate;
+import at.redi2go.photonics.core.rendering.world.registry.block.BlockRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockModelImpl;
+import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockModelRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockPartImpl;
+import at.redi2go.photonics.core.rendering.world.registry.object.WeakValue;
 import com.google.common.collect.ImmutableList;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.joml.Vector3i;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 public class BlockModelBuilder implements VoxelConsumer {
-    private final WorldRegistry worldRegistry;
-    private final long vertexHash;
-    private final TintBuilder.Result tint;
+    private final VoxelData tempVoxelData = new VoxelData();
+    private final Vector3i tempPos = new Vector3i();
 
-    private final Int2IntMap tintPaletteIndexes;
-    private final Map<Vector3i, BlockPartBuilder> parts;
+    private final Map<Vector3i, BlockLayerBuilder> parts = new HashMap<>();
 
     private int lastPartHash = 0;
-    private BlockPartBuilder lastPart = null;
-
-    public BlockModelBuilder(
-            WorldRegistry worldRegistry,
-            long vertexHash,
-            TintBuilder.Result tint
-    ) {
-        this.worldRegistry = worldRegistry;
-        this.vertexHash = vertexHash;
-        this.tint = tint;
-        this.tintPaletteIndexes = new Int2IntOpenHashMap();
-        this.parts = new Object2ObjectOpenHashMap<>();
-    }
+    private BlockLayerBuilder lastPart = null;
 
     @Override
-    public void acceptVoxel(
-            int x, int y, int z,
-            int normal,
-            int tint,
-            TextureData textureData
-    ) {
-        BlockPartBuilder builder;
+    public void acceptVoxel(int x, int y, int z, int normal, TextureData textureData) {
+        BlockLayerBuilder builder;
 
-        Vector3i blockPos = new Vector3i(
-                Math.floorDiv(x, 16),
-                Math.floorDiv(y, 16),
-                Math.floorDiv(z, 16)
-        );
-
+        Vector3i blockPos = new Vector3i(Math.floorDiv(x, 16), Math.floorDiv(y, 16), Math.floorDiv(z, 16));
         int hash = blockPos.hashCode();
+
         if (lastPartHash != hash || lastPart == null) {
-            builder = parts.computeIfAbsent(
-                    blockPos,
-                    (ignored) -> new BlockPartBuilder()
-            );
+            builder = parts.computeIfAbsent(blockPos, (ignored) -> new BlockLayerBuilder());
 
             lastPartHash = hash;
             lastPart = builder;
         } else builder = lastPart;
 
-        tintPaletteIndexes.putIfAbsent(tint, tintPaletteIndexes.size());
-        builder.acceptVoxel(
-                correctVoxelPos(x),
-                correctVoxelPos(y),
-                correctVoxelPos(z),
-                normal,
-                tint,
-                textureData
-        );
+        tempPos.x = correctVoxelPos(x);
+        tempPos.y = correctVoxelPos(y);
+        tempPos.z = correctVoxelPos(z);
+
+        tempVoxelData.normal = normal;
+        tempVoxelData.textureData = textureData;
+
+        builder.insertEntry(tempPos, tempVoxelData);
     }
 
-    public BlockModelTemplate build() {
-        ImmutableList.Builder<BlockPartTemplate> partTemplates = ImmutableList.builder();
+    public @WeakValue BlockModelImpl build(long vertexHash, BlockRegistry blockRegistry, BlockModelRegistry registry) {
+        ImmutableList.Builder<BlockPartImpl> parts = ImmutableList.builder();
 
-        Int2IntMap tintIndexes = tint.indexes();
-        for (var entry : parts.entrySet()) {
+        for (var entry : this.parts.entrySet()) {
             var offset = entry.getKey();
-            var builtPart = entry.getValue().build();
+            var buildPart = entry.getValue().build(blockRegistry);
 
-            var palette = builtPart.palette();
-
-            int[] tintMappings = new int[palette.size()];
-            PaletteObject[] weakPaletteArray = new PaletteObject[palette.size()];
-
-            for (int i = 0; i < weakPaletteArray.length; i++) {
-                weakPaletteArray[i] = worldRegistry.allocatePaletteWeak(palette.get(i));
-
-                int tint = palette.getTint(i);
-                tintMappings[i] = tintIndexes.get(tint);
-            }
-
-            var weakBlockVoxel = worldRegistry.allocateBlockVoxelWeak(
-                    builtPart.hash(),
-                    builtPart.voxelData()
-            );
-
-            partTemplates.add(
-                new BlockPartTemplate(
-                        offset,
-                        builtPart.volume(),
-                        tintMappings,
-                        List.of(weakPaletteArray),
-                        weakBlockVoxel
-                )
-            );
+            parts.add(new BlockPartImpl(offset, buildPart));
         }
 
-        return new BlockModelTemplate(
-                worldRegistry,
-                vertexHash,
-                partTemplates.build()
-        );
+        return new BlockModelImpl(vertexHash, parts.build(), registry);
     }
 
     private static int correctVoxelPos(int component) {

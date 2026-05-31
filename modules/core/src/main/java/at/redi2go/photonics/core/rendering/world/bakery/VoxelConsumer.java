@@ -6,7 +6,6 @@ public interface VoxelConsumer {
     void acceptVoxel(
             int x, int y, int z,
             int normal,
-            int tint,
             TextureData textureData
     );
 }

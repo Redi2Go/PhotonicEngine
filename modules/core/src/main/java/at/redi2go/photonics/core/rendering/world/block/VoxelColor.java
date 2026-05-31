@@ -54,7 +54,7 @@ public class VoxelColor {
     }
 
     public static int applyTint(int color, int tint) {
-        if ((tint ^ WHITE) == 0) return color;
+        if (tint == WHITE) return color;
 
         return from(
                 ((r(color) + 1) * r(tint)) >> 8,
