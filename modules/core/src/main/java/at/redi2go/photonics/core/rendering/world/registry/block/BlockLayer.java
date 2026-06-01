@@ -1,16 +1,9 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
-import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
-import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
-import at.redi2go.photonics.core.rendering.world.registry.object.InnerWorldObject;
-import at.redi2go.photonics.core.rendering.world.registry.object.WorldObject;
-import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeNode;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
-
-import java.util.List;
 
 public class BlockLayer extends BlockNodeObject {
     private final long hash;
@@ -23,13 +16,14 @@ public class BlockLayer extends BlockNodeObject {
             int boundingVolume,
             BlockRegistry blockRegistry
     ) {
-        super(blockRegistry, VOXEL_DEPTH + 1);
+        super(
+                blockRegistry,
+                BLOCK_DEPTH,
+                size,
+                entries
+        );
 
-        System.arraycopy(entries, 0, data, 0, ENTRIES_SIZE);
-
-        this.size = size;
         this.hash = hash;
-
         this.boundingVolume = boundingVolume;
     }
 
@@ -64,7 +58,7 @@ public class BlockLayer extends BlockNodeObject {
     }
 
     @Override
-    protected VoxelTreeNode createNode(Vector3i pos) {
+    protected VoxelTreeNode createNode(int x, int y, int z) {
         throw new UnsupportedOperationException("createNode");
     }
 }

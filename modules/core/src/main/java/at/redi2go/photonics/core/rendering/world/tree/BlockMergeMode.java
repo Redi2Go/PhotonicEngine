@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 public enum  BlockMergeMode {
     OVERWRITE {
         @Override
-        public VoxelTreeEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry) {
+        public BlockEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry) {
             //TODO: KEEP TRACK OF ALL BLOCKS
             if (oldEntry == null || newEntry.boundingVolume() > oldEntry.boundingVolume())
                 return newEntry;
@@ -17,10 +17,10 @@ public enum  BlockMergeMode {
     },
     COMBINE {
         @Override
-        public VoxelTreeEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry) {
+        public BlockEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry) {
             return oldEntry == null ? newEntry : oldEntry.merge(newEntry);
         }
     };
 
-    public abstract VoxelTreeEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry);
+    public abstract BlockEntry merge(@Nullable BlockEntry oldEntry, BlockEntry newEntry);
 }

@@ -2,23 +2,32 @@ package at.redi2go.photonics.core.rendering.world.tree;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
-import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3L;
 import org.joml.Vector3i;
 
 public abstract class VoxelTreeNode implements VoxelTreeEntry {
     public static final int SIZE_LENGTH = 4;
     public static final int ENTRIES_SIZE = SIZE_LENGTH * SIZE_LENGTH * SIZE_LENGTH;
 
-    protected final int depth;
+    private final int depth;
 
-    protected int size = 0;
-    protected final @Nullable VoxelTreeEntry[] data = new VoxelTreeEntry[ENTRIES_SIZE];
+    private int size = 0;
+    private final @Nullable VoxelTreeEntry[] data = new VoxelTreeEntry[ENTRIES_SIZE];
 
     protected VoxelTreeNode(int depth) {
         this.depth = depth;
+    }
+
+    protected VoxelTreeNode(
+            int depth,
+            int size,
+            VoxelTreeEntry[] entries
+    ) {
+        this(depth);
+
+        this.size = size;
+        System.arraycopy(entries, 0, data, 0, ENTRIES_SIZE);
     }
 
     @Override
@@ -26,48 +35,67 @@ public abstract class VoxelTreeNode implements VoxelTreeEntry {
         return depth;
     }
 
+    protected int size() {
+        return size;
+    }
+
+    protected boolean isEmpty() {
+        return size == 0;
+    }
+
     public int magnitude() {
         return depth << 1;
     }
 
-    protected abstract VoxelTreeNode createNode(Vector3i pos);
+    protected abstract VoxelTreeNode createNode(int x, int y, int z);
 
-    protected VoxelTreeEntry merge(@Nullable VoxelTreeEntry oldEntry, VoxelTreeEntry newEntry) {
-        if (oldEntry instanceof Disposable disposable)
-            disposable.close();
-
-        return newEntry;
+    protected @Nullable VoxelTreeEntry getEntry(int index) {
+        return data[index];
     }
 
-    protected void onChanged() {}
+    protected @Nullable VoxelTreeEntry replaceEntry(int index, @Nullable VoxelTreeEntry entry) {
+        var previous = data[index];
+        if (previous == entry) return null;
 
-    public void insertEntry(Vector3i pos, @NonNls VoxelTreeEntry entry) {
-        int index = indexOf(pos, magnitude());
+        onChanged();
+
+        data[index] = entry;
+
+        if (previous == null)
+            size++;
+        else if (entry == null)
+            size--;
+
+        return previous;
+    }
+
+    protected void setEntry(int index, @Nullable VoxelTreeEntry entry) {
+        var result = replaceEntry(index, entry);
+        if (result instanceof Disposable disposable)
+            disposable.close();
+    }
+
+    public void insertEntry(int x, int y, int z, @NonNls VoxelTreeEntry entry) {
+        int index = indexOf(x, y, z, magnitude());
         int targetDepth = entry.depth() + 1;
         if (targetDepth < 0) throw new IllegalStateException("depth was less than -1");
 
-        var previous = data[index];
-        if (previous == entry) return;
-        if (previous == null) size++;
-
         if (depth == targetDepth) {
-            var newEntry = merge(previous, entry);
-            data[index] = newEntry;
-
-            if (newEntry != previous)
-                onChanged();
-
+            setEntry(index, entry);
             return;
         }
 
+        var previous = getEntry(index);
         if (previous == null) {
-            previous = merge(null, createNode(pos));
-            data[index] = previous;
-
-            onChanged();
+            previous = createNode(x, y, z);
+            setEntry(index, previous);
         }
 
-        ((VoxelTreeNode) previous.toMutable()).insertEntry(pos, entry);
+        ((VoxelTreeNode) previous.toMutable()).insertEntry(x, y, z, entry);
+    }
+
+    public void insertEntry(Vector3i pos, @NonNls VoxelTreeEntry entry) {
+        insertEntry(pos.x, pos.y, pos.z, entry);
     }
 
     protected long writeEntries(VoxelEntryListMemory memory) {
@@ -87,10 +115,13 @@ public abstract class VoxelTreeNode implements VoxelTreeEntry {
         return mask;
     }
 
-    private int indexOf(Vector3i pos, int magnitude) {
-        int x = ((pos.x >> magnitude) & 3);
-        int y = ((pos.y >> magnitude) & 3);
-        int z = ((pos.z >> magnitude) & 3);
+    protected void onChanged() { }
+
+
+    protected static int indexOf(int x, int y, int z, int magnitude) {
+        x = ((x >> magnitude) & 3);
+        y = ((y >> magnitude) & 3);
+        z = ((z >> magnitude) & 3);
 
         return x + (z << 2) + (y << 4);
     }

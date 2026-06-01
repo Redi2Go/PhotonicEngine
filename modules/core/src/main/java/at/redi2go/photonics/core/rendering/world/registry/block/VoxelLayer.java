@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.rendering.world.registry.block;
 
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
+import at.redi2go.photonics.core.rendering.world.registry.block.builder.VoxelLayerBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.palete.PaletteRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeNode;
@@ -13,7 +14,7 @@ public class VoxelLayer extends BlockNodeObject {
     private long childMask = 0;
 
     VoxelLayer(
-            @Nullable VoxelTreeEntry[] entries,
+            VoxelLayerBuilder node,
             PaletteRegistry paletteRegistry,
             BlockRegistry blockRegistry
     ) {
@@ -24,12 +25,10 @@ public class VoxelLayer extends BlockNodeObject {
         for (int i = 0; i < ENTRIES_SIZE; i++) {
             hash = hash * 31;
 
-            var entry = entries[i];
+            var entry = node.getEntry(i);
             if (entry == null) continue;
 
-            data[i] = paletteRegistry.allocate((PaletteEntry) entry);
-            size++;
-
+            setEntry(i, paletteRegistry.allocate((PaletteEntry) entry));
             hash+= entry.hashCode();
         }
 
@@ -67,7 +66,7 @@ public class VoxelLayer extends BlockNodeObject {
     }
 
     @Override
-    protected VoxelTreeNode createNode(Vector3i pos) {
+    protected VoxelTreeNode createNode(int x, int y, int z) {
         throw new UnsupportedOperationException("createNode");
     }
 }

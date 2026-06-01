@@ -34,7 +34,10 @@ public record SimpleBlockEntry(
 
     @Override
     public @Nullable VoxelTreeEntry removeRegions(IntSet regions) {
-        return regions.contains(region) ? null : this;
+        if (!regions.contains(region)) return this;
+
+        close();
+        return null;
     }
 
     @Override

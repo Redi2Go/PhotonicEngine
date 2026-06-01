@@ -8,7 +8,6 @@ import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
-import at.redi2go.photonics.core.rendering.world.WorldManager;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
@@ -42,11 +41,17 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private final WorldRegistry registry;
 
     private final RegionIdManager regionIds = new RegionIdManager();
-    private final RootManager rootManager;
+    private final TreeManager treeManager;
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean canUpload = true;
+
+    private Vector3i iorigin = null;
+    private WorldOrigin origin = null;
+
+    private final Vector3i minBlock = new Vector3i();
+    private final Vector3i maxBlock = new Vector3i();
 
     private final UniformUpdater uniformUpdater = new UniformUpdater();
 
@@ -69,7 +74,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         this.taskQueue = taskQueue;
         this.registry = worldRegistry;
 
-        this.rootManager = new RootManager(worldAllocator, BlockMergeMode.OVERWRITE);
+        this.treeManager = new TreeManager(BlockMergeMode.OVERWRITE, worldAllocator);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -87,28 +92,33 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         return mostRecentMaxBlock;
     }
 
+    private void setOrigin(Vector3i origin) {
+        this.iorigin = origin;
+        this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
+    }
+
     @Override
     public void run() {
         try {
             while (!Thread.interrupted()) {
                 taskQueue.awaitTask();
 
-
                 var unloadedSections = taskQueue.drainUnloadQueue();
-                if (!unloadedSections.isEmpty()) {
+                if (!unloadedSections.isEmpty())
                     clearUnloadedSections(unloadedSections);
-                }
 
 
                 var builtSections = taskQueue.drain(MAX_SECTIONS_PER_RUN);
                 if (!builtSections.isEmpty()) {
+                    recenter();
+
                     clearPendingSections(builtSections);
                     insertSections(builtSections);
                 }
 
                 if (!unloadedSections.isEmpty() || !builtSections.isEmpty()) {
                     stopUpload();
-                    rootManager.uploadAll(MultiThreadTask::new);
+                    writeSections();
                     awaitUpload();
 
                     registry.freeUnusedObjects();
@@ -119,23 +129,42 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         }
     }
 
+
+    // Compiler steps
+
     private void clearUnloadedSections(List<Vector3i> unloadedSections) {
+        if (iorigin == null) return;
+
         IntSet regions = new IntOpenHashSet(unloadedSections.size());
         for (var section : unloadedSections) {
             regions.add(regionIds.getId(section));
             regionIds.removeRegion(section);
         }
 
-        rootManager.removeRegions(regions);
+        treeManager.removeRegions(regions);
+    }
+
+    private void recenter() throws InterruptedException {
+        var newOrigin = WorldOrigin.getAsVector3i();
+        if (iorigin == null) {
+            setOrigin(newOrigin);
+            return;
+        }
+
+        if (iorigin.equals(newOrigin)) return;
+
+        stopUpload();
+
+        var offset = iorigin.sub(newOrigin, new Vector3i());
+        treeManager.recenter(offset);
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
         IntSet regions = new IntOpenHashSet(sections.size());
-        for (var section : sections) {
+        for (var section : sections)
             regions.add(regionIds.getId(section.chunkPos()));
-        }
 
-        rootManager.removeRegions(regions);
+        treeManager.removeRegions(regions);
     }
 
     private void insertSections(List<ChunkCompiler.BuildResult> sections) {
@@ -146,13 +175,13 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             try (section) {
                 blockSorter.reset();
 
-                int region = regionIds.getId(section.chunkPos());
+                var chunkBlockPos = new Vector3i(section.chunkBlockPos())
+                        .sub(iorigin);
 
-                section.forEachBlock(((blockChunkOffset, block) ->
-                        blockSorter.addBlock(
-                                section.chunkBlockPos().add(blockChunkOffset, blockPos),
-                                block
-                        )
+                int region = regionIds.getId(section.chunkPos());
+                section.forEachBlock((blockChunkOffset, block) -> blockSorter.addBlock(
+                        chunkBlockPos.add(blockChunkOffset, new Vector3i()),
+                        block
                 ));
 
                 blockSorter.forEachBlock((block) -> {
@@ -163,7 +192,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                         blockPos.set(block.x(), block.y(), block.z());
                         blockPos.add(part.offset());
 
-                        rootManager.insertBlock(
+                        treeManager.insertBlock(
                                 blockPos,
                                 part.createEntry(region)
                         );
@@ -173,6 +202,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         }
     }
 
+    private void writeSections() throws InterruptedException {
+        treeManager.uploadAll(MultiThreadTask::new);
+        treeManager.findBounds(minBlock, maxBlock);
+    }
     // Uploading
 
     private void stopUpload() throws InterruptedException {
@@ -208,10 +241,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             paletteTexture.upload();
             uniformUpdater.updateAll();
 
-            mostRecentOrigin = new WorldOrigin(rootManager.minBlockPos());
+            mostRecentOrigin = origin;
 
-            mostRecentMinBlock = new Vector3f(rootManager.minBlockPos());
-            mostRecentMaxBlock = new Vector3f(rootManager.maxBlockPos());
+            mostRecentMinBlock = new Vector3f(minBlock);
+            mostRecentMaxBlock = new Vector3f(maxBlock);
 
             uploadDone.signalAll();
         } finally {
@@ -232,14 +265,22 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                 uniformUpdater.newNotifier()
         );
 
-        dynamicUniforms.uniform3f("world_min_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMinBlock)), uniformUpdater.newNotifier());
-        dynamicUniforms.uniform3f("world_max_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMaxBlock)), uniformUpdater.newNotifier());
+
+        dynamicUniforms.uniform3f("world_min_block", () -> mostRecentMinBlock, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_max_block", () -> mostRecentMaxBlock, uniformUpdater.newNotifier());
+
         dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBlock).sub(mostRecentMinBlock), uniformUpdater.newNotifier());
 
-        dynamicUniforms.uniform3d(
+        dynamicUniforms.uniform3f(
                 IUniformUpdateFrequency.perFrame(),
                 "rt_camera_position",
-                () -> mostRecentOrigin.applyOffset(Minecraft.getCameraPos())
+                () -> {
+                    var offset = mostRecentOrigin;
+                    if (offset == null) return new Vector3f(0f);
+
+                    var pos = Minecraft.getCameraPos();
+                    return new Vector3f(offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z)));
+                }
         );
     }
 

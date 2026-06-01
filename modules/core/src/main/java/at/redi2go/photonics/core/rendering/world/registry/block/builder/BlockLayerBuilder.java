@@ -1,8 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.registry.block.builder;
 
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
-import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
-import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockLayer;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.block.VoxelLayer;
@@ -16,11 +14,11 @@ public class BlockLayerBuilder extends VoxelTreeNode {
     private final Vector3i maxVoxel = new Vector3i(Integer.MIN_VALUE);
 
     protected BlockLayerBuilder() {
-        super(VOXEL_DEPTH + 1);
+        super(BLOCK_DEPTH);
     }
 
     @Override
-    protected VoxelTreeNode createNode(Vector3i pos) {
+    protected VoxelTreeNode createNode(int x, int y, int z) {
         return new VoxelLayerBuilder();
     }
 
@@ -39,7 +37,7 @@ public class BlockLayerBuilder extends VoxelTreeNode {
         for (int i = 0; i < ENTRIES_SIZE; i++) {
             hash = hash * 31;
 
-            var entry = data[i];
+            var entry = getEntry(i);
             if (entry == null) continue;
 
             var layer = ((VoxelLayerBuilder) entry).build(registry);
@@ -54,7 +52,7 @@ public class BlockLayerBuilder extends VoxelTreeNode {
         Vector3i edgeLengths = maxVoxel.sub(minVoxel).max(VECTOR_ONE);
         return registry.allocateBlockLayer(
                 result,
-                size,
+                size(),
                 hash,
                 edgeLengths.x * edgeLengths.y * edgeLengths.z
         );

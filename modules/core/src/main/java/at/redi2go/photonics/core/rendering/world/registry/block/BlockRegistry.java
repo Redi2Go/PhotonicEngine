@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.registry.block;
 
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.registry.block.builder.VoxelLayerBuilder;
 import at.redi2go.photonics.core.rendering.world.registry.object.ObjectRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.object.WeakValue;
 import at.redi2go.photonics.core.rendering.world.registry.palete.PaletteRegistry;
@@ -24,7 +25,7 @@ public class BlockRegistry extends ObjectRegistry<BlockObject> {
         this.paletteRegistry = paletteRegistry;
     }
 
-    public @WeakValue VoxelLayer allocateVoxelLayer(@Nullable VoxelTreeEntry[] entries) {
+    public @WeakValue VoxelLayer allocateVoxelLayer(VoxelLayerBuilder entries) {
         return (VoxelLayer) cacheObject(
                 new VoxelLayer(entries, paletteRegistry, this),
                 (e) -> e.allocate(allocator)

@@ -49,4 +49,24 @@ public class WorldOrigin extends Vector3d {
     public Vector3d applyOffset(Vector3dc pos) {
         return pos.sub(this, new Vector3d());
     }
+
+    private static int snapToSectionPos(int component, int renderDistance) {
+        var chunkPos = ((component >> 4) - renderDistance) << 4;
+        return (chunkPos >> 6) << 6;
+    }
+
+    public static Vector3i getAsVector3i() {
+        Vector3d cameraPos = Minecraft.getCameraPos();
+        int renderDistance = Minecraft.getRenderDistance() + 4;
+
+        return new Vector3i(
+                snapToSectionPos((int) cameraPos.x, renderDistance),
+                snapToSectionPos((int) cameraPos.y, renderDistance),
+                snapToSectionPos((int) cameraPos.z, renderDistance)
+        );
+    }
+
+    public static WorldOrigin get() {
+        return new WorldOrigin(getAsVector3i());
+    }
 }

@@ -16,19 +16,28 @@ public class VoxelLayerBuilder extends VoxelTreeNode {
     }
 
     @Override
-    protected VoxelTreeEntry merge(@Nullable VoxelTreeEntry oldEntry, VoxelTreeEntry newEntry) {
-        var accumulator = MutablePaletteEntry.copyOf(oldEntry);
-        accumulator.update(newEntry);
-
-        return accumulator;
-    }
-
-    public @WeakValue VoxelLayer build(BlockRegistry registry) {
-        return registry.allocateVoxelLayer(data);
+    public VoxelTreeEntry getEntry(int index) {
+        return super.getEntry(index);
     }
 
     @Override
-    protected VoxelTreeNode createNode(Vector3i pos) {
+    public void insertEntry(int x, int y, int z, VoxelTreeEntry entry) {
+        int index = indexOf(x, y, z, magnitude());
+
+        var oldEntry = getEntry(index);
+        var accumulator = MutablePaletteEntry.copyOf(oldEntry);
+
+        accumulator.update(entry);
+
+        setEntry(index, accumulator);
+    }
+
+    public @WeakValue VoxelLayer build(BlockRegistry registry) {
+        return registry.allocateVoxelLayer(this);
+    }
+
+    @Override
+    protected VoxelTreeNode createNode(int x, int y, int z) {
         throw new UnsupportedOperationException("createNode");
     }
 

@@ -5,7 +5,7 @@ import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.registry.object.InnerWorldObject;
 import at.redi2go.photonics.core.rendering.world.registry.object.WorldObject;
-import at.redi2go.photonics.core.rendering.world.registry.palete.PaletteObject;
+import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeNode;
 
 import java.util.List;
@@ -18,6 +18,17 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
         super(depth);
         this.ref = new Reference(blockRegistry);
     }
+
+    public BlockNodeObject(
+            BlockRegistry blockRegistry,
+            int depth,
+            int size,
+            VoxelTreeEntry[] entries
+    ) {
+        super(depth);
+        this.ref = new Reference(blockRegistry);
+    }
+
 
     protected abstract boolean useChildMask();
 
@@ -41,7 +52,7 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
 
     protected void loadDependants(List<WorldObject> output) {
         for (int i = 0; i < ENTRIES_SIZE; i++) {
-            var entry = data[i];
+            var entry = getEntry(i);
             if (entry == null) continue;
 
             output.add((WorldObject) entry);

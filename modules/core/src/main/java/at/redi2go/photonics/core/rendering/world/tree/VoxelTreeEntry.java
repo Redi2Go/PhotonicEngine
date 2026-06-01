@@ -6,8 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface VoxelTreeEntry {
     int VOXEL_DEPTH = 0;
-    int BLOCK_DEPTH = 2;
-    int CHUNK_DEPTH = 4;
+    int BLOCK_DEPTH = 1;
+    int BLOCK_CONTAINER_DEPTH = 2;
+    int CHUNK_DEPTH = 3;
+    int CHUNK_CONTAINER_DEPTH = 4;
 
     int depth();
 
