@@ -99,23 +99,29 @@ public class RootManager implements WorldManager {
     }
 
     public void uploadAll(Supplier<CompilerTask> taskSupplier) throws InterruptedException {
-//        var itr = uploadJobs.int2ObjectEntrySet().iterator();
-//        while (itr.hasNext()) {
-//            var entry = itr.next();
-//            var task = taskSupplier.get();
-//
-//            for (var job : entry.getValue())
-//                task.queueJob(job);
-//
-//            itr.remove();
-//            task.awaitCompletion();
-//        }
+        var itr = uploadJobs.int2ObjectEntrySet().iterator();
+        while (itr.hasNext()) {
+            var entry = itr.next();
+            var task = taskSupplier.get();
+
+            for (var job : entry.getValue())
+                task.queueJob(job);
+
+            itr.remove();
+            task.awaitCompletion();
+        }
 
         if (root != null) {
             root.removeEmpty();
             root = root.pruneTree();
 
-            root.uploadTo(rootMemory);
+            if (root == null) {
+                rootMemory.setChildMask(0);
+            } else {
+                root.uploadTo(rootMemory);
+            }
+
+
             rootMemory.upload();
         }
     }

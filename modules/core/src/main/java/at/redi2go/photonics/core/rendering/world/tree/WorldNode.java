@@ -28,6 +28,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     private WorldNode parent;
     private final IntSet containedRegions = new IntOpenHashSet();
 
+    private boolean uploadRequested = false;
     private boolean hasEmptyChild = false;
 
     private long childMask = 0;
@@ -99,6 +100,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
             containedRegions.addAll(blockEntry.regions());
         }
 
+        requestUpload();
         super.insertEntry(pos, entry);
     }
 
@@ -150,7 +152,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         return size <= 0;
     }
 
-    public WorldNode pruneTree() {
+    public @Nullable WorldNode pruneTree() {
         if (size > 1) {
             parent = null;
             return this;
@@ -162,6 +164,8 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
                 return node.pruneTree();
             }
         }
+
+        if (size <= 0) return null;
 
         parent = null;
         return this;
@@ -179,11 +183,22 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         return super.writeEntries(memory);
     }
 
-    @Override
-    public void uploadTo(VoxelEntryMemory memory) {
+    private void requestUpload() {
+        if (uploadRequested) return;
+
+        uploadRequested = true;
+        worldManager.queueUpload(depth, this::upload);
+    }
+
+    private void upload() {
         childMask = writeEntries(this.memory);
         this.memory.upload();
 
+        uploadRequested = false;
+    }
+
+    @Override
+    public void uploadTo(VoxelEntryMemory memory) {
         memory.setEntryFlag(false);
         memory.setEntryData(this.memory.entryData());
         memory.setChildMask(childMask);
