@@ -58,6 +58,10 @@ public class ObjectRegistry<T extends WorldObject> {
         cache.remove(value);
     }
 
+    public boolean hasEnqueuedObject() {
+        return !freeQueue.isEmpty();
+    }
+
     void enqueueObject(WorldObject.Handle<T> value) {
         freeQueue.add(value);
     }
