@@ -83,5 +83,10 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
         protected void loadDependants(List<WorldObject> output) {
             BlockNodeObject.this.loadDependants(output);
         }
+
+        @Override
+        protected WorldObject getKey() {
+            return BlockNodeObject.this;
+        }
     }
 }

@@ -111,7 +111,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                     rootManager.uploadAll(MultiThreadTask::new);
                     awaitUpload();
 
-//                    registry.freeUnusedObjects();
+                    registry.freeUnusedObjects();
                 }
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {

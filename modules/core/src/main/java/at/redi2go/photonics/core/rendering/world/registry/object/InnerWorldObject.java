@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public class InnerWorldObject<M extends Disposable> extends AbstractWorldObject<M> {
+public abstract class InnerWorldObject<M extends Disposable> extends AbstractWorldObject<M> {
     public InnerWorldObject(ObjectRegistry<?> registry) {
         super(registry);
     }
@@ -21,4 +21,7 @@ public class InnerWorldObject<M extends Disposable> extends AbstractWorldObject<
     public M memoryOrThrow() {
         return super.memoryOrThrow();
     }
+
+    @Override
+    protected abstract WorldObject getKey();
 }

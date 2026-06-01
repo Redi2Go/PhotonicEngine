@@ -71,6 +71,10 @@ public abstract class AbstractWorldObject<M extends Disposable> implements World
 
     }
 
+    protected WorldObject getKey() {
+        return this;
+    }
+
     protected M setMemory(Supplier<M> memorySupplier) {
         while (true) {
             int count = this.referenceCount;
@@ -165,7 +169,7 @@ public abstract class AbstractWorldObject<M extends Disposable> implements World
     private class HandleImpl implements Handle<WorldObject> {
         @Override
         public @Nullable WorldObject free() {
-            return dispose() ? AbstractWorldObject.this : null;
+            return dispose() ? getKey() : null;
         }
     }
 

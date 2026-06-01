@@ -5,17 +5,18 @@ import at.redi2go.photonics.core.rendering.world.block.palette.PaletteEntry;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTextureView;
 import at.redi2go.photonics.core.rendering.world.registry.object.InnerWorldObject;
+import at.redi2go.photonics.core.rendering.world.registry.object.ObjectRegistry;
 import at.redi2go.photonics.core.rendering.world.registry.object.WorldObject;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import org.joml.Vector4i;
 
 public class PaletteObject extends PaletteEntry implements WorldObject, VoxelTreeEntry {
-    private final InnerWorldObject<PaletteTextureView> ref;
+    private final Reference ref;
 
     public PaletteObject(PaletteRegistry registry, PaletteEntry toCopy) {
         copyFrom(toCopy);
 
-        this.ref = new InnerWorldObject<>(registry);
+        this.ref = new Reference(registry);
     }
 
     @Override
@@ -80,5 +81,16 @@ public class PaletteObject extends PaletteEntry implements WorldObject, VoxelTre
     @Override
     public void close() {
         ref.close();
+    }
+
+    private class Reference extends InnerWorldObject<PaletteTextureView> {
+        public Reference(ObjectRegistry<?> registry) {
+            super(registry);
+        }
+
+        @Override
+        protected WorldObject getKey() {
+            return PaletteObject.this;
+        }
     }
 }

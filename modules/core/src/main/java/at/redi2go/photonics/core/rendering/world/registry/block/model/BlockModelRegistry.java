@@ -41,7 +41,7 @@ public class BlockModelRegistry extends ObjectRegistry<BlockModelImpl> {
 
     @Override
     protected void removeObject(BlockModelImpl value) {
-        modelCache.remove(value.hashCode());
+        modelCache.remove(value.vertexHash());
 
         var meshes = value.meshes();
         while (!meshes.isEmpty()) {

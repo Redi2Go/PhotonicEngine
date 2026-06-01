@@ -8,6 +8,7 @@ import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockModel
 import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockPartImpl;
 import at.redi2go.photonics.core.rendering.world.registry.object.WeakValue;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 import java.util.HashMap;
@@ -46,7 +47,9 @@ public class BlockModelBuilder implements VoxelConsumer {
         builder.insertEntry(tempPos, tempVoxelData);
     }
 
-    public @WeakValue BlockModelImpl build(long vertexHash, BlockRegistry blockRegistry, BlockModelRegistry registry) {
+    public @WeakValue @Nullable BlockModelImpl build(long vertexHash, BlockRegistry blockRegistry, BlockModelRegistry registry) {
+        if (this.parts.isEmpty()) return null;
+
         ImmutableList.Builder<BlockPartImpl> parts = ImmutableList.builder();
 
         for (var entry : this.parts.entrySet()) {
