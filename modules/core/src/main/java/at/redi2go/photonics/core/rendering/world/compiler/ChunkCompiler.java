@@ -1,22 +1,22 @@
-package at.redi2go.photonics.core.old.world.compiler;
+package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
-import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
 import at.redi2go.photonics.core.Photonics;
-import at.redi2go.photonics.core.old.model.VoxelModel;
 import at.redi2go.photonics.core.rendering.PrioritizedTask;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
-import at.redi2go.photonics.core.old.world.block.BlockModel;
-import at.redi2go.photonics.core.old.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -93,7 +93,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                                     blockChunkOffset.x(),
                                     blockChunkOffset.y(),
                                     blockChunkOffset.z(),
-                                    worldRegistry.getBlockModel(
+                                    worldRegistry.blockModelRegistry().getBlockModel(
                                             mesher,
                                             new Vector3i(blockChunkOffset),
                                             blockPos,
@@ -158,7 +158,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         private final long hash;
         private final long priority;
 
-        private final @Nullable BlockModel[] blocks = new BlockModel[IChunkSection.SECTION_SIZE];
+        private final List<BlockResult> blocks = new ArrayList<>(128);
 
         private final AtomicInteger pendingBlocks = new AtomicInteger();
         private final CompletableFuture<Void> future = new CompletableFuture<>();
@@ -219,7 +219,8 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
         }
 
         private void completeBlock(int x, int y, int z, @Nullable BlockModel blockModel) throws InterruptedException {
-            setBlock(x, y, z, blockModel);
+            if (blockModel != null)
+                blocks.add(new BlockResult(x, y, z, blockModel));
 
             while (true) {
                 int pending = pendingBlocks.get();
@@ -270,47 +271,25 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             } else close();
         }
 
-        public @Nullable BlockModel getBlock(int x, int y, int z) {
-            if (!containsBlock(x, y, z)) return null;
-
-            return blocks[VoxelModel.toVoxelIndex(x, y, z)];
-        }
-
-        private void setBlock(int x, int y, int z, @Nullable BlockModel block) {
-            if (!containsBlock(x, y, z)) return;
-
-            blocks[VoxelModel.toVoxelIndex(x, y, z)] = block;
-        }
-
         public void forEachBlock(BiConsumer<Vector3i, BlockModel> blockConsumer) {
-            Vector3i chunkOffset = new Vector3i();
-
-            for (int px = 0; px < 16; px++) {
-                for (int py = 0; py < 16; py++) {
-                    for (int pz = 0; pz < 16; pz++) {
-
-                        var block = getBlock(px, py, pz);
-                        if (block == null) continue;
-
-                        chunkOffset.set(px, py, pz);
-                        blockConsumer.accept(chunkOffset, block);
-                    }
-                }
-            }
-        }
-
-        private static boolean containsBlock(int x, int y, int z) {
-            return VoxelModel.contains(x, y, z, 16, 16, 16);
+            for (var block : blocks)
+                blockConsumer.accept(block, block.model);
         }
 
         @Override
         public void close() {
-            for (int i = 0; i < IChunkSection.SECTION_SIZE; i++) {
-                var block = blocks[i];
-                if (block == null) continue;
+            for (var block : blocks)
+                block.model.close();
+        }
+    }
 
-                block.close();
-            }
+    private static class BlockResult extends Vector3i {
+        public final BlockModel model;
+
+        public BlockResult(int x, int y, int z, BlockModel model) {
+            super(x, y, z);
+
+            this.model = model;
         }
     }
 }

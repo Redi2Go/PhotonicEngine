@@ -88,9 +88,9 @@ public abstract class VoxelTreeNode implements VoxelTreeEntry {
     }
 
     public int indexOf(Vector3i pos, int magnitude) {
-        int x = ((pos.x >> magnitude) & 4);
-        int y = ((pos.y >> magnitude) & 4);
-        int z = ((pos.z >> magnitude) & 4);
+        int x = ((pos.x >> magnitude) & 3);
+        int y = ((pos.y >> magnitude) & 3);
+        int z = ((pos.z >> magnitude) & 3);
 
         return x + (z << 2) + (y << 4);
     }

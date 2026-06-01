@@ -6,7 +6,7 @@ import org.joml.Vector3i;
 import java.util.Collection;
 import java.util.List;
 
-public interface BlockModel {
+public interface BlockModel extends Disposable {
     List<Part> parts();
 
     interface Part extends Disposable {

@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.old.world.allocator.buffer;
+package at.redi2go.photonics.core.rendering.world.allocator.buffer;
 
 import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
 import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;

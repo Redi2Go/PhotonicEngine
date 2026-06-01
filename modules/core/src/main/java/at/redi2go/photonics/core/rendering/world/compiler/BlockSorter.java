@@ -1,6 +1,6 @@
-package at.redi2go.photonics.core.old.world.compiler;
+package at.redi2go.photonics.core.rendering.world.compiler;
 
-import at.redi2go.photonics.core.old.world.block.BlockModel;
+import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 import org.joml.Vector3i;

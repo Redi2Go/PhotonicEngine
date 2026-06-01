@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.old.world.compiler;
+package at.redi2go.photonics.core.rendering.world.compiler;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;

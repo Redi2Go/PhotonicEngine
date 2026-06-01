@@ -18,6 +18,11 @@ public record SimpleBlockEntry(
     }
 
     @Override
+    public IntSet regions() {
+        return IntSet.of(region);
+    }
+
+    @Override
     public int depth() {
         return part.blockLayer().depth();
     }

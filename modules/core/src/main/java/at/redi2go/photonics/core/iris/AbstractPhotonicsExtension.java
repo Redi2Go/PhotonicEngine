@@ -13,13 +13,12 @@ import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.lights.BufferLightList;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
-import at.redi2go.photonics.core.old.world.allocator.buffer.BufferPaletteTexture;
-import at.redi2go.photonics.core.old.world.allocator.buffer.BufferWorldAllocator;
+import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferPaletteTexture;
+import at.redi2go.photonics.core.rendering.world.allocator.buffer.BufferWorldAllocator;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.old.world.compiler.ChunkCompiler;
-import at.redi2go.photonics.core.old.world.compiler.WorldCompiler;
+import at.redi2go.photonics.core.rendering.world.compiler.ChunkCompiler;
+import at.redi2go.photonics.core.rendering.world.compiler.WorldCompiler;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
-import at.redi2go.photonics.core.old.world.registry.optimization.OptimizationService;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -54,8 +53,7 @@ public abstract class AbstractPhotonicsExtension implements PhotonicsExtension {
         var worldAllocator = registerComponent(new BufferWorldAllocator(1 << 29));
         var paletteTexture = registerComponent(new BufferPaletteTexture(2048, 600));
 
-        var optimizationService = registerComponent(new OptimizationService());
-        var worldRegistry = registerComponent(new WorldRegistry(worldAllocator, paletteTexture, atlasDownloader, optimizationService));
+        var worldRegistry = new WorldRegistry(worldAllocator, paletteTexture, atlasDownloader);
 
         var builtSectionQueue = sectionManager.<ChunkCompiler.BuildResult>newTaskQueue(WorldCompiler.MAX_SECTIONS_PER_RUN << 1, true);
         var worldCompiler = registerComponent(new WorldCompiler(

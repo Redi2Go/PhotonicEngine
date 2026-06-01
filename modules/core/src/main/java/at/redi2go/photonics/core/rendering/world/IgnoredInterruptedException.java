@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.old.world;
+package at.redi2go.photonics.core.rendering.world;
 
 public class IgnoredInterruptedException extends RuntimeException {
 }

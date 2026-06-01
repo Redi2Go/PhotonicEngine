@@ -240,7 +240,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
     private LightList trimLights() {
         var loadedLights = tracedLightPositions.values().toArray(TracedLightPosition[]::new);
         if (loadedLights.length < maxLights) {
-            return new LightList(loadedLights, WorldOrigin.get());
+            return new LightList(loadedLights, worldOriginSupplier.get());
         }
 
         Vector3d cameraPosition = Minecraft.getCameraPos();
@@ -253,7 +253,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
 
         return new LightList(
                 Arrays.copyOf(loadedLights, maxLights),
-                WorldOrigin.get()
+                worldOriginSupplier.get()
         );
     }
 

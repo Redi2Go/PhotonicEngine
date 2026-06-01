@@ -5,6 +5,7 @@ import at.redi2go.photonics.core.rendering.world.WorldManager;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -18,6 +19,8 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     private final WorldAllocator allocator;
     private final VoxelEntryListMemory memory;
 
+    private final BlockMergeMode mergeMode;
+
     private final Vector3i minPos;
     private final Vector3i maxPos;
 
@@ -25,7 +28,6 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     private WorldNode parent;
     private final IntSet containedRegions = new IntOpenHashSet();
 
-    private boolean uploadRequested = false;
     private boolean hasEmptyChild = false;
 
     private long childMask = 0;
@@ -33,6 +35,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     public WorldNode(
             WorldManager worldManager,
             WorldAllocator allocator,
+            BlockMergeMode mergeMode,
             int depth,
             Vector3i pos
     ) {
@@ -42,6 +45,8 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         this.allocator = allocator;
         this.memory = allocator.allocateEntryList(true, 0);
 
+        this.mergeMode = mergeMode;
+
         int sideLength = blockSideLength();
         this.minPos = new Vector3i(
                 pos.x & -sideLength,
@@ -50,6 +55,11 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         );
 
         this.maxPos = new Vector3i(sideLength).add(minPos);
+    }
+
+    @Override
+    public int magnitude() {
+        return (depth - 2) << 1;
     }
 
     public int blockSideLength() {
@@ -81,11 +91,20 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         return false;
     }
 
-    private void propagateEmpty() {
-        if (hasEmptyChild) return;
+    @Override
+    public void insertEntry(Vector3i pos, VoxelTreeEntry entry) {
+        if (entry instanceof WorldNode node) {
+            containedRegions.addAll(node.containedRegions);
+        } else if (entry instanceof BlockEntry blockEntry) {
+            containedRegions.addAll(blockEntry.regions());
+        }
 
+        super.insertEntry(pos, entry);
+    }
+
+    private void propagateEmpty() {
         var node = this;
-        while (node != null) {
+        while (node != null && !node.hasEmptyChild) {
             node.hasEmptyChild = true;
             node = node.parent;
         }
@@ -107,6 +126,8 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
 
             data[i] = newEntry;
         }
+
+        containedRegions.removeAll(regions);
 
         if (size <= 0)
             propagateEmpty();
@@ -130,34 +151,39 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     }
 
     public WorldNode pruneTree() {
-        if (size > 1) return this;
+        if (size > 1) {
+            parent = null;
+            return this;
+        }
 
         for (var entry : data) {
             if (entry instanceof WorldNode node) {
-                close();
+                memory.close();
                 return node.pruneTree();
             }
         }
 
+        parent = null;
         return this;
     }
 
-    private void requestUpload() {
-        if (uploadRequested) return;
+    @Override
+    protected long writeEntries(VoxelEntryListMemory memory) {
+        //TODO: Fix size tracking
+        int tempSize = 0;
+        for (var entry : data)
+            if (entry != null) tempSize++;
 
-        worldManager.queueUpload(depth, this::upload);
-        uploadRequested = true;
-    }
+        size = tempSize;
 
-    private void upload() {
-        if (size == 0) return;
-
-        this.childMask = writeEntries(memory);
-        uploadRequested = false;
+        return super.writeEntries(memory);
     }
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
+        childMask = writeEntries(this.memory);
+        this.memory.upload();
+
         memory.setEntryFlag(false);
         memory.setEntryData(this.memory.entryData());
         memory.setChildMask(childMask);
@@ -165,26 +191,24 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
 
     @Override
     protected VoxelTreeNode createNode(Vector3i pos) {
-        return new WorldNode(worldManager, allocator, depth - 1, pos);
+        return new WorldNode(worldManager, allocator, mergeMode, depth - 1, pos);
     }
 
     @Override
     protected VoxelTreeEntry merge(@Nullable VoxelTreeEntry oldEntry, VoxelTreeEntry newEntry) {
-        if (newEntry instanceof WorldNode node) {
+        if (newEntry instanceof WorldNode node)
             node.parent = this;
-            containedRegions.addAll(node.containedRegions);
-        }
 
-        return super.merge(oldEntry, newEntry);
-    }
-
-    @Override
-    protected void onChanged() {
-        requestUpload();
+        return newEntry instanceof BlockEntry blockEntry ? mergeMode.merge((BlockEntry) oldEntry, blockEntry) : super.merge(oldEntry, newEntry);
     }
 
     @Override
     public void close() {
+        for (var entry : data) {
+            if (entry instanceof Disposable disposable)
+                disposable.close();
+        }
+
         memory.close();
     }
 

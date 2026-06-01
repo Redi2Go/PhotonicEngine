@@ -27,6 +27,8 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
     public void allocate(WorldAllocator allocator) {
         var memory = ref.setMemory(() -> allocator.allocateEntryList(useChildMask(), extraFieldCount()));
         this.childMask = writeEntries(memory);
+
+        memory.upload();
     }
 
     @Override
@@ -40,7 +42,7 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
             var entry = data[i];
             if (entry == null) continue;
 
-            output.add((PaletteObject) entry);
+            output.add((WorldObject) entry);
         }
     }
 

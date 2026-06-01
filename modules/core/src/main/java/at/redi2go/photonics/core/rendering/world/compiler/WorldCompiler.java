@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.old.world.compiler;
+package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
@@ -6,27 +6,20 @@ import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
-import at.redi2go.photonics.core.old.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.WorldManager;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
-import at.redi2go.photonics.core.old.world.tree.BlockMergeMode;
-import at.redi2go.photonics.core.old.world.tree.ChunkManager;
-import at.redi2go.photonics.core.old.world.tree.ChunkVoxel;
-import at.redi2go.photonics.core.old.world.tree.WorldVoxel;
+import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent {
+public class WorldCompiler implements Runnable, RenderingComponent {
     public static final int MAX_SECTIONS_PER_RUN = 48;
 
     private static final int THREAD_POOL_SIZE = 3;
@@ -48,26 +41,17 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
     private final WorldRegistry registry;
 
     private final RegionIdManager regionIds = new RegionIdManager();
-
-    private final Queue<WorldVoxel> uploadQueue;
-    private final WorldVoxel rootVoxel;
-    private final Set<ChunkVoxel> chunks = ConcurrentHashMap.newKeySet();
+    private final RootManager rootManager;
 
     private final ReentrantLock uploadLock = new ReentrantLock();
     private final Condition uploadDone = uploadLock.newCondition();
     private boolean canUpload = true;
 
-    private Vector3i iorigin = null;
-    private WorldOrigin origin = null;
-
-    private final Vector3i minVoxel = new Vector3i();
-    private final Vector3i maxVoxel = new Vector3i();
-
     private final UniformUpdater uniformUpdater = new UniformUpdater();
 
-    private WorldOrigin mostRecentOrigin;
-    private Vector3f mostRecentMinVoxel = new Vector3f();
-    private Vector3f mostRecentMaxVoxel = new Vector3f();
+    private WorldOrigin mostRecentOrigin = new WorldOrigin(0.0f, 0.0f, 0.0f);
+    private Vector3f mostRecentMinBlock = new Vector3f();
+    private Vector3f mostRecentMaxBlock = new Vector3f();
 
     private final Thread compilerThread;
 
@@ -84,8 +68,7 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         this.taskQueue = taskQueue;
         this.registry = worldRegistry;
 
-        this.uploadQueue = new ConcurrentLinkedQueue<>();
-        this.rootVoxel = WorldVoxel.create(depth, BlockMergeMode.OVERWRITE, this, registry, uploadQueue);
+        this.rootManager = new RootManager(worldAllocator, BlockMergeMode.OVERWRITE);
 
         this.compilerThread = new Thread(this, "Photonics World Compiler");
         this.compilerThread.start();
@@ -95,11 +78,13 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         return mostRecentOrigin;
     }
 
-    private void setOrigin(Vector3i origin) {
-        this.iorigin = origin;
-        this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
+    public Vector3f minBlock() {
+        return mostRecentMinBlock;
     }
 
+    public Vector3f maxBlock() {
+        return mostRecentMaxBlock;
+    }
 
     @Override
     public void run() {
@@ -116,20 +101,16 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
 
                 var builtSections = taskQueue.drain(MAX_SECTIONS_PER_RUN);
                 if (!builtSections.isEmpty()) {
-                    recenter();
-
                     clearPendingSections(builtSections);
                     insertSections(builtSections);
                 }
 
                 if (!unloadedSections.isEmpty() || !builtSections.isEmpty()) {
-                    rootVoxel.pruneEmptyVoxels();
-
                     stopUpload();
-                    buildSections();
+                    rootManager.uploadAll(MultiThreadTask::new);
                     awaitUpload();
 
-                    registry.objectManager().freeUnusedObjects();
+//                    registry.freeUnusedObjects();
                 }
             }
         } catch (InterruptedException | IgnoredInterruptedException e) {
@@ -137,137 +118,59 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         }
     }
 
-
-    // Compiler Steps
-
     private void clearUnloadedSections(List<Vector3i> unloadedSections) {
-        if (iorigin == null) return;
-
         IntSet regions = new IntOpenHashSet(unloadedSections.size());
         for (var section : unloadedSections) {
             regions.add(regionIds.getId(section));
             regionIds.removeRegion(section);
         }
 
-        rootVoxel.removeRegions(regions);
-    }
-
-    private void recenter() throws InterruptedException {
-        var newOrigin = WorldOrigin.getAsVector3i();
-        if (iorigin == null) {
-            setOrigin(newOrigin);
-            return;
-        }
-
-        if (iorigin.equals(newOrigin)) return;
-
-        stopUpload();
-
-        var chunks = new ArrayList<>(this.chunks);
-        for (var chunk : chunks) {
-            if (chunk == null) continue;
-
-            rootVoxel.removeChunkUnsafe(chunk.x(), chunk.y(), chunk.z());
-        }
-
-        var offset = iorigin.sub(newOrigin, new Vector3i());
-        offset.x = offset.x << 4;
-        offset.y = offset.y << 4;
-        offset.z = offset.z << 4;
-
-        for (var chunk : chunks) {
-            if (chunk == null) continue;
-
-            int newX = chunk.x() + offset.x;
-            int newY = chunk.y() + offset.y;
-            int newZ = chunk.z() + offset.z;
-
-            if (!rootVoxel.containsChunk(newX, newY, newZ)) {
-                chunk.close();
-                continue;
-            }
-
-            rootVoxel.insertChunk(newX, newY, newZ, chunk);
-        }
-
-        rootVoxel.pruneEmptyVoxels();
-
-        setOrigin(newOrigin);
+        rootManager.removeRegions(regions);
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
         IntSet regions = new IntOpenHashSet(sections.size());
-        for (var section : sections)
+        for (var section : sections) {
             regions.add(regionIds.getId(section.chunkPos()));
+        }
 
-        rootVoxel.removeRegions(regions);
+        rootManager.removeRegions(regions);
     }
 
     private void insertSections(List<ChunkCompiler.BuildResult> sections) {
         BlockSorter blockSorter = new BlockSorter();
-        Vector3i blockVoxelPos = new Vector3i();
+        Vector3i blockPos = new Vector3i();
 
         for (var section : sections) {
             try (section) {
                 blockSorter.reset();
 
-                var chunkVoxelPos = new Vector3i(section.chunkBlockPos())
-                        .sub(iorigin)
-                        .mul(16);
+                int region = regionIds.getId(section.chunkPos());
 
-                if (!rootVoxel.containsChunk(chunkVoxelPos)) continue;
-
-                int region =regionIds.getId(section.chunkPos());
-                section.forEachBlock((blockChunkPos, block) -> blockSorter.addBlock(
-                        chunkVoxelPos.add(blockChunkPos.mul(16), new Vector3i()),
-                        block
+                section.forEachBlock(((blockChunkOffset, block) ->
+                        blockSorter.addBlock(
+                                section.chunkBlockPos().add(blockChunkOffset, blockPos),
+                                block
+                        )
                 ));
 
-                blockSorter.forEachBlock((block -> {
+                blockSorter.forEachBlock((block) -> {
                     var parts = block.blockModel().parts();
                     for (int i = 0; i < parts.size(); i++) {
                         var part = parts.get(i);
 
-                        blockVoxelPos.set(block.x(), block.y(), block.z());
-                        blockVoxelPos.add(part.offset().mul(16, new Vector3i()));
+                        blockPos.set(block.x(), block.y(), block.z());
+                        blockPos.add(part.offset());
 
-                        rootVoxel.insertBlock(
-                                blockVoxelPos.x, blockVoxelPos.y, blockVoxelPos.z,
-                                region,
-                                part.toEntry(region)
+                        rootManager.insertBlock(
+                                blockPos,
+                                part.createEntry(region)
                         );
                     }
-                }));
+                });
             }
         }
     }
-
-    private void buildSections() throws InterruptedException {
-        var task = new MultiThreadTask();
-
-        var chunks = new ArrayList<>(this.chunks);
-
-        while (!uploadQueue.isEmpty())
-            task.queueJob(uploadQueue.remove()::upload);
-
-        minVoxel.set(Integer.MAX_VALUE);
-        maxVoxel.set(Integer.MIN_VALUE);
-
-        var temp = new Vector3i();
-
-        for (var chunk : chunks) {
-            if (chunk == null) continue;
-
-            temp.set(chunk.x(), chunk.y(), chunk.z());
-            minVoxel.min(temp);
-
-            temp.add(chunk.voxelSize());
-            maxVoxel.max(temp);
-        }
-
-        task.awaitPending();
-    }
-
 
     // Uploading
 
@@ -304,10 +207,10 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
             paletteTexture.upload();
             uniformUpdater.updateAll();
 
-            mostRecentOrigin = origin;
+            mostRecentOrigin = new WorldOrigin(rootManager.minBlockPos());
 
-            mostRecentMinVoxel = new Vector3f(minVoxel);
-            mostRecentMaxVoxel = new Vector3f(maxVoxel);
+            mostRecentMinBlock = new Vector3f(rootManager.minBlockPos());
+            mostRecentMaxBlock = new Vector3f(rootManager.maxBlockPos());
 
             uploadDone.signalAll();
         } finally {
@@ -328,8 +231,9 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
                 uniformUpdater.newNotifier()
         );
 
-        dynamicUniforms.uniform3f("world_min_voxel", () -> mostRecentMinVoxel, uniformUpdater.newNotifier());
-        dynamicUniforms.uniform3f("world_max_voxel", () -> mostRecentMaxVoxel, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_min_block", () -> mostRecentMinBlock, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_max_block", () -> mostRecentMaxBlock, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBlock).sub(mostRecentMinBlock), uniformUpdater.newNotifier());
 
         dynamicUniforms.uniform3f("rt_camera_position", () -> {
             var offset = mostRecentOrigin;
@@ -340,23 +244,10 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
         }, uniformUpdater.newNotifier());
     }
 
-    // Chunk management
-
-    @Override
-    public void addChunk(ChunkVoxel chunk) {
-        chunks.add(chunk);
-    }
-
-    @Override
-    public void removeChunk(ChunkVoxel chunk) {
-        chunks.remove(chunk);
-    }
-
     @Override
     public void close() {
         compilerThread.interrupt();
     }
-
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {
         private final AtomicInteger pendingTasks = new AtomicInteger();
@@ -375,7 +266,8 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
             });
         }
 
-        void awaitPending() throws InterruptedException {
+        @Override
+        public void awaitCompletion() throws InterruptedException {
             try {
                 if (pendingTasks.get() != 0)
                     get();
@@ -391,7 +283,8 @@ public class WorldCompiler implements ChunkManager, Runnable, RenderingComponent
             task.run();
         }
 
-        void awaitPending() {
+        @Override
+        public void awaitCompletion() {
 
         }
     }

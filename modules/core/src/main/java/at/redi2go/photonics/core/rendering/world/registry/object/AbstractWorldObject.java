@@ -158,13 +158,6 @@ public abstract class AbstractWorldObject<M extends Disposable> implements World
             throw new IllegalStateException("already allocated");
     }
 
-    @Override
-    public abstract int hashCode();
-
-    @Override
-    public abstract boolean equals(Object o);
-
-
     private class HandleImpl implements Handle<WorldObject> {
         @Override
         public @Nullable WorldObject free() {

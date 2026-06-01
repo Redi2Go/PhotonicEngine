@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common;
 
 import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.core.old.world.IgnoredInterruptedException;
+import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.Rgba8Texture;
