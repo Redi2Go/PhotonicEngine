@@ -34,7 +34,7 @@ public class ObjectRegistry<T extends WorldObject> {
             Consumer<T> allocator
     ) {
         var value = cache.get(key);
-        if (value != null) return (T) value;
+        if (value != null) return value;
 
         var newValue = supplier.apply(key);
         var result = cache.putIfAbsent(newValue, newValue);

@@ -39,11 +39,13 @@ public abstract class AbstractWorldObject<M extends Disposable> implements World
             Thread.onSpinWait();
 
             count = referenceCount;
-            checkCanAllocate(count);
+            checkNotClosed(count);
         }
     }
 
     public void acquireReference() {
+        awaitAllocated();
+
         while (true) {
             int count = referenceCount;
             checkNotClosed(count);
@@ -54,6 +56,8 @@ public abstract class AbstractWorldObject<M extends Disposable> implements World
     }
 
     public boolean tryAcquireReference() {
+        awaitAllocated();
+
         while (true) {
             int count = referenceCount;
             if (count == CLOSED) return false;

@@ -33,6 +33,8 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
+        awaitAllocated();
+
         memory.setEntryData(ref.memoryOrThrow().entryData());
         memory.setChildMask(childMask);
     }

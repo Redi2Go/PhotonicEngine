@@ -25,6 +25,8 @@ public class PaletteObject extends PaletteEntry implements WorldObject, VoxelTre
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
+        awaitAllocated();
+
         memory.setEntryFlag(hasTransparent);
         memory.setEntryData(ref.memoryOrThrow().entryData());
     }
