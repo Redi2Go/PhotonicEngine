@@ -6,7 +6,9 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -14,15 +16,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public abstract class AbstractGpuBufferHeap implements IGpuBufferHeap {
     private long index = 0;
-    private final Queue<FreeRegion> freeRegions = new ConcurrentLinkedQueue<>();
+    private final Map<Long, ConcurrentLinkedQueue<FreeRegion>> freeRegions = new ConcurrentHashMap();
 
     protected synchronized long allocatePtr(long byteSize) {
-        for (var itr = freeRegions.iterator(); itr.hasNext(); ) {
-            final var region = itr.next();
-            if (region.size() != byteSize) continue;
-
-            itr.remove();
-            return region.begin;
+        var queue = freeRegions.get(byteSize);
+        if (queue != null) {
+            final var region = queue.poll();
+            if (region != null)
+                return region.begin;
         }
 
         long begin = index;
@@ -62,7 +63,9 @@ public abstract class AbstractGpuBufferHeap implements IGpuBufferHeap {
             if ((_begin() & SIGN_BIT) != 0) return;
             _setBegin(_begin() | SIGN_BIT);
 
-            owner().freeRegions.add(new FreeRegion(begin(), end()));
+            long size = end() - begin();
+            owner().freeRegions.computeIfAbsent(size, (ignored) -> new ConcurrentLinkedQueue<>())
+                            .add(new FreeRegion(begin(), end()));
         }
 
         static List<? extends MemorySlice> takeFrom(Queue<Region> queue) {
