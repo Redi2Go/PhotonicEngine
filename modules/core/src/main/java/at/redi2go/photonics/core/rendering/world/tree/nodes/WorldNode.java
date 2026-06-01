@@ -19,16 +19,19 @@ import org.joml.Vector3i;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorldNode extends VoxelTreeNode implements Disposable {
+    private static final int CLOSED = 2;
+
     protected final WorldManager worldManager;
     protected final WorldAllocator allocator;
     protected final BlockMergeMode mergeMode;
+
+    private boolean isClosed = false;
     private final VoxelEntryListMemory memory;
 
     private final AtomicBoolean uploadRequested = new AtomicBoolean(false);
     private boolean hasEmptyChild = false;
 
     private long childMask = 0;
-    private int prevEntryData = -1;
 
     private final IntSet containedRegions = new IntOpenHashSet();
 
@@ -109,8 +112,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
 
     @Override
     protected void onChanged() {
-        if (uploadRequested.compareAndSet(false, true))
-            worldManager.queueUpload(depth(), this::upload);
+        requestUpload();
 
         if (isEmpty()) {
             var node = this;
@@ -218,25 +220,34 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         }
 
         memory.close();
+        isClosed = true;
     }
 
 
     // Uploading
 
+    private void requestUpload() {
+//        if (uploadRequested.compareAndSet(false, true))
+//            worldManager.queueUpload(depth(), this::upload);
+//
+//        if (parent != null)
+//            parent.requestUpload();
+    }
+
     private void upload() {
+        if (isClosed) return;
+
         childMask = writeEntries(this.memory);
         this.memory.upload();
 
-        int entryData = this.memory.entryData();
-        if (entryData != prevEntryData && parent != null)
-            parent.onChanged();
-
-        prevEntryData = entryData;
         uploadRequested.set(false);
     }
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
+        childMask = writeEntries(this.memory);
+        this.memory.upload();
+
         memory.setEntryFlag(depth() == BLOCK_CONTAINER_DEPTH);
         memory.setEntryData(this.memory.entryData());
         memory.setChildMask(childMask);

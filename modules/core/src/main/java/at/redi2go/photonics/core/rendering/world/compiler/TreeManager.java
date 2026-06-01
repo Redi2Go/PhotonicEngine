@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.WorldManager;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
@@ -142,6 +143,8 @@ public class TreeManager implements WorldManager {
     }
 
     public void uploadAll(Supplier<CompilerTask> taskSupplier) throws InterruptedException {
+        root = root.removeEmpty();
+
         for (Queue<Runnable> queue : uploadQueue) {
             var task = taskSupplier.get();
 
@@ -157,14 +160,15 @@ public class TreeManager implements WorldManager {
 
         if (root == null) return;
 
-        Optional.of(root)
-                .map(WorldNode::removeEmpty)
-                .map(WorldNode::trim)
-                .ifPresentOrElse((node) -> {
-                    root = node;
-                    node.uploadTo(rootMemory);
-                }, () -> rootMemory.setChildMask(0));
+        root = root.trim();
+        if (root == null) {
+            rootMemory.setChildMask(0);
+            rootMemory.upload();
 
+            return;
+        }
+
+        root.uploadTo(rootMemory);
         rootMemory.upload();
     }
 
