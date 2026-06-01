@@ -25,7 +25,7 @@ public abstract class BlockNodeObject extends VoxelTreeNode implements BlockObje
             int size,
             VoxelTreeEntry[] entries
     ) {
-        super(depth);
+        super(depth, size, entries);
         this.ref = new Reference(blockRegistry);
     }
 

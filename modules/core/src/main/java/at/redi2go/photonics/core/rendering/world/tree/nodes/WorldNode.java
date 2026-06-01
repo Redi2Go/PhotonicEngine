@@ -248,7 +248,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         childMask = writeEntries(this.memory);
         this.memory.upload();
 
-        memory.setEntryFlag(depth() == BLOCK_CONTAINER_DEPTH);
+        memory.setEntryFlag(false);
         memory.setEntryData(this.memory.entryData());
         memory.setChildMask(childMask);
     }
