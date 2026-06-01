@@ -143,7 +143,7 @@ public class TreeManager implements WorldManager {
     }
 
     public void uploadAll(Supplier<CompilerTask> taskSupplier) throws InterruptedException {
-        root = root.removeEmpty();
+        if (root != null) root = root.removeEmpty();
 
         for (Queue<Runnable> queue : uploadQueue) {
             var task = taskSupplier.get();
