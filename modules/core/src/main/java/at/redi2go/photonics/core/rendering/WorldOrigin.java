@@ -4,6 +4,7 @@ import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
@@ -18,6 +19,10 @@ public class WorldOrigin extends Vector3d {
     }
 
     public WorldOrigin(Vector3i origin) {
+        this(origin.x, origin.y, origin.z);
+    }
+
+    public WorldOrigin(Vector3f origin) {
         this(origin.x, origin.y, origin.z);
     }
 

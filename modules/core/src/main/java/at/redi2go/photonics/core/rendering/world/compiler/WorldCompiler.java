@@ -48,7 +48,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private boolean canUpload = true;
 
     private Vector3i iorigin = null;
-    private WorldOrigin origin = null;
+    private WorldOrigin offset = null;
 
     private final Vector3i minBlock = new Vector3i();
     private final Vector3i maxBlock = new Vector3i();
@@ -56,6 +56,11 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private final UniformUpdater uniformUpdater = new UniformUpdater();
 
     private WorldOrigin mostRecentOrigin = new WorldOrigin(0.0f, 0.0f, 0.0f);
+
+    private Vector3f mostRecentMinBounds = new Vector3f();
+    private Vector3f mostRecentMaxBounds = new Vector3f();
+
+
     private Vector3f mostRecentMinBlock = new Vector3f();
     private Vector3f mostRecentMaxBlock = new Vector3f();
 
@@ -84,17 +89,9 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         return mostRecentOrigin;
     }
 
-    public Vector3f minBlock() {
-        return mostRecentMinBlock;
-    }
-
-    public Vector3f maxBlock() {
-        return mostRecentMaxBlock;
-    }
-
     private void setOrigin(Vector3i origin) {
         this.iorigin = origin;
-        this.origin = new WorldOrigin(origin.x, origin.y, origin.z);
+        this.offset = new WorldOrigin(origin.x, origin.y, origin.z);
     }
 
     @Override
@@ -151,11 +148,11 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             return;
         }
 
-        if (iorigin.equals(newOrigin)) return;
+        if (newOrigin.equals(newOrigin)) return;
 
         stopUpload();
 
-        var offset = iorigin.sub(newOrigin, new Vector3i());
+        var offset = newOrigin.sub(newOrigin, new Vector3i());
         treeManager.recenter(offset);
     }
 
@@ -241,7 +238,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             paletteTexture.upload();
             uniformUpdater.updateAll();
 
-            mostRecentOrigin = origin;
+            mostRecentMinBounds = new Vector3f(treeManager.minBounds());
+            mostRecentMaxBounds = new Vector3f(treeManager.maxBounds());
+
+            mostRecentOrigin = offset;
 
             mostRecentMinBlock = new Vector3f(minBlock);
             mostRecentMaxBlock = new Vector3f(maxBlock);
@@ -265,11 +265,10 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                 uniformUpdater.newNotifier()
         );
 
+        dynamicUniforms.uniform3f("world_min_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMinBlock)), uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_max_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMaxBlock)), uniformUpdater.newNotifier());
 
-        dynamicUniforms.uniform3f("world_min_block", () -> mostRecentMinBlock, uniformUpdater.newNotifier());
-        dynamicUniforms.uniform3f("world_max_block", () -> mostRecentMaxBlock, uniformUpdater.newNotifier());
-
-        dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBlock).sub(mostRecentMinBlock), uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBounds).sub(mostRecentMinBounds), uniformUpdater.newNotifier());
 
         dynamicUniforms.uniform3f(
                 IUniformUpdateFrequency.perFrame(),

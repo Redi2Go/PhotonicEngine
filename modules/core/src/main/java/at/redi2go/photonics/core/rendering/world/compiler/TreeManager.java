@@ -44,6 +44,16 @@ public class TreeManager implements WorldManager {
         this.rootMemory = worldAllocator.allocateEntry(true, 0);
     }
 
+    public Vector3i minBounds() {
+        var root = this.root;
+        return root == null ? new Vector3i(0) : root.minBounds();
+    }
+
+    public Vector3i maxBounds() {
+        var root = this.root;
+        return root == null ? new Vector3i(0) : root.maxBounds();
+    }
+
     @Override
     public void addChunk(ChunkNode chunk) {
         chunks.add(chunk);
