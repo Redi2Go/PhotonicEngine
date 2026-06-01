@@ -22,7 +22,7 @@ public class BlockContainerNode extends WorldNode {
         if (!(entry instanceof BlockEntry blockEntry))
             throw new IllegalArgumentException("only BlockEntry can be inserted to BlockContainerNode");
 
-        containedRegions.addAll(blockEntry.regions());
+        insertRegions(entry);
 
         int index = indexOf(x, y, z, magnitude());
 

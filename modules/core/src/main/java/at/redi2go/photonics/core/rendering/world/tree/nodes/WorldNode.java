@@ -5,6 +5,7 @@ import at.redi2go.photonics.core.rendering.world.WorldManager;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeNode;
@@ -29,7 +30,7 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     private long childMask = 0;
     private int prevEntryData = -1;
 
-    protected final IntSet containedRegions = new IntOpenHashSet();
+    private final IntSet containedRegions = new IntOpenHashSet();
 
     protected WorldNode parent;
 
@@ -120,10 +121,17 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
         }
     }
 
-    @Override
-    public void insertEntry(int x, int y, int z, @NonNls VoxelTreeEntry entry) {
+    protected void insertRegions(VoxelTreeEntry entry) {
         if (entry instanceof WorldNode worldNode)
             containedRegions.addAll(worldNode.containedRegions);
+        else if (entry instanceof BlockEntry blockEntry)
+            containedRegions.addAll(blockEntry.regions());
+
+    }
+
+    @Override
+    public void insertEntry(int x, int y, int z, @NonNls VoxelTreeEntry entry) {
+        insertRegions(entry);
 
         int index = indexOf(x, y, z, magnitude());
         int targetDepth = entry.depth() + 1;
