@@ -119,7 +119,9 @@ public class BlockModelRegistry extends ObjectRegistry<BlockModelImpl> {
                     .handle((model, e) -> {
                         try {
                             if (e == null) {
-                                model.meshes().add(meshState);
+                                if (model != null)
+                                    model.meshes().add(meshState);
+
                                 future.complete(model);
                             } future.completeExceptionally(e);
                         } catch (Throwable t) {
