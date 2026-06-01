@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
@@ -231,17 +232,15 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                 uniformUpdater.newNotifier()
         );
 
-        dynamicUniforms.uniform3f("world_min_block", () -> mostRecentMinBlock, uniformUpdater.newNotifier());
-        dynamicUniforms.uniform3f("world_max_block", () -> mostRecentMaxBlock, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_min_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMinBlock)), uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3f("world_max_block", () -> new Vector3f(mostRecentOrigin.applyOffset(mostRecentMaxBlock)), uniformUpdater.newNotifier());
         dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBlock).sub(mostRecentMinBlock), uniformUpdater.newNotifier());
 
-        dynamicUniforms.uniform3f("rt_camera_position", () -> {
-            var offset = mostRecentOrigin;
-            if (offset == null) return new Vector3f(0f);
-
-            var pos = Minecraft.getCameraPos();
-            return new Vector3f(offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z)));
-        }, uniformUpdater.newNotifier());
+        dynamicUniforms.uniform3d(
+                IUniformUpdateFrequency.perFrame(),
+                "rt_camera_position",
+                () -> mostRecentOrigin.applyOffset(Minecraft.getCameraPos())
+        );
     }
 
     @Override
