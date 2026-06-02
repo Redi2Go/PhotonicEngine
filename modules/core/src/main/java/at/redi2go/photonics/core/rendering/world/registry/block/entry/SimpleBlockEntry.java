@@ -23,11 +23,6 @@ public record SimpleBlockEntry(
     }
 
     @Override
-    public int depth() {
-        return part.blockLayer().depth();
-    }
-
-    @Override
     public void uploadTo(VoxelEntryMemory memory) {
         part.blockLayer().uploadTo(memory);
     }
