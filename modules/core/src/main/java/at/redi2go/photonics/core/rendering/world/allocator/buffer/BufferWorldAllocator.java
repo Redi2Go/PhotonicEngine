@@ -216,11 +216,8 @@ public class BufferWorldAllocator implements WorldAllocator {
         private static int capacityTarget(int size) {
             if (size <= 8) return 8;
             if (size <= 16) return 16;
-            if (size <= 24) return 24;
             if (size <= 32) return 32;
-            if (size <= 40) return 40;
             if (size <= 48) return 48;
-            if (size <= 56) return 56;
 
             return 64;
         }
