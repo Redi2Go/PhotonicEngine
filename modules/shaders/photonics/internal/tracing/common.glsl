@@ -7,16 +7,7 @@
 #include "/photonics/utility/color.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
-#define PH_WORLD_DEPTH 4
-#define ph_is_data(entry) (entry & PH_SIGN_BIT) != 0u
-
-#define PH_BLOCK_DEPTH 0
-#define PH_CHUNK_DEPTH 1
-
-const int PH_LAST_INDEX = PH_WORLD_DEPTH - 1;
 const uint PH_SIGN_BIT = 1 << 31;
-
-const ivec3 PH_WORLD_BOUNDS = ivec3(16 << (PH_LAST_INDEX << 2));
 
 struct RayResult {
     uint _x;
@@ -45,7 +36,7 @@ const uint ph_ray_result_palette_mask = 0xffffffu;
 RayResult new_ray_result(
     vec3 position,
     VoxelNormal normal,
-    uint palette_header_ptr,
+    uint palette_ptr,
     uint light_ptr,
     bool transparent
 ) {
@@ -55,7 +46,7 @@ RayResult new_ray_result(
         pos.x,
         pos.y,
         pos.z,
-        palette_header_ptr | (transparent ? PH_SIGN_BIT : 0),
+        (palette_ptr + 1) | (transparent ? PH_SIGN_BIT : 0),
         light_ptr
     );
 }
@@ -91,15 +82,7 @@ layout (std430) restrict readonly buffer ph_world_voxel_buffer {
 };
 
 VoxelData ray_result_voxel_data(RayResult hit) {
-    uint palette_ptr = hit._data1 & ~PH_SIGN_BIT;
-
-    uint tint = ph_world_buffer[palette_ptr];
-    uint palette_entry = ph_world_buffer[palette_ptr + 1];
-
-    VoxelData voxel_data = ph_fetch_voxel_data(palette_entry, _ray_result_voxel_normal(hit));
-    voxel_data_apply_tint(voxel_data, ph_unpack_int_color(tint));
-
-    return voxel_data;
+    return ph_fetch_voxel_data((hit._data1 & ~PH_SIGN_BIT) - 1, _ray_result_voxel_normal(hit));
 }
 
 Light ray_result_light_data(RayResult hit) {
@@ -151,7 +134,7 @@ vec3 ph_signed_nudge(vec3 value) {
 }
 
 bool ph_is_inside(vec3 position) {
-    vec3 s = step(world_min_voxel, position) - step(world_max_voxel, position);
+    vec3 s = step(world_min_block, position) - step(world_max_block, position);
     return bool(s.x * s.y * s.z);
 }
 
@@ -160,8 +143,8 @@ float ph_intersects_world(vec3 direction_inv, vec3 origin) {
         return 0.0f;
     }
 
-    vec3 tbot = direction_inv * (world_min_voxel - origin);
-    vec3 ttop = direction_inv * (world_max_voxel - origin);
+    vec3 tbot = direction_inv * (world_min_block - origin);
+    vec3 ttop = direction_inv * (world_max_block - origin);
     vec3 tmin = min(ttop, tbot);
     vec3 tmax = max(ttop, tbot);
     vec2 t = max(tmin.xx, tmin.yz);
@@ -172,17 +155,6 @@ float ph_intersects_world(vec3 direction_inv, vec3 origin) {
     return t1 > max(t0, 0.0f) ? t0 : -1.0f;
 }
 
-int ph_to_fake_air_entry(ivec3 pos) {
-    int value = (pos.x << 0) |(pos.y << 5) | (pos.z << 10);
-
-    return value | (value << 15);
-}
-
-const int[] morton = int[](0, 1, 8, 9, 64, 65, 72, 73, 512, 513, 520, 521, 576, 577, 584, 585, 4096,
-4097, 4104, 4105, 4160, 4161, 4168, 4169, 4608, 4609, 4616, 4617, 4672, 4673, 4680, 4681);
-
-int ph_get_voxel_index(ivec3 position) {
-    return morton[position.x] | (morton[position.y] << 1) | (morton[position.z] << 2);
-}
+#include "/photonics/internal/tracing/types.glsl"
 
 #endif

@@ -20,10 +20,9 @@ struct RayIterator {
     int state; // this could improved, do I care? no
 };
 
-void _ray_iter_setup(inout RayIterator ray, vec3 direction) {
-    ray.direction = normalize(ph_signed_nudge(direction));
-    vec3 direction_inv = 1.0f / ray.direction;
-    float t0 = ph_intersects_world(direction_inv, ray.position);
+void _ray_iter_setup(inout RayIterator ray) {
+    vec3 dir_inv = 1.0f / ray.direction;
+    float t0 = ph_intersects_world(dir_inv, ray.position);
     if (t0 == -1) {
         ray.state = PH_RAY_STATE_OUT_OF_BOUNDS;
         return;
@@ -34,68 +33,20 @@ void _ray_iter_setup(inout RayIterator ray, vec3 direction) {
 }
 
 void ray_iter_begin(out RayIterator ray, vec3 position, vec3 direction) {
-    ray.position = position * 16.0f;
-    _ray_iter_setup(ray, direction);
+    ray.position = position;
+    ray.direction = direction;
 
+    _ray_iter_setup(ray);
     ray.iterations = 100;
 }
 
 void ray_iter_set_position(inout RayIterator ray, vec3 position) {
-    ray.position = position * 16.0f;
+    ray.position = position;
 }
 
 void ray_iter_set_direction(inout RayIterator ray, vec3 direction) {
-    _ray_iter_setup(ray, direction);
-}
-
-vec3 ph_trace_direction_inv = vec3(0.0f);
-ivec3 ph_trace_intersection_index = ivec3(0);
-ivec3 ph_trace_intersection_offset = ivec3(0);
-vec3 ph_trace_skip_delta = vec3(0.0f);
-
-int ph_trace_t_min = -1;
-int ph_trace_depth = 0;
-ivec3 ph_trace_ipos = ivec3(0);
-
-ivec3 _ray_intersection(uint entry, int index_shift_factor) {
-    ivec3 intersection = (((ivec3(entry) >> ph_trace_intersection_index) & 15) + ph_trace_intersection_offset) << index_shift_factor;
-    intersection += ph_trace_ipos & (-1 << (index_shift_factor + 4));
-
-    return intersection;
-}
-
-bool _ray_skip_intersection(inout RayIterator ray, ivec3 intersection) {
-    vec3 t = intersection - ray.position;
-
-    t*= ph_trace_direction_inv;
-
-    ph_trace_t_min = int(t.x >= t.y);
-    ph_trace_t_min = t.z < t[ph_trace_t_min] ? 2 : ph_trace_t_min;
-
-    ray.position += t[ph_trace_t_min] * ray.direction;
-
-    // "push precision" into lower decimal values to fight rounding errors
-    ray.position[ph_trace_t_min] = (intersection[ph_trace_t_min] * 0.01f + ph_trace_skip_delta[ph_trace_t_min]) * 100.0f;
-    if (!ph_is_inside(ray.position)) {
-        ray.state = PH_RAY_STATE_OUT_OF_BOUNDS;
-        ray.hit = ph_ray_miss;
-
-        return true;
-    }
-
-    ivec3 new_ipos = ivec3(ray.position);
-    ivec3 diff = (ph_trace_ipos ^ new_ipos);
-
-    ph_trace_depth = findMSB(diff.x | diff.y | diff.z) >> 2;
-    if (ph_trace_depth > PH_LAST_INDEX) {
-        ray.state = PH_RAY_STATE_OUT_OF_BOUNDS;
-        ray.hit = ph_ray_miss;
-
-        return true;
-    }
-
-    ph_trace_ipos = new_ipos;
-    return false;
+    ray.direction = direction;
+    _ray_iter_setup(ray);
 }
 
 const ivec3 ph_ray_no_target = ivec3(-1);
@@ -103,89 +54,101 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     if (ray.state != PH_RAY_STATE_READY) return;
     if (ray.iterations == 0) return;
 
-    ph_trace_direction_inv = 1.0f / ray.direction;
-    vec3 ray_direction_sign = sign(ray.direction);
+    uint[11] stack = uint[11](0);
+    int scale_exp = 21;
 
-    ph_trace_intersection_index = ivec3(7.5f * ray_direction_sign + vec3(7.5f, 12.5f, 17.5f));
-    ph_trace_intersection_offset = max(ivec3(ray_direction_sign), 0);
-    ph_trace_skip_delta = ray_direction_sign * 0.00001f;
+    uint node_index = 0;
+    RtNode node = load_rt_node(node_index);
 
+    uint mirror_mask = 0u;
+    if (ray.direction.x > 0) mirror_mask |= 3u << 0;
+    if (ray.direction.y > 0) mirror_mask |= 3u << 4;
+    if (ray.direction.z > 0) mirror_mask |= 3u << 2;
 
-    ph_trace_t_min = -1;
+    vec3 origin = (ray.position / world_tree_size) + 1.0f;
+    origin = ph_get_mirrored_pos(origin, ray.direction, true);
 
-    uint[PH_WORLD_DEPTH + 1] entry_ptrs = uint[PH_WORLD_DEPTH + 1](0);
+    vec3 pos = origin;
+    vec3 dir_inv = 1.0f / -abs(ray.direction);
 
-    uint block_header_ptr = 0;
-
-    ph_trace_depth = PH_LAST_INDEX;
-    ph_trace_ipos = ivec3(ray.position);
-
-    for (; ray.iterations > 0; ray.iterations--) {
-        int index_shift_factor = ph_trace_depth << 2;
-        ivec3 voxel_pos = ph_trace_ipos >> index_shift_factor;
-        int index = ph_get_voxel_index(voxel_pos & 15);
-
-        uint parent_voxel = entry_ptrs[ph_trace_depth + 1];
-        uint entry = ph_world_buffer[parent_voxel + index];
-
-        if (ph_is_data(entry)) {
-            uint ptr = entry & ~PH_SIGN_BIT;
-
-            if (ph_trace_depth == PH_BLOCK_DEPTH) {
-                vec3 normal = vec3(0f);
-                normal[ph_trace_t_min] = -ray_direction_sign[ph_trace_t_min];
-
-                // the 1 bit of a block voxel entry is used to store transparency,
-                // but we need to double it anyway as each palette entry is 2 ints (1 tint, 1 palette ptr)
-                // so we can just remove the transparency bit and use the raw value
-                // We also use +3 instead of +5 since 0 means empty, index 0 becomes 1 (2 since its doubled)
-                uint palette_header_ptr = block_header_ptr + ((ptr & ~1u));
-
-                ray.hit = new_ray_result(
-                    ray.position * ph_16_rcp,
-                    ph_encode_voxel_normal(normal),
-                    palette_header_ptr,
-                    ph_world_buffer[block_header_ptr + 1],
-                    (ptr & 1u) == 1
-                );
-
-                ray.state = PH_RAY_STATE_HAS_HIT;
-                return;
-            } else if (ph_trace_depth == PH_CHUNK_DEPTH) {
-                if (voxel_pos == target) {
-                    ray.hit = new_ray_result(
-                        vec3(target),
-                        0,
-                        1,
-                        0,
-                        false
-                    );
-
-                    ray.state = PH_RAY_STATE_HAS_HIT;
-                    return;
-                }
-
-                //Block header:
-                //ptr + 0 = block voxel ptr
-                //ptr + 1 = light data ptr
-
-                block_header_ptr = ptr;
-
-                entry_ptrs[ph_trace_depth] = ph_world_buffer[block_header_ptr + 0];
-            } else entry_ptrs[ph_trace_depth] = ptr;
-
-            ph_trace_depth--;
-            continue;
-        }
-
-        // Found air!
-        ivec3 intersection = _ray_intersection(entry, index_shift_factor);
-        if (_ray_skip_intersection(ray, intersection))
-            return;
-    }
+    int tmin;
+    uint child_index;
 
     ray.state = PH_RAY_STATE_HAS_MISS;
     ray.hit = ph_ray_miss;
+
+    for (; ray.iterations > 0; ray.iterations--) {
+        child_index = ph_get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+
+        while (!rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
+            stack[scale_exp >> 1] = node_index;
+
+            node_index = rt_node_child_ptr(node) + (ph_bitCount_64(node.child_mask, child_index) * 3u);
+            node = load_rt_node(node_index);
+
+            //TODO Target hit detection
+
+            scale_exp-= 2;
+            child_index = ph_get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+        }
+
+        if (rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
+            ray.state = PH_RAY_STATE_HAS_HIT;
+            break;
+        }
+
+        int adv_scale_exp = scale_exp;
+
+        const uint64_t zero_64 = uint64_t(0);
+        const uint64_t index_mask_64 = uint64_t(0x00330033u);
+        if (((node.child_mask >> (child_index & 42u)) & index_mask_64) == zero_64) adv_scale_exp++;
+
+        vec3 cell_min = ph_floor_scale(pos, adv_scale_exp);
+        vec3 side_dist = (cell_min - origin) * dir_inv;
+
+        tmin = side_dist.x < side_dist.y ? 0 : 1;
+        tmin = side_dist.z < side_dist[tmin] ? 2 : tmin;
+
+        ivec3 neighbor_max = floatBitsToInt(cell_min) + ivec3(
+            side_dist.x == side_dist[tmin] ? -1 : (1 << adv_scale_exp) - 1,
+            side_dist.y == side_dist[tmin] ? -1 : (1 << adv_scale_exp) - 1,
+            side_dist.z == side_dist[tmin] ? -1 : (1 << adv_scale_exp) - 1
+        );
+
+        pos = min(origin - (abs(ray.direction) * side_dist[tmin]), intBitsToFloat(neighbor_max));
+
+        uvec3 diff_pos = floatBitsToUint(pos) ^ floatBitsToUint(cell_min);
+        int diff_exp = findMSB((diff_pos.x | diff_pos.y | diff_pos.z) & 0xFFAAAAAAu);
+
+        if (diff_exp > scale_exp) {
+            scale_exp = diff_exp;
+            if (diff_exp > 21) {
+                ray.state = PH_RAY_STATE_OUT_OF_BOUNDS;
+                break;
+            }
+
+            node_index = stack[scale_exp >> 1];
+            node = load_rt_node(node_index);
+        }
+    }
+
+    pos = ph_get_mirrored_pos(pos, ray.direction, false);
+    ray.position = (pos - 1.0f) * world_tree_size;
+
+    if (ray.state == PH_RAY_STATE_HAS_HIT) {
+        vec3 normal = vec3(0.0f);
+        normal[tmin] = -sign(ray.direction[tmin]);
+
+        LeafNode leaf = load_leaf_node(node, child_index);
+
+        ray.hit = new_ray_result(
+            (origin - 1.0f) * world_tree_size,
+            ph_encode_voxel_normal(normal),
+            leaf_node_palette_entry(leaf),
+            0, // TODO: Block light
+            leaf_node_is_transparent(leaf)
+        );
+    }
 }
 
 bool ray_iter_has_next(inout RayIterator ray) {
@@ -214,22 +177,25 @@ RayResult ray_iter_next_block(inout RayIterator ray, vec3 target) {
     return ray.hit;
 }
 
-void _ray_iter_skip_scale(inout RayIterator ray, int depth) {
-    if (ray.state == PH_RAY_STATE_OUT_OF_BOUNDS) return;
 
-    int index_shift_factor = depth << 2;
-    ivec3 pos = (ph_trace_ipos >> index_shift_factor) & 15;
+void _ray_iter_skip_unit(inout RayIterator ray, float scale) {
+    vec3 pos = ray.position * scale;
 
-    ivec3 intersection = _ray_intersection(ph_to_fake_air_entry(pos), index_shift_factor);
-    _ray_skip_intersection(ray, intersection);
+    vec3 intersection = floor(pos) + step(0.0f, ray.direction);
+    vec3 t = (intersection - pos) * (1.0f / ray.direction);
+
+    float tmax = min(min(t.x, t.y), t.z) + (0.01f * scale);
+    pos+= tmax * ray.direction;
+
+    ray.position = pos / scale;
 }
 
 void ray_iter_skip_block(inout RayIterator ray) {
-    _ray_iter_skip_scale(ray, PH_CHUNK_DEPTH);
+    _ray_iter_skip_unit(ray, 1.0f);
 }
 
 void ray_iter_skip_voxel(inout RayIterator ray) {
-    _ray_iter_skip_scale(ray, PH_BLOCK_DEPTH);
+    _ray_iter_skip_unit(ray, 16.0f);
 }
 
 bool ray_iter_is_in_bounds(RayIterator ray) {
