@@ -243,7 +243,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             mostRecentMinBounds = new Vector3f(treeManager.minBounds());
             mostRecentMaxBounds = new Vector3f(treeManager.maxBounds());
 
-            mostRecentOrigin = offset;
+            mostRecentOrigin = offset == null ? new WorldOrigin(0, 0, 0) : offset;
 
             mostRecentMinBlock = new Vector3f(minBlock);
             mostRecentMaxBlock = new Vector3f(maxBlock);
