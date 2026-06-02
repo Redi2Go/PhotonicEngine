@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
@@ -125,8 +126,11 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                     registry.freeUnusedObjects();
                 }
             }
-        } catch (InterruptedException | IgnoredInterruptedException e) {
+        } catch (Throwable t) {
+            if (t instanceof InterruptedException) return;
+            if (IgnoredInterruptedException.shouldIgnore(t)) return;
 
+            Photonics.LOGGER.error("An error was thrown during world compilation!", t);
         }
     }
 

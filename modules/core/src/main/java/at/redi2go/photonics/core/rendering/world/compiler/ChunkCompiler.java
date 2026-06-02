@@ -112,10 +112,11 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
                 buildResult.awaitSubmission();
             }
-        } catch (InterruptedException | IgnoredInterruptedException e) {
+        } catch (Throwable t) {
+            if (t instanceof InterruptedException) return;
+            if (IgnoredInterruptedException.shouldIgnore(t)) return;
 
-        } catch (Throwable e) {
-            Photonics.LOGGER.warn("An exception was throw during chunk compilation!", e);
+            Photonics.LOGGER.warn("An exception was throw during chunk compilation!", t);
         }
     }
 
@@ -205,7 +206,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 int remaining = (pending & Integer.MAX_VALUE) + 1;
                 if (pendingBlocks.compareAndSet(pending, remaining | (pending & Integer.MIN_VALUE))) {
                     block.handle((result, t) -> {
-                        if (t != null && !(t instanceof IgnoredInterruptedException))
+                        if (!IgnoredInterruptedException.shouldIgnore(t))
                             Photonics.LOGGER.error("An error was thrown while meshing block", t);
 
                         try {
