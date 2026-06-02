@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import org.joml.Vector3i;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
@@ -67,6 +68,7 @@ public class TreeManager implements WorldManager {
 
     @Override
     public void queueUpload(int depth, Runnable job) {
+        Objects.checkIndex(depth, uploadQueue.size());
         uploadQueue.get(depth).add(job);
     }
 
@@ -130,6 +132,8 @@ public class TreeManager implements WorldManager {
     }
 
     public void recenter(Vector3i offset) {
+        if (chunks.isEmpty()) return;
+
         for (var chunk : chunks)
             chunk.removeFromTree();
 

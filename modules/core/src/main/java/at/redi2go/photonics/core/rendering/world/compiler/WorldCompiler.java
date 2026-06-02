@@ -148,12 +148,14 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             return;
         }
 
-        if (newOrigin.equals(newOrigin)) return;
+        if (iorigin.equals(newOrigin)) return;
 
         stopUpload();
 
-        var offset = newOrigin.sub(newOrigin, new Vector3i());
+        var offset = iorigin.sub(newOrigin, new Vector3i());
         treeManager.recenter(offset);
+
+        setOrigin(newOrigin);
     }
 
     private void clearPendingSections(List<ChunkCompiler.BuildResult> sections) {
