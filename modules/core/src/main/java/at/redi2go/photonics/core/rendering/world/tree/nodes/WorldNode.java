@@ -258,7 +258,10 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
 
     @Override
     protected VoxelTreeNode createNode(int x, int y, int z) {
-        return create(x, y, z, worldManager, allocator, mergeMode, depth() - 1);
+        var result = create(x, y, z, worldManager, allocator, mergeMode, depth() - 1);
+        result.parent = this;
+
+        return result;
     }
 
     public static WorldNode create(
