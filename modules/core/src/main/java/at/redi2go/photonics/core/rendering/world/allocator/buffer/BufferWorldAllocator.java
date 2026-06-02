@@ -173,9 +173,13 @@ public class BufferWorldAllocator implements WorldAllocator {
         private MemoryView memory = null;
         private int capacity = -1;
 
+        private final int entryByteSize;
+
         private EntryListImpl(boolean hasChildMask, int extraFieldCount) {
             this.hasChildMask = hasChildMask;
             this.extraFieldCount = extraFieldCount;
+
+            entryByteSize = entryByteSize(hasChildMask, extraFieldCount);
         }
 
         @Override
@@ -191,14 +195,14 @@ public class BufferWorldAllocator implements WorldAllocator {
 
             if (memory != null) memory.close();
 
-            memory = heap.allocateOrThrow((long) entryByteSize(hasChildMask, extraFieldCount) * newCapacity);
+            memory = heap.allocateOrThrow((long) entryByteSize * newCapacity);
             capacity = newCapacity;
         }
 
         @Override
         public VoxelEntryMemory get(int index) {
             Objects.checkIndex(index, capacity);
-            return new Entry(entryByteSize(hasChildMask, extraFieldCount) * index);
+            return new Entry(entryByteSize * index);
         }
 
         @Override
@@ -312,6 +316,6 @@ public class BufferWorldAllocator implements WorldAllocator {
     }
 
     private static int entryByteSize(boolean useChildMask, int extraFields) {
-        return 4 + (useChildMask ? 8 : 0) + (extraFields << 4);
+        return 4 + (useChildMask ? 8 : 0) + (extraFields << 2);
     }
 }
