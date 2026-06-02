@@ -142,7 +142,7 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
         LeafNode leaf = load_leaf_node(node, child_index);
 
         ray.hit = new_ray_result(
-            (origin - 1.0f) * world_tree_size,
+            ray.position,
             ph_encode_voxel_normal(normal),
             leaf_node_palette_entry(leaf),
             0, // TODO: Block light
