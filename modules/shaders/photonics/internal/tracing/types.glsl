@@ -40,6 +40,18 @@ vec3 ph_get_mirrored_pos(vec3 pos, vec3 dir, bool range_check) {
     );
 }
 
+vec3 ph_to_norm_pos(vec3 position, vec3 ray_direction) {
+    return ph_get_mirrored_pos(
+        (position / world_tree_size) + 1.0f
+        , ray_direction,
+        true
+    );
+}
+
+bool ph_is_target(vec3 pos, vec3 target) {
+    return ph_floor_scale(pos, world_block_scale_exp) == target;
+}
+
 
 struct RtNode {
     uint data0;

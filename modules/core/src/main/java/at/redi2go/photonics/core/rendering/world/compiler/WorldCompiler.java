@@ -12,6 +12,7 @@ import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
+import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.joml.Vector3d;
@@ -63,6 +64,8 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
     private Vector3f mostRecentMinBlock = new Vector3f();
     private Vector3f mostRecentMaxBlock = new Vector3f();
+
+    private int mostRecentBlockContainerScale = 0;
 
     private final Thread compilerThread;
 
@@ -248,6 +251,8 @@ public class WorldCompiler implements Runnable, RenderingComponent {
             mostRecentMinBlock = new Vector3f(minBlock);
             mostRecentMaxBlock = new Vector3f(maxBlock);
 
+            mostRecentBlockContainerScale = 21 - (treeManager.depth() - (VoxelTreeEntry.BLOCK_CONTAINER_DEPTH) << 1);
+
             uploadDone.signalAll();
         } finally {
             uploadLock.unlock();
@@ -271,6 +276,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         dynamicUniforms.uniform3f("world_max_block", () -> new Vector3f(mostRecentMaxBlock), uniformUpdater.newNotifier());
 
         dynamicUniforms.uniform3f("world_tree_size", () -> new Vector3f(mostRecentMaxBounds).sub(mostRecentMinBounds), uniformUpdater.newNotifier());
+        dynamicUniforms.uniform1i("world_block_scale_exp", () -> mostRecentBlockContainerScale, uniformUpdater.newNotifier());
 
         dynamicUniforms.uniform3f(
                 IUniformUpdateFrequency.perFrame(),

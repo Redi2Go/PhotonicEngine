@@ -49,8 +49,8 @@ void ray_iter_set_direction(inout RayIterator ray, vec3 direction) {
     _ray_iter_setup(ray);
 }
 
-const ivec3 ph_ray_no_target = ivec3(-1);
-void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
+const vec3 ph_ray_no_target = vec3(-1.0f);
+void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
     if (ray.state != PH_RAY_STATE_READY) return;
     if (ray.iterations == 0) return;
 
@@ -65,11 +65,15 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     if (ray.direction.y > 0) mirror_mask |= 3u << 4;
     if (ray.direction.z > 0) mirror_mask |= 3u << 2;
 
-    vec3 origin = (ray.position / world_tree_size) + 1.0f;
-    origin = ph_get_mirrored_pos(origin, ray.direction, true);
+    vec3 origin = ph_to_norm_pos(ray.position, ray.direction);
 
     vec3 pos = origin;
     vec3 dir_inv = 1.0f / -abs(ray.direction);
+
+    if (target != ph_ray_no_target) {
+        target = ph_to_norm_pos(target, ray.direction);
+        target = ph_floor_scale(target, world_block_scale_exp);
+    }
 
     int tmin;
     uint child_index;
@@ -77,22 +81,26 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     ray.state = PH_RAY_STATE_HAS_MISS;
     ray.hit = ph_ray_miss;
 
+    bool hit_target = false;
     for (; ray.iterations > 0; ray.iterations--) {
         child_index = ph_get_node_cell_index(pos, scale_exp) ^ mirror_mask;
 
         while (!rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
             stack[scale_exp >> 1] = node_index;
 
+            if (scale_exp == world_block_scale_exp && ph_is_target(pos, target)) {
+                hit_target = true;
+                break;
+            }
+
             node_index = rt_node_child_ptr(node) + (ph_bitCount_64(node.child_mask, child_index) * 3u);
             node = load_rt_node(node_index);
-
-            //TODO Target hit detection
 
             scale_exp-= 2;
             child_index = ph_get_node_cell_index(pos, scale_exp) ^ mirror_mask;
         }
 
-        if (rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
+        if (hit_target || (rt_node_is_leaf(node) && rt_node_has_child(node, child_index))) {
             ray.state = PH_RAY_STATE_HAS_HIT;
             break;
         }
@@ -136,17 +144,28 @@ void _ray_iter_trace_next(inout RayIterator ray, ivec3 target) {
     ray.position = (pos - 1.0f) * world_tree_size;
 
     if (ray.state == PH_RAY_STATE_HAS_HIT) {
+        uint palette_entry;
+        bool transparent;
+
+        if (!hit_target) {
+            LeafNode leaf = load_leaf_node(node, child_index);
+
+            palette_entry = leaf_node_palette_entry(leaf);
+            transparent = leaf_node_is_transparent(leaf);
+        } else {
+            palette_entry = 0u;
+            transparent = false;
+        }
+
         vec3 normal = vec3(0.0f);
         normal[tmin] = -sign(ray.direction[tmin]);
-
-        LeafNode leaf = load_leaf_node(node, child_index);
 
         ray.hit = new_ray_result(
             ray.position,
             ph_encode_voxel_normal(normal),
-            leaf_node_palette_entry(leaf),
+            palette_entry,
             0, // TODO: Block light
-            leaf_node_is_transparent(leaf)
+            transparent
         );
     }
 }
@@ -165,12 +184,12 @@ RayResult ray_iter_next(inout RayIterator ray) {
 }
 
 bool ray_iter_has_next_block(inout RayIterator ray, vec3 target) {
-    _ray_iter_trace_next(ray, ivec3(target));
+    _ray_iter_trace_next(ray, target);
     return ray.state == PH_RAY_STATE_HAS_HIT;
 }
 
 RayResult ray_iter_next_block(inout RayIterator ray, vec3 target) {
-    _ray_iter_trace_next(ray, ivec3(target));
+    _ray_iter_trace_next(ray, target);
     if (ray.state != PH_RAY_STATE_OUT_OF_BOUNDS)
     ray.state = PH_RAY_STATE_READY;
 

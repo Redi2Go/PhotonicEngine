@@ -8,6 +8,7 @@ uniform vec3 world_offset;
 uniform vec3 world_max_block;
 uniform vec3 world_min_block;
 uniform vec3 world_tree_size;
+uniform int world_block_scale_exp;
 
 
 // light uniforms

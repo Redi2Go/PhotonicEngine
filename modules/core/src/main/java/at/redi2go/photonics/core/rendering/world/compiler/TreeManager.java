@@ -56,6 +56,11 @@ public class TreeManager implements WorldManager {
         return root == null ? new Vector3i(0) : root.maxBounds();
     }
 
+    public int depth() {
+        var root = this.root;
+        return root == null ? 0 : root.depth();
+    }
+
     @Override
     public void addChunk(ChunkNode chunk) {
         chunks.add(chunk);
