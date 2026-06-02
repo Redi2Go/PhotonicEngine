@@ -19,8 +19,6 @@ import org.joml.Vector3i;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorldNode extends VoxelTreeNode implements Disposable {
-    private static final int CLOSED = 2;
-
     protected final WorldManager worldManager;
     protected final WorldAllocator allocator;
     protected final BlockMergeMode mergeMode;
@@ -113,6 +111,9 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     @Override
     protected void onChanged() {
         requestUpload();
+
+        if (parent != null)
+            parent.requestUpload();
 
         if (isEmpty()) {
             var node = this;
@@ -227,11 +228,8 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
     // Uploading
 
     private void requestUpload() {
-//        if (uploadRequested.compareAndSet(false, true))
-//            worldManager.queueUpload(depth(), this::upload);
-//
-//        if (parent != null)
-//            parent.requestUpload();
+        if (uploadRequested.compareAndSet(false, true))
+            worldManager.queueUpload(depth(), this::upload);
     }
 
     private void upload() {
@@ -245,9 +243,6 @@ public class WorldNode extends VoxelTreeNode implements Disposable {
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
-        childMask = writeEntries(this.memory);
-        this.memory.upload();
-
         memory.setEntryFlag(false);
         memory.setEntryData(this.memory.entryData());
         memory.setChildMask(childMask);
