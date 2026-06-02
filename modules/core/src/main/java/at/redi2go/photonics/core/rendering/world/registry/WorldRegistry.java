@@ -38,6 +38,10 @@ public class WorldRegistry {
         this.blockModelRegistry = new BlockModelRegistry(lock, bakery, blockRegistry);
     }
 
+    public WorldLightRegistry lightRegistry() {
+        return lightRegistry;
+    }
+
     public BlockModelRegistry blockModelRegistry() {
         return blockModelRegistry;
     }

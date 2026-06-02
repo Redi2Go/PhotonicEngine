@@ -2,6 +2,7 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.PrioritizedTask;
@@ -11,7 +12,10 @@ import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
+import at.redi2go.photonics.core.rendering.world.registry.light.WorldLight;
+import at.redi2go.photonics.core.rendering.world.registry.light.WorldLightRegistry;
 import org.apache.logging.log4j.util.BiConsumer;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
@@ -93,6 +97,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                                     blockChunkOffset.x(),
                                     blockChunkOffset.y(),
                                     blockChunkOffset.z(),
+                                    block,
                                     worldRegistry.blockModelRegistry().getBlockModel(
                                             mesher,
                                             new Vector3i(blockChunkOffset),
@@ -190,6 +195,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
         private void submitBlockFuture(
                 int x, int y, int z,
+                IBlockState blockState,
                 CompletionStage<@Nullable BlockModel> block
         ) {
             while (true) {
@@ -203,7 +209,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                             Photonics.LOGGER.error("An error was thrown while meshing block", t);
 
                         try {
-                            completeBlock(x, y, z, result);
+                            completeBlock(x, y, z, blockState, result);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         } catch (Throwable t2) {
@@ -218,9 +224,13 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             }
         }
 
-        private void completeBlock(int x, int y, int z, @Nullable BlockModel blockModel) throws InterruptedException {
+        private void completeBlock(
+                int x, int y, int z,
+                IBlockState blockState,
+                @Nullable BlockModel blockModel
+                ) throws InterruptedException {
             if (blockModel != null)
-                blocks.add(new BlockResult(x, y, z, blockModel));
+                blocks.add(new BlockResult(x, y, z, blockState, blockModel));
 
             while (true) {
                 int pending = pendingBlocks.get();
@@ -271,9 +281,9 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
             } else close();
         }
 
-        public void forEachBlock(BiConsumer<Vector3i, BlockModel> blockConsumer) {
+        public void forEachBlock(TriConsumer<Vector3i, IBlockState, BlockModel> blockConsumer) {
             for (var block : blocks)
-                blockConsumer.accept(block, block.model);
+                blockConsumer.accept(block, block.blockState, block.model);
         }
 
         @Override
@@ -285,10 +295,16 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
 
     private static class BlockResult extends Vector3i {
         public final BlockModel model;
+        public final IBlockState blockState;
 
-        public BlockResult(int x, int y, int z, BlockModel model) {
+        public BlockResult(
+                int x, int y, int z,
+                IBlockState blockState,
+                BlockModel model
+        ) {
             super(x, y, z);
 
+            this.blockState = blockState;
             this.model = model;
         }
     }

@@ -73,6 +73,12 @@ bool rt_node_has_child(RtNode node, uint child_index) {
     return ((node.child_mask >> child_index) & one_64) != zero_64;
 }
 
+uint rt_node_get_child(RtNode node, uint child_index, int scale_exp) {
+    uint multiplier = scale_exp == world_block_scale_exp ? 4u : 3u;
+
+    return rt_node_child_ptr(node) + (ph_bitCount_64(node.child_mask, child_index) * multiplier);
+}
+
 RtNode load_rt_node(uint index) {
     return RtNode(
         ph_world_buffer[index],

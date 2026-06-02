@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
+import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
@@ -19,15 +20,17 @@ public class BlockSorter {
 
     public void addBlock(
             int x, int y, int z,
+            IBlockState blockState,
             BlockModel block
     ) {
         blocks.computeIfAbsent(block.parts().size(), (i) -> new ArrayList<>())
-                .add(new Entry(x, y, z, block));
+                .add(new Entry(x, y, z, blockState, block));
     }
 
-    public void addBlock(Vector3i pos, BlockModel block) {
+    public void addBlock(Vector3i pos, IBlockState blockState, BlockModel block) {
         addBlock(
                 pos.x(), pos.y(), pos.z(),
+                blockState,
                 block
         );
     }
@@ -39,7 +42,11 @@ public class BlockSorter {
         }
     }
 
-    public record Entry(int x, int y, int z, BlockModel blockModel) {
+    public record Entry(
+            int x, int y, int z,
+            IBlockState blockState,
+            BlockModel blockModel
+    ) {
 
     };
 }

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.rendering.world.tree.nodes;
-
 import at.redi2go.photonics.core.rendering.world.WorldManager;
+import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryListMemory;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
@@ -15,6 +15,11 @@ public class BlockContainerNode extends WorldNode {
             Vector3i pos
     ) {
         super(worldManager, allocator, mergeMode, BLOCK_CONTAINER_DEPTH, pos);
+    }
+
+    @Override
+    protected VoxelEntryListMemory allocate(WorldAllocator allocator) {
+        return allocator.allocateEntryList(true, 1);
     }
 
     @Override

@@ -13,6 +13,7 @@ import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
+import at.redi2go.photonics.core.rendering.world.tree.entries.LightBlockEntry;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.joml.Vector3d;
@@ -181,22 +182,33 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                         .sub(iorigin);
 
                 int region = regionIds.getId(section.chunkPos());
-                section.forEachBlock((blockChunkOffset, block) -> blockSorter.addBlock(
+                section.forEachBlock((blockChunkOffset, blockState, blockModel) -> blockSorter.addBlock(
                         chunkBlockPos.add(blockChunkOffset, new Vector3i()),
-                        block
+                        blockState,
+                        blockModel
                 ));
 
                 blockSorter.forEachBlock((block) -> {
                     var parts = block.blockModel().parts();
+                    if (parts.isEmpty()) return;
+
+                    var light = registry.lightRegistry().getWeak(block.blockState());
+
                     for (int i = 0; i < parts.size(); i++) {
                         var part = parts.get(i);
 
                         blockPos.set(block.x(), block.y(), block.z());
                         blockPos.add(part.offset());
 
+                        var entry = part.createEntry(region);
+                        if (light != null) {
+                            light.acquireReference();
+                            entry = new LightBlockEntry(entry, light);
+                        }
+
                         treeManager.insertBlock(
                                 blockPos,
-                                part.createEntry(region)
+                                entry
                         );
                     }
                 });

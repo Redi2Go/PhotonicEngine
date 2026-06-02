@@ -44,6 +44,8 @@ public class BlockLayer extends BlockNodeObject {
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
         memory.setEntryFlag(false);
+        memory.setExtraFields(0);
+
         super.uploadTo(memory);
     }
 

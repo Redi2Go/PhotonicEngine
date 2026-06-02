@@ -87,13 +87,15 @@ void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
 
         while (!rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
             stack[scale_exp >> 1] = node_index;
+            node_index = rt_node_get_child(node, child_index, scale_exp);
 
             if (scale_exp == world_block_scale_exp && ph_is_target(pos, target)) {
+                stack[(scale_exp - 2) >> 1] = node_index;
+
                 hit_target = true;
                 break;
             }
 
-            node_index = rt_node_child_ptr(node) + (ph_bitCount_64(node.child_mask, child_index) * 3u);
             node = load_rt_node(node_index);
 
             scale_exp-= 2;
@@ -164,7 +166,7 @@ void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
             ray.position,
             ph_encode_voxel_normal(normal),
             palette_entry,
-            0, // TODO: Block light
+            ph_world_buffer[stack[(world_block_scale_exp - 2) >> 1] + 3],
             transparent
         );
     }
