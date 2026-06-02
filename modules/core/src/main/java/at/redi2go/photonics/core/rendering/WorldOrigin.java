@@ -56,13 +56,12 @@ public class WorldOrigin extends Vector3d {
     }
 
     private static int snapToSectionPos(int component, int renderDistance) {
-        var chunkPos = ((component >> 4) - renderDistance) << 4;
-        return (chunkPos >> 6) << 6;
+        return ((component >> 4) - renderDistance) << 4;
     }
 
     public static Vector3i getAsVector3i() {
         Vector3d cameraPos = Minecraft.getCameraPos();
-        int renderDistance = Minecraft.getRenderDistance() + 4;
+        int renderDistance = Minecraft.getRenderDistance() + 2;
 
         return new Vector3i(
                 snapToSectionPos((int) cameraPos.x, renderDistance),
