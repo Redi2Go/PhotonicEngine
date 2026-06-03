@@ -2,6 +2,8 @@
 #include "/photonics/tracing.glsl"
 #include "/photonics/utility/random.glsl"
 
+#include "/photonics/modifiers/indirect_surface_sample_modifier.glsl"
+
 //TODO: Make these into settings
 #define PH_MAX_GI_ITERATIONS 100
 
