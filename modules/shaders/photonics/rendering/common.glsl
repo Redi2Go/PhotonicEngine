@@ -1,19 +1,17 @@
-//TODO: Guard against uniforms
-uniform vec3 cameraPosition;
+//ph_required: uniform vec3 cameraPosition;
+//ph_required: uniform int frameCounter;
+//ph_required: uniform float viewWidth;
+//ph_required: uniform float viewHeight;
+
+//ph_required: uniform vec3 previousCameraPosition;
+
+//ph_required: uniform mat4 gbufferPreviousModelView;
+//ph_required: uniform mat4 gbufferPreviousProjection;
 
 #include "/photonics/uniforms.glsl"
 #include "/photonics/interface/world_interface.glsl"
 #include "/photonics/utility/random.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
-
-uniform int frameCounter;
-uniform float viewWidth;
-uniform float viewHeight;
-
-uniform vec3 previousCameraPosition;
-
-uniform mat4 gbufferPreviousModelView;
-uniform mat4 gbufferPreviousProjection;
 
 ivec2 frag_tex_coord = ivec2(0);
 uint frag_rnd_state = 0;

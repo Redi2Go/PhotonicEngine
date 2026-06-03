@@ -7,8 +7,8 @@ layout(location = 0) out vec3 color_out;
 layout(location = 1) out float variance_out;
 
 uniform int atrous_iteration;
-uniform sampler2D depthtex0;
-//uniform float near, far;
+//ph_required: uniform sampler2D depthtex0;
+//ph_required: uniform float near, far;
 
 #include "/photonics/rendering/common.glsl"
 #include "/photonics/rendering/restir_di/restir.glsl"

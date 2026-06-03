@@ -1,6 +1,8 @@
 //HEAD
 
 //TODO: DEPRECATED; REMOVE IN FUTURE RELEASE
+//ph_required: uniform sampler2D depthtex1;
+
 #include "/photonics/deprecated/shader_interface.glsl"
 
 //bool is_in_world();

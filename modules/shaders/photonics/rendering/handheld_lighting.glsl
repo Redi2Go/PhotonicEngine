@@ -4,7 +4,7 @@
 
 #define PH_HANDHELD_RAY_ITERATIONS 40
 
-uniform vec3 relativeEyePosition;
+//ph_required: uniform vec3 relativeEyePosition;
 
 struct HandheldSample {
     Light light;
