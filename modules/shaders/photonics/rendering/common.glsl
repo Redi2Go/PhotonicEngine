@@ -1,3 +1,6 @@
+//TODO: Guard against uniforms
+uniform vec3 cameraPosition;
+
 #include "/photonics/uniforms.glsl"
 #include "/photonics/interface/world_interface.glsl"
 #include "/photonics/utility/random.glsl"
@@ -7,7 +10,6 @@ uniform int frameCounter;
 uniform float viewWidth;
 uniform float viewHeight;
 
-uniform vec3 cameraPosition;
 uniform vec3 previousCameraPosition;
 
 uniform mat4 gbufferPreviousModelView;
