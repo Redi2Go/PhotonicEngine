@@ -3,6 +3,7 @@ package at.redi2go.photonics.core.rendering.world.compiler;
 import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;
@@ -276,6 +277,13 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     }
 
     @Override
+    public void registerUniforms(IUniformHolder uniforms) {
+        // TODO: Replace this with actual values
+        uniforms.uniform1i(IUniformUpdateFrequency.once(), "phFirstBuildTime", () -> 1);
+        uniforms.uniform1i(IUniformUpdateFrequency.once(), "phLastBuildTime", () -> 1);
+    }
+
+    @Override
     public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
         dynamicUniforms.uniform3f(
                 "world_offset",
@@ -305,11 +313,6 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                     return new Vector3f(offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z)));
                 }
         );
-
-
-        // TODO: Replace this with actual values
-        dynamicUniforms.uniform1i(IUniformUpdateFrequency.once(), "phFirstBuildTime", () -> 1);
-        dynamicUniforms.uniform1i(IUniformUpdateFrequency.once(), "phLastBuildTime", () -> 1);
     }
 
     @Override
