@@ -23,6 +23,7 @@ import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_GI_ENABLED
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_HANDHELD_LIGHT_ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_LIGHT_BINNING_ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.LIGHTING_MODE_KEY;
+import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_GI_BOUNCES_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_LIGHTS_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_SAMPLES_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RENDER_SCALE_KEY;
@@ -55,6 +56,8 @@ public abstract class ShaderPropertiesMixin {
         handleFloatDirective(key, value, RENDER_SCALE_KEY, e -> phProperties.renderScale = e);
 
         handleNonZeroDirective(key, value, MAX_LIGHTS_KEY, e -> phProperties.maxLights = e);
+        handleNonZeroDirective(key, value, MAX_GI_BOUNCES_KEY, e -> phProperties.maxGiBounces = e);
+
         handleAlphaModeDirective(key, value, ALPHA_MODE_KEY, e -> phProperties.alphaMode = e);
         handleFloatDirective(key, value, ENCHANTMENT_GLINT_STRENGTH_KEY, e -> phProperties.enchantmentGlintStrength = e);
         handleBooleanDirective(key, value, SEPARATE_HANDHELD_RAYS_KEY, e -> phProperties.useSeparateHandheldRays = e);

@@ -3,7 +3,6 @@
 #include "/photonics/utility/random.glsl"
 
 //TODO: Make these into settings
-#define PH_MAX_GI_BOUNCES 1
 #define PH_MAX_GI_ITERATIONS 100
 
 bool ph_should_trace_to_sun(

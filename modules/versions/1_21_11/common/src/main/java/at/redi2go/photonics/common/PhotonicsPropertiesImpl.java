@@ -8,6 +8,7 @@ public class PhotonicsPropertiesImpl implements PhotonicsProperties {
     public boolean enabled = PhotonicsProperties.DEFAULT_ENABLED;
     public float renderScale = PhotonicsProperties.DEFAULT_RENDER_SCALE;
     public int maxLights = PhotonicsProperties.DEFAULT_MAX_LIGHTS;
+    public int maxGiBounces = PhotonicsProperties.DEFAULT_MAX_GI_BOUNCES;
     public AlphaMode alphaMode = PhotonicsProperties.DEFAULT_ALPHA_MODE;
     public float enchantmentGlintStrength = PhotonicsProperties.DEFAULT_ENCHANTMENT_GLINT_STRENGTH;
     public boolean useSeparateHandheldRays = PhotonicsProperties.DEFAULT_SEPARATE_HANDHELD_RAYS;
@@ -38,6 +39,11 @@ public class PhotonicsPropertiesImpl implements PhotonicsProperties {
     @Override
     public int getMaxLights() {
         return maxLights;
+    }
+
+    @Override
+    public int getMaxGiBounces() {
+        return maxGiBounces;
     }
 
     @Override

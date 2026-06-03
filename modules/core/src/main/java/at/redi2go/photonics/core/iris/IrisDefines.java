@@ -14,6 +14,7 @@ public class IrisDefines {
     public static void registerDefines(DefineHolder defines, PhotonicsProperties phProperties) {
         defines.floatDefine("PH_RENDER_SCALE", phProperties.getRenderScale());
         defines.intDefine("PH_MAX_LIGHTS", phProperties.getMaxLights());
+        defines.intDefine("PH_MAX_GI_BOUNCES", phProperties.getMaxGiBounces());
 
         switch (phProperties.getAlphaMode()) {
             case BLOCK -> defines.stringDefine("PH_USE_TRANSPARENCY", "");

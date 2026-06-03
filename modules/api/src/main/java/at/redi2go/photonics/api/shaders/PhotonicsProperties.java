@@ -13,6 +13,10 @@ public interface PhotonicsProperties {
     int DEFAULT_MAX_LIGHTS = 1000;
     String MAX_LIGHTS_KEY = "photonics.maxLights";
 
+    int getMaxGiBounces();
+    int DEFAULT_MAX_GI_BOUNCES = 1;
+    String MAX_GI_BOUNCES_KEY = "photonics.maxGiBounces";
+
     AlphaMode getAlphaMode();
     AlphaMode DEFAULT_ALPHA_MODE = AlphaMode.NONE;
     String ALPHA_MODE_KEY = "photonics.alphaMode";
