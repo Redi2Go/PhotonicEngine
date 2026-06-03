@@ -1,5 +1,7 @@
 #version 430
 
+#define PH_LIGHTING_PASS
+
 #include "/photonics/rendering/common.glsl"
 #include "/photonics/rendering/indirect_lighting.glsl"
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
@@ -17,7 +19,7 @@ void main() {
     sample_indirect(indirect_lighting, frag_rt_pos, frag_geo_normal, frag_rnd_state);
 
 #ifndef PH_RESTIR_GI_MODIFIER_DISABLED
-    modify_restir_gi(indirect_color);
+    modify_restir_gi(indirect_lighting);
 #endif
 
     lighting_out+= indirect_lighting;
