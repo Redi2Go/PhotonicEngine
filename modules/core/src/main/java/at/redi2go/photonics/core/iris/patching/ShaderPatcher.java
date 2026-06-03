@@ -23,7 +23,16 @@ import java.util.stream.Stream;
 
 public class ShaderPatcher {
     // TODO replace with comment at the top of the file
-    private static final Set<String> AUTO_REPLACED_FILES = Set.of("photonics.glsl", "ph_samplers.glsl");
+    private static final Set<String> AUTO_REPLACED_FILES = Set.of(
+            "light_list.glsl",
+            "palette.glsl",
+            "samplers.glsl",
+            "tracing.glsl",
+
+            // LEGACY FILE NAMES
+            "photonics.glsl",
+            "ph_samplers.glsl"
+    );
     private static final Path PATCHED_DEBUG_PATH = ModLoader.getGameDir().resolve(".ph-patched-shaders");
     private static final Path PHOTONICS_SHADERS_PATH = getPhotonicsShadersPath();
 
