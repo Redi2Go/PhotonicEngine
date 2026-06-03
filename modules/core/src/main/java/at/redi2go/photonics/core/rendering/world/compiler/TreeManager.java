@@ -88,6 +88,11 @@ public class TreeManager implements WorldManager {
     }
 
     public void insertBlock(Vector3i pos, BlockEntry entry) {
+        if (pos.x < 0 || pos.y < 0 || pos.z < 0) {
+            entry.close();
+            return;
+        }
+
         initRoot(pos);
 
         if (root.isInBounds(pos)) {
@@ -106,6 +111,11 @@ public class TreeManager implements WorldManager {
     }
 
     private void insertChunk(ChunkNode node) {
+        if (node.minBounds().x < 0 || node.minBounds().y < 0 || node.minBounds().z < 0) {
+            node.close();
+            return;
+        }
+
         if (root == null) {
             root = node;
             return;
