@@ -88,6 +88,8 @@ void sample_indirect(
         vec4 albedo = vec4(1.0f);
         vec3 light_color = vec3(0.0f);
 
+        vec3 hit_position = ray_result_position(hit);
+
         // Ray either hit something or reached sky
         if (ray_result_is_hit(hit)) {
             VoxelData voxel_data = ray_result_voxel_data(hit);
@@ -124,7 +126,9 @@ void sample_indirect(
 #endif
         } else {
             ray.iterations = 0;
-            light_color = is_tracing_sun ? get_sun_color() : get_sky_color();
+            vec3 player_pos = hit_position - rt_camera_position;
+
+            light_color = is_tracing_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
         }
 
         if (light_color != vec3(0.0f)) {
@@ -138,7 +142,7 @@ void sample_indirect(
         bounce_count += 1;
         running_bounce_color *= albedo.rgb;
 
-        sample_rt_pos = ray_result_position(hit);
+        sample_rt_pos = hit_position;
         geo_normal = ray_result_normal(hit);
 
         ph_gi_prepare_ray(ray, rnd_state, sample_rt_pos, geo_normal, is_tracing_sun);
