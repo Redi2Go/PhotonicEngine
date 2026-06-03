@@ -93,7 +93,7 @@ A value of -1 means the light was removed from the light list.
 
 ## `/photonics/palette.glsl`
 
-### `Voxeldata`
+### `VoxelData`
 ```glsl
 struct VoxelData {
 
@@ -309,7 +309,7 @@ Applies multiplicative blending to `accumulator` with `albedo`, where accumulato
 Can be used to tint the final albedo like so:
 
 ```glsl
-vec3 result_color = mix(abledo, accumulator.rgb, accumulator.a);
+vec3 result_color = mix(albedo, accumulator.rgb, accumulator.a);
 ```
 
 ## `/photonics/uniforms.glsl`
