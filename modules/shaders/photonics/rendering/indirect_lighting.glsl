@@ -100,6 +100,7 @@ void sample_indirect(
                 continue;
             }
 
+#if defined PH_INDIRECT_SURFACE_SAMPLE_MODIFIER_DISABLED
             Light hit_light = ray_result_light_data(hit);
             if (light_is_valid(hit_light) && hit_light.type == LIGHT_TYPE_NOT_TRACED) {
                 light_color = light_sample_at(
@@ -110,6 +111,17 @@ void sample_indirect(
                     geo_normal
                 ) * 3.0f;
             }
+#else
+            light_color = modify_indirect_surface_sample(
+                hit,
+                sample_rt_pos,
+                geo_normal,
+                bounce_count,
+                rnd_state
+            );
+#endif
+
+
         } else {
             ray.iterations = 0;
             light_color = is_tracing_sun ? get_sun_color() : get_sky_color();
