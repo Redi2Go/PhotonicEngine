@@ -50,7 +50,7 @@ void ph_gi_prepare_ray(
         )
     );
 
-    ray.position += ray.direction * 0.01f;
+    ray_iter_offset_position(ray.direction * 0.01f);
 }
 
 void sample_indirect(
@@ -70,8 +70,7 @@ void sample_indirect(
     RayIterator ray;
 
     ray.iterations = PH_MAX_GI_ITERATIONS;
-    ray.position = sample_rt_pos;
-
+    ray_iter_set_position(sample_rt_pos);
     ph_gi_prepare_ray(ray, rnd_state, sample_rt_pos, geo_normal, is_tracing_sun);
 
     while (bounce_count < PH_MAX_GI_BOUNCES) {

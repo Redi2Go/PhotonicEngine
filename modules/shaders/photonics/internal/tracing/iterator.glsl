@@ -44,6 +44,10 @@ void ray_iter_set_position(inout RayIterator ray, vec3 position) {
     ray.position = position;
 }
 
+void ray_iter_offset_position(inout RayIterator ray, vec3 offset) {
+    ray.position+= offset;
+}
+
 void ray_iter_set_direction(inout RayIterator ray, vec3 direction) {
     ray.direction = direction;
     _ray_iter_setup(ray);
