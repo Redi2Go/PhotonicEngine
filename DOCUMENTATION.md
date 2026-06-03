@@ -312,8 +312,60 @@ Can be used to tint the final albedo like so:
 vec3 result_color = mix(abledo, accumulator.rgb, accumulator.a);
 ```
 
-### `/photonics/uniforms.glsl`
+## `/photonics/uniforms.glsl`
 
 A common file containing all of photonics's uniforms behind an #if guard. 
 This is used by every Photonics file that uses its uniforms. 
 Useful to avoid duplicate uniform declarations.
+
+## `/photonics/interface/world_interface.glsl`
+
+```glsl
+bool is_in_world();
+```
+`true` if the current fragment is in the world
+
+```glsl
+bool is_hand_at();
+```
+`true` if the current fragment is the hand. Yes this name is currently a typo
+
+```glsl
+vec3 load_player_position();
+```
+The current player pos of the current fragment. The offset required in load_fragment_data from 0.3 is not required
+
+```glsl
+void load_fragment_data(out vec3 geometry_normal, out vec3 texture_normal);
+```
+Loads the geometry/texture normal of the current fragment
+
+```glsl
+vec2 get_taa_jitter();
+```
+The TAA jitter for the current fragment, in NDC space.
+
+## `/photonics/interface/lighting_interface.glsl`
+```glsl
+vec3 get_sun_direction();
+```
+The current direction to the sun or moon (depending on which one is the active light source)
+
+```glsl
+vec3 get_sun_color();
+```
+The color of light from the sun.
+
+```glsl
+vec3 get_sky_color();
+```
+The color of light from the sky.
+
+```glsl
+bool is_in_shadow_at(vec3 scene_pos, vec3 geo_normal);
+```
+`true` if `scene_pos` is in shadow. It is okay for this method to return false for culling/out of distance.
+
+If you do not use shadow mapping at all define `NO_SHADOW_MAPPING` at the top of the file. 
+This will force photonic's to use the old approach for checking trace to sun.
+
