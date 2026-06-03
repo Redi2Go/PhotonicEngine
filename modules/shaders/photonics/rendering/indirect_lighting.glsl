@@ -120,8 +120,6 @@ void sample_indirect(
                 rnd_state
             );
 #endif
-
-
         } else {
             ray.iterations = 0;
             light_color = is_tracing_sun ? get_sun_color() : get_sky_color();
