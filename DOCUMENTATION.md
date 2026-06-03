@@ -366,12 +366,12 @@ vec3 get_sun_direction();
 The current direction to the sun or moon (depending on which one is the active light source)
 
 ```glsl
-vec3 get_sun_color();
+vec3 get_sun_color(vec3 player_pos, vec3 direction);
 ```
 The color of light from the sun.
 
 ```glsl
-vec3 get_sky_color();
+vec3 get_sky_color(vec3 player_pos, vec3 direction);
 ```
 The color of light from the sky.
 
