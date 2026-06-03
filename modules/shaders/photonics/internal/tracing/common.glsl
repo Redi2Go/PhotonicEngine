@@ -3,7 +3,7 @@
 
 #include "/photonics/uniforms.glsl"
 #include "/photonics/palette.glsl"
-#include "/photonics/internal/light.glsl"
+#include "/photonics/light.glsl"
 #include "/photonics/utility/color.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 

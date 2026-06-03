@@ -1,5 +1,5 @@
 #include "/photonics/modifiers/handheld_light_pulse_modifier.glsl"
-#include "/photonics/internal/light.glsl"
+#include "/photonics/light.glsl"
 #include "/photonics/tracing.glsl"
 
 #define PH_HANDHELD_RAY_ITERATIONS 40

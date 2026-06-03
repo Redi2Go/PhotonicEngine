@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 public class ShaderPatcher {
     // TODO replace with comment at the top of the file
     private static final Set<String> AUTO_REPLACED_FILES = Set.of(
+            "light.glsl",
             "light_list.glsl",
             "palette.glsl",
             "samplers.glsl",

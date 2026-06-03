@@ -2,7 +2,7 @@
 #define PH_LIGHT_LIST_INCLUDE
 
 #include "/photonics/uniforms.glsl"
-#include "/photonics/internal/light.glsl"
+#include "/photonics/light.glsl"
 
 layout (std140) restrict readonly buffer ph_light_list {
 // vec 1: position (xyz) + block_id (w)
