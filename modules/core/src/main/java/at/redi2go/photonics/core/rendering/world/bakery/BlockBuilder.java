@@ -1,14 +1,14 @@
 package at.redi2go.photonics.core.rendering.world.bakery;
 
 import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasTexture;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import org.joml.Vector3f;
 
 public interface BlockBuilder {
     BlockBuilder useAtlas(Id id);
 
-    BlockBuilder useTexture(CpuTexture texture);
+    BlockBuilder useTexture(AtlasTexture texture);
 
     BlockBuilder useOffset(float x, float y, float z);
 

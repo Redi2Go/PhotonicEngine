@@ -12,7 +12,7 @@ import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import at.redi2go.photonics.core.rendering.world.bakery.Vertex;
 import at.redi2go.photonics.core.rendering.world.bakery.VoxelConsumer;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.core.rendering.world.bakery.texture.CpuTexture;
+import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasTexture;
 import at.redi2go.photonics.core.rendering.world.block.TextureData;
 import at.redi2go.photonics.core.rendering.world.block.VoxelColor;
 import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
@@ -78,7 +78,7 @@ public class BlockBakeryImpl implements BlockBakery {
         private float offsetX, offsetY, offsetZ = 0f;
 
         private int currentBlockId = -1;
-        private CpuTexture currentTexture = null;
+        private AtlasTexture currentTexture = null;
         private long currentTextureHash = 0;
 
         private int vertexCount = 0;
@@ -162,7 +162,7 @@ public class BlockBakeryImpl implements BlockBakery {
         }
 
         @Override
-        public BlockBuilder useTexture(CpuTexture texture) {
+        public BlockBuilder useTexture(AtlasTexture texture) {
             if (currentTexture == texture) return this;
 
             currentTexture = texture;
@@ -278,7 +278,7 @@ public class BlockBakeryImpl implements BlockBakery {
             rasterState.readQuad(this);
 
             int tint = rasterState.v0().tint();
-            CpuTexture texture = currentTexture;
+            AtlasTexture texture = currentTexture;
 
             tri[0] = rasterState.v0();
             tri[1] = rasterState.v1();
@@ -299,7 +299,7 @@ public class BlockBakeryImpl implements BlockBakery {
                 RasterState rasterState,
                 int tint,
                 Vertex[] tri,
-                CpuTexture texture,
+                AtlasTexture texture,
                 VoxelConsumer consumer
         ) throws InterruptedException {
             Vector3f ba = tri[1].sub(tri[0], rasterState.ba());
@@ -392,9 +392,9 @@ public class BlockBakeryImpl implements BlockBakery {
         }
 
         private static class TextureChange extends StateChange {
-            private final CpuTexture texture;
+            private final AtlasTexture texture;
 
-            private TextureChange(CpuTexture texture) {
+            private TextureChange(AtlasTexture texture) {
                 this.texture = texture;
             }
 
@@ -409,7 +409,7 @@ public class BlockBakeryImpl implements BlockBakery {
         }
 
         private static TextureData sample(
-                CpuTexture texture,
+                AtlasTexture texture,
                 int blockId,
                 Vertex[] tri,
                 BaryPos barycentricPos

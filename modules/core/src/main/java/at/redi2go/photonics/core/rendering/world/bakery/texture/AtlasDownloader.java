@@ -6,5 +6,5 @@ import at.redi2go.photonics.api.mc.Id;
 public interface AtlasDownloader extends Disposable {
     void preloadTexture(Id atlasId);
 
-    CpuTexture get(Id atlasId);
+    AtlasTexture get(Id atlasId);
 }

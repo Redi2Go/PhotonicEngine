@@ -22,16 +22,18 @@ int voxel_data_block_id(VoxelData voxel_data) {
 }
 
 vec4 voxel_data_albedo(VoxelData voxel_data) {
-    return vec4(ph_unpack_int_color(voxel_data.y)) / 255.0f;
-    //return unpackUnorm4x8(voxel_data.y);
+    const float rcp_255 = 1.0f / 255.0f;
+    return vec4(ph_unpack_int_color(voxel_data.y)) * rcp_255;
 }
 
 vec4 voxel_data_normal(VoxelData voxel_data) {
-    return unpackUnorm4x8(voxel_data.z);
+    const float rcp_255 = 1.0f / 255.0f;
+    return vec4(ph_unpack_int_color(voxel_data.z)) * rcp_255;
 }
 
 vec4 voxel_data_specular(VoxelData voxel_data) {
-    return unpackUnorm4x8(voxel_data.w);
+    const float rcp_255 = 1.0f / 255.0f;
+    return vec4(ph_unpack_int_color(voxel_data.w)) * rcp_255;
 }
 
 
