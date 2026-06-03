@@ -29,6 +29,7 @@ public class ShaderPatcher {
             "palette.glsl",
             "samplers.glsl",
             "tracing.glsl",
+            "uniforms.glsl",
 
             // LEGACY FILE NAMES
             "photonics.glsl",
