@@ -112,7 +112,7 @@ void sample_indirect(
             }
         } else {
             ray.iterations = 0;
-            light_color = is_tracing_sun ? get_sun_color() * 4.0f : get_sky_color();
+            light_color = is_tracing_sun ? get_sun_color() : get_sky_color();
         }
 
         if (light_color != vec3(0.0f)) {
