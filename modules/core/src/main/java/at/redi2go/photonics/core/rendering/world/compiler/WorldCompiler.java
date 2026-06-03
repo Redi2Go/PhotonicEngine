@@ -305,6 +305,11 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                     return new Vector3f(offset.applyOffset(new Vector3d(pos.x, pos.y, pos.z)));
                 }
         );
+
+
+        // TODO: Replace this with actual values
+        dynamicUniforms.uniform1i(IUniformUpdateFrequency.once(), "phFirstBuildTime", () -> 1);
+        dynamicUniforms.uniform1i(IUniformUpdateFrequency.once(), "phLastBuildTime", () -> 1);
     }
 
     @Override
