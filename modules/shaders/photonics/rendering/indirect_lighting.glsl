@@ -12,7 +12,7 @@ bool ph_should_trace_to_sun(
 ) {
 #if !defined NO_SHADOW_MAPPING
     return ph_rand_next_float(rnd_state) < 0.6f &&
-        dot( get_sun_direction(), surface_normal) >= 0.0f &&
+        dot(get_sun_direction(), surface_normal) >= 0.0f &&
         is_in_shadow_at(surface_rt_pos - rt_camera_position, surface_normal);
 #else
         return ph_rand_next_float(rnd_state) < 0.25f &&
