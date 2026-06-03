@@ -37,7 +37,7 @@ void ray_iter_begin(out RayIterator ray, vec3 position, vec3 direction) {
     ray.direction = direction;
 
     _ray_iter_setup(ray);
-    ray.iterations = 100;
+    ray.iterations = PH_RAY_DEFAULT_ITERATIONS;
 }
 
 void ray_iter_set_position(inout RayIterator ray, vec3 position) {
