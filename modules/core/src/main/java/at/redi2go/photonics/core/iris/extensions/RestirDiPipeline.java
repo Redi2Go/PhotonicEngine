@@ -64,7 +64,7 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
 
         restirBuilder.addPass("direct", "/photonics/rendering/restir_di/passes/direct.fsh", null, restirFramebuffer);
 
-        if (properties.useRestirCombinedGi()) {
+        if (properties.isGiEnabled() && properties.useRestirCombinedGi()) {
             restirBuilder.addPass("indirect", "/photonics/rendering/restir_di/passes/combined_indirect.fsh", null, restirFramebuffer);
         }
 
