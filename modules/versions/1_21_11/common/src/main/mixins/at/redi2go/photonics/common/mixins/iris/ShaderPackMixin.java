@@ -4,10 +4,12 @@ import at.redi2go.photonics.api.mc.world.level.IBlockState;
 import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.api.shaders.LightingMode;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.common.StringPairDefineHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.core.Photonics;
+import at.redi2go.photonics.core.iris.IrisDefines;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
@@ -114,8 +116,8 @@ public abstract class ShaderPackMixin implements IShaderPack {
             @Local(name = "envDefines1") ArrayList<StringPair> defines
     ) {
         // These are the defines used by the preprocessor for shaders.properties
-        defines.add(new StringPair("PHOTONICS", ""));
-        defines.add(new StringPair("PHOTONICS_VERSION", Photonics.getVersionString()));
+        var defineHolder = new StringPairDefineHolder(defines);
+        IrisDefines.registerVersionDefines(defineHolder);
     }
 
     @Inject(
@@ -135,47 +137,8 @@ public abstract class ShaderPackMixin implements IShaderPack {
             @Local(name = "newEnvDefines") List<StringPair> newEnvDefines
     ) {
         // These are the defines used by the preprocessor for everything else
-        floatDefine(newEnvDefines, "PH_RENDER_SCALE", phProperties.getRenderScale());
-        intDefine(newEnvDefines, "PH_MAX_LIGHTS", phProperties.getMaxLights());
-
-        switch (phProperties.getAlphaMode()) {
-            case BLOCK -> stringDefine(newEnvDefines, "PH_USE_TRANSPARENCY", "");
-            case VOXEL -> {
-                stringDefine(newEnvDefines, "PH_USE_TRANSPARENCY", "");
-                stringDefine(newEnvDefines, "PH_FULL_TRANSPARENCY", "");
-            }
-        }
-
-        if (phProperties.isGiEnabled())
-            stringDefine(newEnvDefines, "PH_ENABLE_GI", "");
-
-        if (phProperties.isBlockLightEnabled())
-            stringDefine(newEnvDefines, "PH_ENABLE_BLOCKLIGHT", "");
-
-        if (phProperties.isHandheldLightEnabled())
-            stringDefine(newEnvDefines, "PH_ENABLE_HANDHELD_LIGHT", "");
-
-        if (phProperties.isLightBinningEnabled() || phProperties.getLightingMode() == LightingMode.BASIC)
-            stringDefine(newEnvDefines, "PH_ENABLE_LIGHT_BINNING", "");
-
-        if (phProperties.useSeparateHandheldRays())
-            stringDefine(newEnvDefines, "PH_SEPARATE_HANDHELD_RAYS", "");
-
-        enumDefine(newEnvDefines, "PH_LIGHTING_MODE", phProperties.getLightingMode());
-
-        intDefine(newEnvDefines, "PH_RESTIR_INITIAL_SAMPLES", phProperties.getRestirInitialSamples());
-        intDefine(newEnvDefines, "PH_RESTIR_SPATIAL_REUSE_SAMPLES", phProperties.getRestirSpatialReuseSamples());
-        floatDefine(newEnvDefines, "PH_RESTIR_SPATIAL_REUSE_RADIUS", phProperties.getRestirSpatialReuseRadius());
-        intDefine(newEnvDefines, "PH_RESTIR_ACCUMULATION_FRAMES", phProperties.getRestirAccumulationFrames());
-        intDefine(newEnvDefines, "PH_RESTIR_DENOISER_PASSES", phProperties.getRestirDenoiserPasses());
-
-        if (phProperties.useRestirSoftShadows())
-            stringDefine(newEnvDefines, "PH_RESTIR_SOFT_SHADOWS", "");
-
-        if (phProperties.getLightingMode() == LightingMode.RESTIR && phProperties.useRestirCombinedGi())
-            stringDefine(newEnvDefines, "PH_RESTIR_COMBINED_GI", "");
-
-        intDefine(newEnvDefines, "PH_MAX_SAMPLES",  phProperties.getMaxSamples());
+        var defineHolder = new StringPairDefineHolder(newEnvDefines);
+        IrisDefines.registerDefines(defineHolder, phProperties);
     }
 
     @Unique
