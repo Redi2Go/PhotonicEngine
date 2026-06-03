@@ -20,6 +20,7 @@
     "iris.pipeline.uniforms.UniformUpdateFrequencyMixin",
 
     "iris.ShaderPackSourceNamesMixin",
+    "iris.JcppProcessorMixin",
     "iris.pipeline.IrisRenderingPipelineMixin",
     "iris.pipeline.PipelineManagerMixin",
     "iris.pipeline.passes.composite.CompositeRendererMixin",

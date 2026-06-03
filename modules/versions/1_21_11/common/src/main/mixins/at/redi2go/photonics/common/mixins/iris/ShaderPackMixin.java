@@ -8,12 +8,16 @@ import at.redi2go.photonics.common.StringPairDefineHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
+import at.redi2go.photonics.common.iris.UniformPatcher;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.IrisDefines;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.helpers.StringPair;
 import net.irisshaders.iris.shaderpack.ShaderPack;
@@ -97,6 +101,27 @@ public abstract class ShaderPackMixin implements IShaderPack {
     @Override
     public PhotonicsProperties properties() {
         return phProperties;
+    }
+
+    @WrapOperation(
+            method = "lambda$new$8",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/shaderpack/preprocessor/JcppProcessor;glslPreprocessSource(Ljava/lang/String;Ljava/lang/Iterable;)Ljava/lang/String;"
+            ),
+            remap = false
+    )
+    private static String lambda$new$8Post(
+            String source,
+            Iterable<StringPair> environmentDefines,
+            Operation<String> original
+    ) {
+        UniformPatcher.prepare();
+        try {
+            return UniformPatcher.addRequiredUniforms(original.call(source, environmentDefines));
+        } catch (CommandSyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Inject(
