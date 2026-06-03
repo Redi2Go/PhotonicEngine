@@ -1,7 +1,7 @@
 //HEAD
 
 //TODO: DEPRECATED; REMOVE IN FUTURE RELEASE
-#define LEGACY_LIGHTING_INTERFACE
+#define NO_SHADOW_MAPPING
 
 vec3 get_sun_direction() {
     return sun_direction;
