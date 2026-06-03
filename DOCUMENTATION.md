@@ -19,6 +19,20 @@ If a file returns a type from another file it will have included that file.
 Some structs may be documented to have *no* members. 
 This means their members are unstable and should not be manually accessed.
 
+# NEW MODIFIERS
+
+### `/photonics/modifiers/indirect_surface_sample_modifier`
+
+```glsl
+vec3 modify_indirect_surface_sample(
+    RayResult hit,
+    vec3 sample_rt_pos,
+    vec3 sample_geo_normal,
+    int bounce, // The bounce the sample is for, where -1 is the ray from the fragment to `hit`
+    inout uint rnd_state 
+);
+```
+
 ## `/photonics/light.glsl`
 
 ### `LIGHT_TYPE_INVALID`
