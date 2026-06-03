@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+//TODO: FIX TREE GROWING TO GIANT SIZE WHEN TELEPORTED
 public class WorldCompiler implements Runnable, RenderingComponent {
     public static final int MAX_SECTIONS_PER_RUN = 48;
 
