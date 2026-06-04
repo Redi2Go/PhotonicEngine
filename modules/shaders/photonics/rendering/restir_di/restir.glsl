@@ -189,11 +189,9 @@ void reservoir_decode(inout Reservoir reservoir, vec4 color, vec3 sample_pos, bo
 }
 
 bool reservoir_reuse(inout Reservoir reservoir, ivec2 texel) {
-    if (!frag_is_bad_angle) {
-        vec3 sample_player_pos = texelFetch(restir_position_history, texel, 0).xyz;
-        vec3 d = sample_player_pos - frag_player_pos;
-        if (dot(d, d) >= 0.3f) return false;
-    }
+    vec3 sample_player_pos = texelFetch(restir_position_history, texel, 0).xyz;
+    vec3 d = sample_player_pos - frag_player_pos;
+    if (dot(d, d) >= 2f) return false;
 
     vec3 n = ph_decode_normal(texelFetch(restir_normal_history, texel, 0).xy);
 
