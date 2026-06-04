@@ -28,10 +28,8 @@ void main() {
 
     SampleHistory accumulator;
 
-    if (!frag_is_hand) {
-        sample_history_reproject(accumulator);
-        sample_history_combine_lighting(accumulator, smple);
-    } else accumulator = smple;
+    sample_history_reproject(accumulator);
+    sample_history_combine_lighting(accumulator, smple);
 
 #if PH_RESTIR_DENOISER_PASSES != 0
     sample_history_combine_moment(accumulator, smple);
