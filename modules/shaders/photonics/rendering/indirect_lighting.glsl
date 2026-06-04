@@ -9,11 +9,13 @@
 
 bool ph_should_trace_to_sun(
     inout uint rnd_state,
+    int bounce,
     vec3 surface_rt_pos,
     vec3 surface_normal
 ) {
 #if !defined NO_SHADOW_MAPPING
-    return ph_rand_next_float(rnd_state) < 0.6f &&
+    return bounce != -1 &&
+        ph_rand_next_float(rnd_state) < 0.6f &&
         dot(get_sun_direction(), surface_normal) >= 0.0f &&
         is_in_shadow_at(surface_rt_pos - rt_camera_position, surface_normal);
 #else
@@ -25,10 +27,11 @@ bool ph_should_trace_to_sun(
 vec3 ph_next_direction(
     inout uint rnd_state,
     out bool is_sun,
+    int bounce,
     vec3 surface_rt_pos,
     vec3 surface_normal
 ) {
-    if (ph_should_trace_to_sun(rnd_state, surface_rt_pos, surface_normal)) {
+    if (ph_should_trace_to_sun(rnd_state, bounce, surface_rt_pos, surface_normal)) {
         is_sun = true;
         return get_sun_direction();
     } else {
@@ -40,6 +43,7 @@ vec3 ph_next_direction(
 void ph_gi_prepare_ray(
     inout RayIterator ray,
     inout uint rnd_state,
+    int bounce,
 
     vec3 rt_pos,
     vec3 geo_normal,
@@ -51,7 +55,8 @@ void ph_gi_prepare_ray(
         ph_next_direction(
             rnd_state,
             is_tracing_sun,
-                rt_pos,
+            bounce,
+            rt_pos,
             geo_normal
         )
     );
@@ -77,7 +82,7 @@ void sample_indirect(
 
     ray.iterations = PH_MAX_GI_ITERATIONS;
     ray_iter_set_position(ray, sample_rt_pos);
-    ph_gi_prepare_ray(ray, rnd_state, sample_rt_pos, geo_normal, is_tracing_sun);
+    ph_gi_prepare_ray(ray, rnd_state, bounce_count, sample_rt_pos, geo_normal, is_tracing_sun);
 
     while (bounce_count < PH_MAX_GI_BOUNCES) {
         RayResult hit = ray_iter_next(ray);
@@ -145,6 +150,6 @@ void sample_indirect(
         sample_rt_pos = hit_position;
         geo_normal = ray_result_normal(hit);
 
-        ph_gi_prepare_ray(ray, rnd_state, sample_rt_pos, geo_normal, is_tracing_sun);
+        ph_gi_prepare_ray(ray, rnd_state, bounce_count, sample_rt_pos, geo_normal, is_tracing_sun);
     }
 }
