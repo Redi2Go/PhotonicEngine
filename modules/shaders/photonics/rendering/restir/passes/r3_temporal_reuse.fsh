@@ -3,11 +3,15 @@
 #include "/photonics/rendering/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
+#if defined PH_ENABLE_BLOCKLIGHT
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
+#endif
 
+#if defined PH_ENABLE_RESTIR_GI
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
 layout(location = INDIRECT_RESERVOIR_1) out vec4 gi_reservoir_1;
 layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
+#endif
 
 void main() {
     ivec2 prev_texel;
@@ -31,6 +35,7 @@ void main() {
     vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, prev_texel, 0).xy);
     if (dot(n, frag_geo_normal) < 0.99f) discard;
 
+#if defined PH_ENABLE_BLOCKLIGHT
     // DIRECT TEMPORAL REUSE
 
     float direct_sample_weight = 0.0f;
@@ -51,7 +56,9 @@ void main() {
     direct_reservoir_finalize_weight(direct_result, direct_sample_weight);
     direct_reservoir_encode(direct_result, di_reservoir_0);
 
+#endif
 
+#if defined PH_ENABLE_RESTIR_GI
     // INDIRECT TEMPORAL REUSE
 
     float indirect_sample_weight = 0.0f;
@@ -70,4 +77,5 @@ void main() {
     // write resulting reservoir
     indirect_reservoir_finalize_weight(indirect_result, indirect_sample_weight);
     indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
+#endif
 }

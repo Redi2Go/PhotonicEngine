@@ -1,9 +1,20 @@
 #include "/photonics/rendering/restir/indirect/sample.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
+//TODO Rename restir combined gi
+#if defined PH_ENABLE_GI && defined PH_RESTIR_COMBINED_GI
+#define PH_ENABLE_RESTIR_GI
+#endif
+
+#if defined PH_ENABLE_BLOCKLIGHT
 #define INDIRECT_RESERVOIR_0 4
 #define INDIRECT_RESERVOIR_1 5
 #define INDIRECT_RESERVOIR_2 6
+#else
+#define INDIRECT_RESERVOIR_0 3
+#define INDIRECT_RESERVOIR_1 4
+#define INDIRECT_RESERVOIR_2 5
+#endif
 
 uniform sampler2D restir_indirect_reservoirs0;
 uniform sampler2D restir_indirect_reservoirs1;
@@ -86,6 +97,7 @@ void indirect_reservoir_finalize_weight(
 }
 
 vec3 indirect_reservoir_get_final_color(inout IndirectReservoir reservoir) {
+    // is causing a crash on nvidia windows(???)
 //    vec3 color = indirect_sample_validate_visibility(reservoir.smple, frag_rt_pos);
 //    if (all(equal(color, vec3(0.0f)))) {
 //        reservoir.smple.color = vec3(0.0f);

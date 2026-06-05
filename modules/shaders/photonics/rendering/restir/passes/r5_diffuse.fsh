@@ -6,11 +6,15 @@
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
 #include "/photonics/interface/lighting_interface.glsl"
 
+#if defined PH_ENABLE_BLOCKLIGHT
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
+#endif
 
+#if defined PH_ENABLE_RESTIR_GI
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
 layout(location = INDIRECT_RESERVOIR_1) out vec4 gi_reservoir_1;
 layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
+#endif
 
 layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting;
 
@@ -18,6 +22,7 @@ void main() {
     lighting = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     if (!prepare_frag(0)) return;
 
+#if defined PH_ENABLE_RESTIR_GI
     // INDIRECT LIGHTING
 
     IndirectReservoir indirect_reservoir = indirect_reservoir_empty();
@@ -25,12 +30,15 @@ void main() {
 
     lighting.rgb = indirect_reservoir_get_final_color(indirect_reservoir);
 
-//#ifndef PH_RESTIR_GI_MODIFIER_DISABLED
-//    modify_restir_gi(lighting.rgb);
-//#endif
+#ifndef PH_RESTIR_GI_MODIFIER_DISABLED
+    modify_restir_gi(lighting.rgb);
+#endif
 
-//    indirect_reservoir_encode(indirect_reservoir, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
+    indirect_reservoir_encode(indirect_reservoir, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
+#endif
 
+
+#if defined PH_ENABLE_BLOCKLIGHT
     // DIRECT LIGHTING
 
     DirectReservoir direct_reservoir = direct_reservoir_empty();
@@ -43,4 +51,5 @@ void main() {
     );
 
     direct_reservoir_encode(direct_reservoir, di_reservoir_0);
+#endif
 }
