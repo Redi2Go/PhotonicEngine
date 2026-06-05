@@ -82,7 +82,7 @@ public class ChunkCompiler implements Runnable, RenderingComponent {
                 if (!isLatestSection(section.pos(), section.priority())) continue;
 
                 // Computing the hash immediately is cheaper than meshing an entire section just to discard it
-                long hash = section.computeSectionHash();
+                long hash = section.computeSectionHash(level);
                 if (isDuplicateSection(section.pos(), hash)) continue;
 
                 var buildResult = new BuildResult(section.pos(), section.blockPos(), hash, section.priority());

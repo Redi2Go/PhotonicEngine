@@ -165,7 +165,7 @@ public abstract class AbstractLightList implements Runnable, RenderingComponent 
         boolean changed = false;
 
         for (var section : newSections) {
-            var sectionHash = section.computeSectionHash();
+            var sectionHash = section.computeSectionHash(null);
             if (sectionHashes.put(section.pos(), sectionHash) == sectionHash) continue;
 
             changed = true;

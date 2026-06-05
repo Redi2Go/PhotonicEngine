@@ -8,6 +8,7 @@ import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
+import at.redi2go.photonics.core.rendering.SectionCopy;
 import at.redi2go.photonics.core.rendering.SectionManager;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
@@ -213,7 +214,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                         blockPos.add(part.offset());
                         blockPos.add(iorigin);
 
-                        var skylight = compileSkylight(level, IBlockPos.of(blockPos));
+                        var skylight = SectionCopy.compileSkylight(level, IBlockPos.of(blockPos));
                         var entry = part.createEntry(region, skylight, light);
 
                         blockPos.sub(iorigin);
@@ -325,21 +326,6 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     @Override
     public void close() {
         compilerThread.interrupt();
-    }
-
-    private static int compileSkylight(ILevel level, IBlockPos pos) {
-        int brightness = level.ph$getSkylightValue(pos);
-
-        int result = 0;
-        for (int i = 5; i >= 0; i--) {
-            var normal = new Vector3i(VoxelNormal.getNormal(i), RoundingMode.TRUNCATE);
-            int skylight = level.ph$getSkylightValue(pos.ph$offset(normal));
-
-            result <<= 4;
-            result |= Math.max(skylight, brightness);
-        }
-
-        return result;
     }
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {

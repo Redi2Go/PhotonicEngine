@@ -2,8 +2,12 @@ package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.mc.core.IBlockPos;
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.api.mc.world.level.chunk.IChunkSection;
+import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.jetbrains.annotations.Nullable;
+import org.joml.RoundingMode;
 import org.joml.Vector3i;
 
 public class SectionCopy implements PrioritizedTask, IChunkSection {
@@ -69,12 +73,15 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
         }
     }
 
-    public long computeSectionHash() {
+    public long computeSectionHash(@Nullable ILevel level) {
         final long[] hash = {0};
 
-        forEachBlock((ignored, ignored1, block) ->
-                hash[0] = hash[0] * 31 + (block.hashCode() ^ block.ph$block().hashCode())
-        );
+        forEachBlock((ignored, blockPos, block) -> {
+            int blockHash = (block.hashCode() ^ block.ph$block().hashCode());
+            int skylight = level == null ? 0 : compileSkylight(level, blockPos);
+
+            hash[0] = hash[0] * 31 + (((long) skylight) << 32) | blockHash;
+        });
 
         return hash[0];
     }
@@ -85,5 +92,20 @@ public class SectionCopy implements PrioritizedTask, IChunkSection {
                 blockPos.ph$y() >> 4,
                 blockPos.ph$z() >> 4
         );
+    }
+
+    public static int compileSkylight(ILevel level, IBlockPos pos) {
+        int brightness = level.ph$getSkylightValue(pos);
+
+        int result = 0;
+        for (int i = 5; i >= 0; i--) {
+            var normal = new Vector3i(VoxelNormal.getNormal(i), RoundingMode.TRUNCATE);
+            int skylight = level.ph$getSkylightValue(pos.ph$offset(normal));
+
+            result <<= 4;
+            result |= Math.max(skylight, brightness);
+        }
+
+        return result;
     }
 }
