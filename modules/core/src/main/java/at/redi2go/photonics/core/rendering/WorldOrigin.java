@@ -56,7 +56,8 @@ public class WorldOrigin extends Vector3d {
     }
 
     private static int snapToSectionPos(int component, int renderDistance) {
-        return ((component >> 4) - renderDistance) << 4;
+        int value = ((component >> 4) - renderDistance) << 4;
+        return (value >> 6) << 6;
     }
 
     public static Vector3i getAsVector3i() {
