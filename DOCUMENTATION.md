@@ -19,6 +19,16 @@ If a file returns a type from another file it will have included that file.
 Some structs may be documented to have *no* members. 
 This means their members are unstable and should not be manually accessed.
 
+# NEW PROPERTIES
+
+### `photonics.maxGiBounces`
+Accepts a non-zero positive integer (defaults to 1)
+
+The max number of bounces a GI ray can do
+
+### `photonics.enableBlockLightGi`
+Accepts `true` or `false`
+
 # NEW MODIFIERS
 
 ### `/photonics/modifiers/indirect_surface_sample_modifier`
