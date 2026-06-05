@@ -372,14 +372,15 @@ vec3 get_sun_direction();
 The current direction to the sun or moon (depending on which one is the active light source)
 
 ```glsl
-vec3 get_sun_color(vec3 player_pos, vec3 direction);
-```
-The color of light from the sun.
-
-```glsl
 vec3 get_sky_color(vec3 player_pos, vec3 direction);
 ```
 The color of light from the sky.
+
+```glsl
+vec3 get_sun_color(vec3 player_pos, vec3 direction);
+```
+The color of light from the sun. Unlike `get_sky_color`, 
+sunlight can never be traced on the first ray (frag -> sample pos), only the first bounce (sample pos -> sun).
 
 ```glsl
 bool is_in_shadow_at(vec3 scene_pos, vec3 geo_normal);
