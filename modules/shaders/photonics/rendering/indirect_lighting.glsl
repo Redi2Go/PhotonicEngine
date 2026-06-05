@@ -68,7 +68,10 @@ void sample_indirect(
     inout vec3 indirect_color,
     vec3 sample_rt_pos,
     vec3 geo_normal,
-    inout uint rnd_state
+    inout uint rnd_state,
+
+    out vec3 first_hit,
+    out vec3 first_normal
 ) {
     vec4 running_tint_color = vec4(0.0f);
     float running_light_transmittance = 1.0f;
@@ -86,6 +89,10 @@ void sample_indirect(
 
     while (bounce_count < PH_MAX_GI_BOUNCES) {
         RayResult hit = ray_iter_next(ray);
+        if (bounce_count == -1) {
+            first_hit = ray_result_is_hit(hit) ? ray_result_position(hit) : vec3(-1.0f);
+            first_normal = ray_result_normal(hit);
+        }
 
         // No hit & not out of bounds means we likely out of iterations
         if (!ray_result_is_hit(hit) && ray_iter_is_in_bounds(ray)) break;

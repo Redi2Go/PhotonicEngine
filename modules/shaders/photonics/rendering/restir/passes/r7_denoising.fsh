@@ -7,11 +7,11 @@ layout(location = 0) out vec3 color_out;
 layout(location = 1) out float variance_out;
 
 uniform int atrous_iteration;
-//ph_required: uniform sampler2D depthtex0;
-//ph_required: uniform float near, far;
+uniform sampler2D depthtex0;
+//uniform float near, far;
 
 #include "/photonics/rendering/common.glsl"
-#include "/photonics/rendering/restir_di/restir.glsl"
+#include "/photonics/rendering/restir/restir.glsl"
 
 // 3×3 Gaussian Kernel & Offsets
 const float kernel[9] = float[](
@@ -59,18 +59,18 @@ float ph_linearize_depth(float d)
 #define PH_DEPTH_MODIFIER(p) modify_denoiser_depth_fetch(p)
 #endif
 
-#ifndef PH_RESTIR_COMBINED_GI
-#define SKIP_DENOISER light_list_size == 0 || !prepare_frag(0)
-#else
-#define SKIP_DENOISER !prepare_frag(0)
-#endif
-
 vec3 ph_decode_lighting_normal(vec4 packed_normals) {
     return ph_decode_normal(frag_is_hand ? packed_normals.xy : packed_normals.zw);
 }
 
+uniform sampler2D denoise_color;
+uniform sampler2D denoise_variance;
+
+uniform sampler2D prev_denoise_color;
+uniform sampler2D prev_denoise_variance;
+
 void main() {
-    if (SKIP_DENOISER) {
+    if (!prepare_frag(0)) {
         color_out = vec3(0.0f);
         variance_out = 1.0f;
 
@@ -84,7 +84,7 @@ void main() {
         return;
     } else if (atrous_iteration == -1) {
         vec3 color = texelFetch(restir_lighting, frag_tex_coord, 0).rgb;
-        if (any(isnan(color))); // TODO: Find cause of this nan
+        if (any(isnan(color))) color = vec3(0.0f); // TODO: Find cause of this nan
 
         color_out = color;
         variance_out = texelFetch(restir_lighting_variance, frag_tex_coord, 0).z;
@@ -101,22 +101,34 @@ void main() {
     vec3  N0 = ph_decode_lighting_normal(texelFetch(restir_normal_history, frag_tex_coord, 0));
     float D0 = ph_linearize_depth(depth);
 
+    const float phi_depth = 0.5f;
+
     float V0 = 0f;
     if (!frag_is_hand) {
         float sumw = 0.0f;
         for (int i = 0; i < 9; ++i) {
             ivec2 p = frag_tex_coord + offset[i];
-            float Vi = texelFetch(prev_denoise_variance, p, 0).x;
-            float k   = kernel[i];
 
-            V0 += Vi * k;
-            sumw += k;
+            float Vi = texelFetch(prev_denoise_variance, p, 0).x;
+            vec3  Ni = ph_decode_normal(texelFetch(restir_normal_history, p, 0).xy);
+            float Di = ph_linearize_depth(texelFetch(depthtex0, PH_DEPTH_MODIFIER(p), 0).x);
+
+            // Normal weight
+            float wN = normal_edge_stopping_weight(N0, Ni);
+
+            // Position weight
+            float wP = depth_edge_stopping_weight(D0, Di, phi_depth);
+
+            float k   = kernel[i];
+            float w = k * wN * wP;
+
+            V0 += Vi * w;
+            sumw += w;
         }
         V0 /= sumw;
     } else V0 = 5f;
 
     float phi_luminance = 6.0f * sqrt(max(0.0f, V0)) + 1e-10;
-    const float phi_depth = 0.5f;
 
     // 2) Bilateral‐style filter with adaptive color weight
     vec3 C_sum = vec3(0.0f);

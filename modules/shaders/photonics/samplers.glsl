@@ -6,7 +6,7 @@
 #elif PH_LIGHTING_MODE == 1
 #include "/photonics/rendering/basic/samplers.glsl"
 #elif PH_LIGHTING_MODE == 2
-#include "/photonics/rendering/restir_di/samplers.glsl"
+#include "/photonics/rendering/restir/samplers.glsl"
 #endif
 
 #endif

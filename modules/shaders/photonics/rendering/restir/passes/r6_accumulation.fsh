@@ -1,22 +1,13 @@
 #version 430
 
-/*
-    -- OUTPUT VARIABLES --
-*/
-layout(location = 3) out vec4 lighting_frag_out;
-layout(location = 4) out vec4 lighting_variance_frag_out;
-
 #include "/photonics/rendering/common.glsl"
-#include "/photonics/rendering/restir_di/restir.glsl"
+#include "/photonics/rendering/restir/restir.glsl"
 
-#ifndef PH_RESTIR_COMBINED_GI
-#define SKIP_ACCUMULATION light_list_size == 0 || !prepare_frag(0)
-#else
-#define SKIP_ACCUMULATION !prepare_frag(0)
-#endif
+layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting_frag_out;
+layout(location = RESTIR_LIGHTING_VARIANCE_OUT) out vec4 lighting_variance_frag_out;
 
 void main() {
-    if (SKIP_ACCUMULATION) {
+    if (!prepare_frag(0)) {
         lighting_frag_out = vec4(0.0f);
         lighting_variance_frag_out = vec4(0.0f);
 
