@@ -31,12 +31,14 @@ vec3 ph_next_direction(
     vec3 surface_rt_pos,
     vec3 surface_normal
 ) {
+    // the first call needs to be the direction for ReSTIR GI
+    vec3 next_dir = ph_rand_direction(rnd_state, surface_normal);
     if (ph_should_trace_to_sun(rnd_state, bounce, surface_rt_pos, surface_normal)) {
         is_sun = true;
         return get_sun_direction();
     } else {
         is_sun = false;
-        return ph_rand_direction(rnd_state, surface_normal);
+        return next_dir;
     }
 }
 
