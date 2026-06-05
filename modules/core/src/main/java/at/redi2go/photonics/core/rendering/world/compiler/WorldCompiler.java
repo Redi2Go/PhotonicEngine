@@ -211,9 +211,12 @@ public class WorldCompiler implements Runnable, RenderingComponent {
 
                         blockPos.set(block.x(), block.y(), block.z());
                         blockPos.add(part.offset());
+                        blockPos.add(iorigin);
 
                         var skylight = compileSkylight(level, IBlockPos.of(blockPos));
                         var entry = part.createEntry(region, skylight, light);
+
+                        blockPos.sub(iorigin);
 
                         treeManager.insertBlock(
                                 blockPos,
