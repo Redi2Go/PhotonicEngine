@@ -50,6 +50,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         this.historyRenderer = passFactory.newRenderer("history")
                 .addPass("record history", "/photonics/rendering/restir/passes/r0_record_history.fsh", null, historyFramebuffer)
                 .build();
+        
 
         this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
@@ -73,6 +74,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .addPass("accumulation", "/photonics/rendering/restir/passes/r6_accumulation.fsh", null, restirFramebuffer, this::isRestirEnabled)
                 .build();
 
+
         // The hand always needs at least 7 denoiser passes.
         int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
         this.denoiserPasses = requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0;
@@ -85,6 +87,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         this.denoiseRenderer = passFactory.newRenderer("denoiser")
                 .addPass("denoise", "/photonics/rendering/restir/passes/r7_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
                 .build();
+
 
         this.otherFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("other_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
