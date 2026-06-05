@@ -29,6 +29,9 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
     private final IrisFramebuffer denoiseFramebuffer;
     private final IrisRenderer denoiseRenderer;
 
+    private final IrisFramebuffer otherFramebuffer;
+    private final IrisRenderer otherRenderer;
+
     private final UniformUpdater atrousUpdater = new UniformUpdater();
 
     public RestirPipeline(
@@ -82,6 +85,14 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         this.denoiseRenderer = passFactory.newRenderer("denoiser")
                 .addPass("denoise", "/photonics/rendering/restir/passes/r7_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
                 .build();
+
+        this.otherFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("other_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
+                .build());
+
+        this.otherRenderer = passFactory.newRenderer("other")
+                .addPass("handheld", "/photonics/rendering/restir/passes/r8_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
+                .build();
     }
 
     @Override
@@ -98,6 +109,8 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
             denoiseFramebuffer.flip();
             denoiseRenderer.renderAll();
         }
+
+        otherRenderer.renderAll();
     }
 
     @Override
