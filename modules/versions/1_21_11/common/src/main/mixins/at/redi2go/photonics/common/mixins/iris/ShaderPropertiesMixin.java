@@ -19,6 +19,7 @@ import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ALPHA_MODE_KE
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ENCHANTMENT_GLINT_STRENGTH_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_BLOCK_LIGHT_ENABLED_KEY;
+import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_BLOCK_LIGHT_GI_ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_GI_ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_HANDHELD_LIGHT_ENABLED_KEY;
 import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_LIGHT_BINNING_ENABLED_KEY;
@@ -61,8 +62,9 @@ public abstract class ShaderPropertiesMixin {
         handleAlphaModeDirective(key, value, ALPHA_MODE_KEY, e -> phProperties.alphaMode = e);
         handleFloatDirective(key, value, ENCHANTMENT_GLINT_STRENGTH_KEY, e -> phProperties.enchantmentGlintStrength = e);
         handleBooleanDirective(key, value, SEPARATE_HANDHELD_RAYS_KEY, e -> phProperties.useSeparateHandheldRays = e);
-        handleBooleanDirective(key, value, IS_GI_ENABLED_KEY, e -> phProperties.giEnabled = e);
         handleBooleanDirective(key, value, IS_BLOCK_LIGHT_ENABLED_KEY, e -> phProperties.blockLightEnabled = e);
+        handleBooleanDirective(key, value, IS_GI_ENABLED_KEY, e -> phProperties.giEnabled = e);
+        handleBooleanDirective(key, value, IS_BLOCK_LIGHT_GI_ENABLED_KEY, e -> phProperties.blockLightGiEnabled = e);
         handleBooleanDirective(key, value, IS_HANDHELD_LIGHT_ENABLED_KEY, e -> phProperties.handheldLightEnabled = e);
         handleBooleanDirective(key, value, IS_LIGHT_BINNING_ENABLED_KEY, e -> phProperties.lightBinningEnabled = e);
 

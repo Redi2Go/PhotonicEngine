@@ -29,13 +29,17 @@ public interface PhotonicsProperties {
     boolean DEFAULT_SEPARATE_HANDHELD_RAYS = false;
     String SEPARATE_HANDHELD_RAYS_KEY = "photonics.useSeparateHandheldRays";
 
+    boolean isBlockLightEnabled();
+    boolean DEFAULT_IS_BLOCK_LIGHT_ENABLED = true;
+    String IS_BLOCK_LIGHT_ENABLED_KEY = "photonics.enableBlockLight";
+
     boolean isGiEnabled();
     boolean DEFAULT_IS_GI_ENABLED = true;
     String IS_GI_ENABLED_KEY = "photoncis.enableGi";
 
-    boolean isBlockLightEnabled();
-    boolean DEFAULT_IS_BLOCK_LIGHT_ENABLED = true;
-    String IS_BLOCK_LIGHT_ENABLED_KEY = "photonics.enableBlockLight";
+    boolean isBlockLightGiEnabled();
+    boolean DEFAULT_IS_BLOCK_LIGHT_GI_ENABLED = false;
+    String IS_BLOCK_LIGHT_GI_ENABLED_KEY = "photonics.enableBlockLightGi";
 
     boolean isHandheldLightEnabled();
     boolean DEFAULT_IS_HANDHELD_LIGHT_ENABLED = true;

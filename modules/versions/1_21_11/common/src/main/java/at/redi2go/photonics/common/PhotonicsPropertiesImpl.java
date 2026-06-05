@@ -12,8 +12,9 @@ public class PhotonicsPropertiesImpl implements PhotonicsProperties {
     public AlphaMode alphaMode = PhotonicsProperties.DEFAULT_ALPHA_MODE;
     public float enchantmentGlintStrength = PhotonicsProperties.DEFAULT_ENCHANTMENT_GLINT_STRENGTH;
     public boolean useSeparateHandheldRays = PhotonicsProperties.DEFAULT_SEPARATE_HANDHELD_RAYS;
-    public boolean giEnabled = PhotonicsProperties.DEFAULT_IS_GI_ENABLED;
     public boolean blockLightEnabled = PhotonicsProperties.DEFAULT_IS_BLOCK_LIGHT_ENABLED;
+    public boolean giEnabled = PhotonicsProperties.DEFAULT_IS_GI_ENABLED;
+    public boolean blockLightGiEnabled = PhotonicsProperties.DEFAULT_IS_BLOCK_LIGHT_GI_ENABLED;
     public boolean handheldLightEnabled = PhotonicsProperties.DEFAULT_IS_HANDHELD_LIGHT_ENABLED;
     public boolean lightBinningEnabled = PhotonicsProperties.DEFAULT_IS_LIGHT_BINNING_ENABLED;
     public LightingMode lightingMode = PhotonicsProperties.DEFAULT_LIGHTING_MODE;
@@ -62,13 +63,18 @@ public class PhotonicsPropertiesImpl implements PhotonicsProperties {
     }
 
     @Override
+    public boolean isBlockLightEnabled() {
+        return blockLightEnabled;
+    }
+
+    @Override
     public boolean isGiEnabled() {
         return giEnabled;
     }
 
     @Override
-    public boolean isBlockLightEnabled() {
-        return blockLightEnabled;
+    public boolean isBlockLightGiEnabled() {
+        return blockLightGiEnabled;
     }
 
     @Override

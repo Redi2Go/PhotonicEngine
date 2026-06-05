@@ -24,11 +24,14 @@ public class IrisDefines {
             }
         }
 
+        if (phProperties.isBlockLightEnabled())
+            defines.stringDefine("PH_ENABLE_BLOCKLIGHT", "");
+
         if (phProperties.isGiEnabled())
             defines.stringDefine("PH_ENABLE_GI", "");
 
-        if (phProperties.isBlockLightEnabled())
-            defines.stringDefine("PH_ENABLE_BLOCKLIGHT", "");
+        if (phProperties.isBlockLightGiEnabled())
+            defines.stringDefine("PH_ENABLE_BLOCKLIGHT_GI", "");
 
         if (phProperties.isHandheldLightEnabled())
             defines.stringDefine("PH_ENABLE_HANDHELD_LIGHT", "");
