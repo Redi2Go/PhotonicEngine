@@ -1,6 +1,8 @@
 package at.redi2go.photonics.core.rendering.world.compiler;
 
 import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.api.mc.core.IBlockPos;
+import at.redi2go.photonics.api.mc.world.level.ILevel;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
@@ -11,6 +13,7 @@ import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.WorldOrigin;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
+import at.redi2go.photonics.core.rendering.world.block.VoxelNormal;
 import at.redi2go.photonics.core.rendering.world.block.palette.PaletteTexture;
 import at.redi2go.photonics.core.rendering.world.registry.WorldRegistry;
 import at.redi2go.photonics.core.rendering.world.tree.BlockMergeMode;
@@ -18,6 +21,7 @@ import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import at.redi2go.photonics.core.rendering.world.tree.entries.LightBlockEntry;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import org.joml.RoundingMode;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -179,6 +183,9 @@ public class WorldCompiler implements Runnable, RenderingComponent {
         BlockSorter blockSorter = new BlockSorter();
         Vector3i blockPos = new Vector3i();
 
+        ILevel level = Minecraft.getLevel();
+        if (level == null) return;
+
         for (var section : sections) {
             try (section) {
                 blockSorter.reset();
@@ -205,11 +212,8 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                         blockPos.set(block.x(), block.y(), block.z());
                         blockPos.add(part.offset());
 
-                        var entry = part.createEntry(region);
-                        if (light != null) {
-                            light.acquireReference();
-                            entry = new LightBlockEntry(entry, light);
-                        }
+                        var skylight = compileSkylight(level, IBlockPos.of(blockPos));
+                        var entry = part.createEntry(region, skylight, light);
 
                         treeManager.insertBlock(
                                 blockPos,
@@ -318,6 +322,21 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     @Override
     public void close() {
         compilerThread.interrupt();
+    }
+
+    private static int compileSkylight(ILevel level, IBlockPos pos) {
+        int brightness = level.ph$getSkylightValue(pos);
+
+        int result = 0;
+        for (int i = 5; i >= 0; i--) {
+            var normal = new Vector3i(VoxelNormal.getNormal(i), RoundingMode.TRUNCATE);
+            int skylight = level.ph$getSkylightValue(pos.ph$offset(normal));
+
+            result <<= 4;
+            result |= Math.max(skylight, brightness);
+        }
+
+        return result;
     }
 
     private static class MultiThreadTask extends CompletableFuture<Void> implements CompilerTask {

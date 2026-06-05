@@ -3,8 +3,11 @@ package at.redi2go.photonics.core.rendering.world.registry.block.model;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
 import at.redi2go.photonics.core.rendering.world.block.BlockModel;
 import at.redi2go.photonics.core.rendering.world.registry.block.BlockLayer;
-import at.redi2go.photonics.core.rendering.world.registry.block.entry.SimpleBlockEntry;
-import org.apache.commons.lang3.NotImplementedException;
+import at.redi2go.photonics.core.rendering.world.registry.object.WeakValue;
+import at.redi2go.photonics.core.rendering.world.tree.entries.LightBlockEntry;
+import at.redi2go.photonics.core.rendering.world.tree.entries.SimpleBlockEntry;
+import at.redi2go.photonics.core.rendering.world.registry.light.WorldLight;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3i;
 
 public class BlockPartImpl implements BlockModel.Part {
@@ -28,8 +31,13 @@ public class BlockPartImpl implements BlockModel.Part {
     }
 
     @Override
-    public BlockEntry createEntry(int region) {
-        return new SimpleBlockEntry(region, this);
+    public BlockEntry createEntry(
+            int region,
+            int skylight,
+            @Nullable @WeakValue WorldLight light
+    ) {
+        return light == null ? new SimpleBlockEntry(region, skylight, this)
+                : new LightBlockEntry(region, skylight, light, this);
     }
 
     @Override

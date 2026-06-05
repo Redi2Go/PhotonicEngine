@@ -1,4 +1,4 @@
-package at.redi2go.photonics.core.rendering.world.registry.block.entry;
+package at.redi2go.photonics.core.rendering.world.tree.entries;
 
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 public record SimpleBlockEntry(
         int region,
+        int skylight,
         BlockPartImpl part
 ) implements BlockEntry {
     @Override
@@ -25,6 +26,7 @@ public record SimpleBlockEntry(
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
         part.blockLayer().uploadTo(memory);
+        memory.setExtraFields(skylight, 0);
     }
 
     @Override

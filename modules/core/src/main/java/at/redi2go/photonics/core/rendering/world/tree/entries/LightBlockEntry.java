@@ -1,61 +1,57 @@
 package at.redi2go.photonics.core.rendering.world.tree.entries;
 
-import at.redi2go.photonics.api.Disposable;
 import at.redi2go.photonics.core.rendering.world.allocator.VoxelEntryMemory;
 import at.redi2go.photonics.core.rendering.world.block.BlockEntry;
+import at.redi2go.photonics.core.rendering.world.registry.block.model.BlockPartImpl;
 import at.redi2go.photonics.core.rendering.world.registry.light.WorldLight;
+import at.redi2go.photonics.core.rendering.world.registry.object.WeakValue;
 import at.redi2go.photonics.core.rendering.world.tree.VoxelTreeEntry;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 
 public record LightBlockEntry(
-        BlockEntry block,
-        WorldLight light
+        int region,
+        int skylight,
+        @WeakValue WorldLight light,
+        BlockPartImpl part
 ) implements BlockEntry {
+    public LightBlockEntry {
+        light.acquireReference();
+    }
+
     @Override
     public int boundingVolume() {
-        return block.boundingVolume();
+        return part.blockLayer().boundingVolume();
     }
 
     @Override
     public IntSet regions() {
-        return block.regions();
-    }
-
-    @Override
-    public @Nullable VoxelTreeEntry removeRegions(IntSet regions) {
-        var result = block.removeRegions(regions);
-
-        if (result == null) {
-            light.close();
-            return null;
-        }
-
-        if (result == block) return this;
-
-        return new LightBlockEntry(
-                block,
-                light
-        );
-    }
-
-    @Override
-    public BlockEntry merge(BlockEntry entry) {
-        return new LightBlockEntry(
-                block.merge(entry),
-                light
-        );
+        return IntSet.of(region);
     }
 
     @Override
     public void uploadTo(VoxelEntryMemory memory) {
-        block.uploadTo(memory);
-        memory.setExtraFields(light.entryData());
+        part.blockLayer().uploadTo(memory);
+        memory.setExtraFields(skylight, light.entryData());
+    }
+
+    @Override
+    public @Nullable VoxelTreeEntry removeRegions(IntSet regions) {
+        if (!regions.contains(region)) return this;
+
+        close();
+        return null;
+    }
+
+    @Override
+    public BlockEntry merge(BlockEntry entry) {
+        throw new NotImplementedException("TODO");
     }
 
     @Override
     public void close() {
-        block.close();
+        part.close();
         light.close();
     }
 }

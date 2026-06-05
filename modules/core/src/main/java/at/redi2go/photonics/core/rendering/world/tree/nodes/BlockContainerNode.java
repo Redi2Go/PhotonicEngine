@@ -19,7 +19,7 @@ public class BlockContainerNode extends WorldNode {
 
     @Override
     protected VoxelEntryListMemory allocate(WorldAllocator allocator) {
-        return allocator.allocateEntryList(true, 1);
+        return allocator.allocateEntryList(true, 2);
     }
 
     @Override
