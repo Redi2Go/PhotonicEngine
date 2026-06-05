@@ -1,9 +1,9 @@
 #include "/photonics/rendering/restir/indirect/sample.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
-#define INDIRECT_RESERVOIR_0 1
-#define INDIRECT_RESERVOIR_1 2
-#define INDIRECT_RESERVOIR_2 3
+#define INDIRECT_RESERVOIR_0 4
+#define INDIRECT_RESERVOIR_1 5
+#define INDIRECT_RESERVOIR_2 6
 
 uniform sampler2D restir_indirect_reservoirs0;
 uniform sampler2D restir_indirect_reservoirs1;

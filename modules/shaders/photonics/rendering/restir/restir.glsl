@@ -9,9 +9,9 @@
 #include "/photonics/utility/projection.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
-#define RESTIR_LIGHTING_OUT 4
-#define RESTIR_LIGHTING_VARIANCE_OUT 5
-#define RESTIR_LIGHTING_SAMPLES_OUT 6
+#define RESTIR_LIGHTING_OUT 0
+#define RESTIR_LIGHTING_VARIANCE_OUT 1
+#define RESTIR_LIGHTING_SAMPLES_OUT 2
 
 uniform sampler2D restir_position_history;
 uniform sampler2D restir_normal_history;
