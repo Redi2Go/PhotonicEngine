@@ -13,6 +13,11 @@ import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import org.jetbrains.annotations.Nullable;
 
+import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FLIP;
+import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CREATE_SAMPLER;
+import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CREATE_PREV_SAMPLER;
+import static java.lang.Math.max;
+
 public class RestirDiPipeline extends AbstractPhotonicsExtension {
     private final IrisFramebuffer restirFramebuffer;
     private final IrisRenderer restirRenderer;
@@ -20,8 +25,8 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
     private int atrousIteration = 0;
     private final int denoiserPasses;
 
-    private final @Nullable IrisFramebuffer denoiseFramebuffer;
-    private final @Nullable IrisRenderer denoiseRenderer;
+    private final IrisFramebuffer denoiseFramebuffer;
+    private final IrisRenderer denoiseRenderer;
 
     private final UniformUpdater atrousUpdater = new UniformUpdater();
 
@@ -33,68 +38,39 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
     ) {
         super(properties, atlasDownloader, handheldItemSupplier);
 
-        var restirFramebufferBuilder = passFactory.newFramebuffer(properties.getRenderScale());
+        this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("restir_position_history", ITextureFormat.rgb16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
+                .addAttachment("restir_normal_history", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
+                .addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
+                .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
+                .addAttachment("restir_lighting_variance", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
+                .addAttachment("restir_lighting_samples", ITextureFormat.r16f(), CREATE_SAMPLER)
+                .addAttachment("restir_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
+                .build());
 
-        restirFramebufferBuilder.addAttachment("restir_position_history", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_normal_history", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_reservoirs", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_lighting", ITextureFormat.rgba32f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_lighting_variance", ITextureFormat.rgba16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER);
-        restirFramebufferBuilder.addAttachment("restir_lighting_samples", ITextureFormat.r16f(), AttachmentUsage.CREATE_SAMPLER);
+        this.restirRenderer = passFactory.newRenderer("restir")
+                .addPass("initial sampling", "/photonics/rendering/restir_di/passes/sampling.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
+                .addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
+                .addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
+                .addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
+                .addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
+                .addPass("direct", "/photonics/rendering/restir_di/passes/direct.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
+                .addPass("indirect", "/photonics/rendering/restir_di/passes/combined_indirect.fsh", null, restirFramebuffer, this::isCombinedGiEnabled)
+                .addPass("handheld", "/photonics/rendering/restir_di/passes/handheld.fsh", null, restirFramebuffer, this::isHandheldLightingEnabled)
+                .addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer, this::isAccumulationEnabled)
+                .build();
 
-        if (properties.isHandheldLightEnabled()) {
-            restirFramebufferBuilder.addAttachment("restir_handheld", ITextureFormat.rgb16f(), AttachmentUsage.CREATE_SAMPLER);
-        }
-
-        this.restirFramebuffer = registerComponent(restirFramebufferBuilder.build());
-
-
-
-
-        var restirBuilder = passFactory.newRenderer("restir");
-
-        restirBuilder.addPass("initial sampling", "/photonics/rendering/restir_di/passes/sampling.fsh", null, restirFramebuffer);
-
-        if (properties.getRestirSpatialReuseSamples() != 0) {
-            restirBuilder.addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer);
-            restirBuilder.addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer);
-            restirBuilder.addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer);
-            restirBuilder.addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer);
-        }
-
-        restirBuilder.addPass("direct", "/photonics/rendering/restir_di/passes/direct.fsh", null, restirFramebuffer);
-
-        if (properties.isGiEnabled() && properties.useRestirCombinedGi()) {
-            restirBuilder.addPass("indirect", "/photonics/rendering/restir_di/passes/combined_indirect.fsh", null, restirFramebuffer);
-        }
-
-        if (properties.isHandheldLightEnabled()) {
-            restirBuilder.addPass("handheld", "/photonics/rendering/restir_di/passes/handheld.fsh", null, restirFramebuffer);
-        }
-
-        restirBuilder.addPass("accumulation", "/photonics/rendering/restir_di/passes/accumulation.fsh", null, restirFramebuffer);
-
-        this.restirRenderer = restirBuilder.build();
-
-        // The hand always needs at least 7 denoiser passes.
         int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
-        if (requestedDenoiserPasses != 0) {
-            denoiserPasses = Math.max(requestedDenoiserPasses, 7);
-        } else denoiserPasses = 0;
+        this.denoiserPasses = requestedDenoiserPasses > 0 ? max(requestedDenoiserPasses, 7) : 0;
+        
+        this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("denoise_color", ITextureFormat.rgb16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
+                .addAttachment("denoise_variance", ITextureFormat.r16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
+                .build());
 
-        if (denoiserPasses != 0) {
-            this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
-                    .addAttachment("denoise_color", ITextureFormat.rgb16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                    .addAttachment("denoise_variance", ITextureFormat.r16f(), AttachmentUsage.FLIP | AttachmentUsage.CREATE_SAMPLER | AttachmentUsage.CREATE_PREV_SAMPLER)
-                    .build());
-
-            this.denoiseRenderer = passFactory.newRenderer("denoiser")
-                    .addPass("denoise", "/photonics/rendering/restir_di/passes/denoising.fsh", null, denoiseFramebuffer)
-                    .build();
-        } else {
-            this.denoiseFramebuffer = null;
-            this.denoiseRenderer = null;
-        }
+        this.denoiseRenderer = passFactory.newRenderer("denoiser")
+                .addPass("denoise", "/photonics/rendering/restir_di/passes/denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
+                .build();
     }
 
     @Override
@@ -102,13 +78,11 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
         restirFramebuffer.flip();
         restirRenderer.renderAll();
 
-        if (denoiseFramebuffer != null && denoiseRenderer != null) {
-            for (atrousIteration = -1; atrousIteration < denoiserPasses; atrousIteration++) {
-                atrousUpdater.updateNow();
+        for (atrousIteration = -1; atrousIteration < denoiserPasses; atrousIteration++) {
+            atrousUpdater.updateNow();
 
-                denoiseFramebuffer.flip();
-                denoiseRenderer.renderAll();
-            }
+            denoiseFramebuffer.flip();
+            denoiseRenderer.renderAll();
         }
     }
 
@@ -116,16 +90,38 @@ public class RestirDiPipeline extends AbstractPhotonicsExtension {
     public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
         super.registerDynamicUniforms(dynamicUniforms);
 
-        if (denoiserPasses != 0) {
-            dynamicUniforms.uniform1i(
-                    "atrous_iteration",
-                    () -> atrousIteration,
-                    atrousUpdater.newNotifier()
-            );
-        }
+        dynamicUniforms.uniform1i(
+                "atrous_iteration",
+                () -> atrousIteration,
+                atrousUpdater.newNotifier()
+        );
     }
 
-    private @Nullable String spatialReusePass(String file) {
-        return properties.getRestirSpatialReuseSamples() < 0 ? null : "/photonics/rendering/restir_di/passes/spatial_reuse/" + file;
+    public boolean isBlockLightEnabled() {
+        return properties.isBlockLightEnabled();
+    }
+
+    public boolean isSpatialReuseEnabled() {
+        return properties.getRestirSpatialReuseSamples() > 0;
+    }
+
+    public boolean isHandheldLightingEnabled() {
+        return properties.isHandheldLightEnabled();
+    }
+
+    public boolean isCombinedGiEnabled() {
+        return properties.isGiEnabled() && properties.useRestirCombinedGi();
+    }
+
+    public boolean isAccumulationEnabled() {
+        return properties.isBlockLightEnabled() || properties.useRestirCombinedGi();
+    }
+
+    public boolean isDenoisingEnabled() {
+        return isAccumulationEnabled() && denoiserPasses > 0;
+    }
+
+    private String spatialReusePass(String file) {
+        return "/photonics/rendering/restir_di/passes/spatial_reuse/" + file;
     }
 }

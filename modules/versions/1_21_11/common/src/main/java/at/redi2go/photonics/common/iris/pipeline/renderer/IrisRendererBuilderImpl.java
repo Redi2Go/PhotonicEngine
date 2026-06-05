@@ -42,6 +42,8 @@ public class IrisRendererBuilderImpl implements IrisRenderer.Builder {
 
     @Override
     public IrisRenderer build() {
+        if (passes.isEmpty()) return EmptyRenderer.INSTANCE;
+
         var result = new IrisRendererImpl(name, passes);
         commonRenderers.add(result);
 

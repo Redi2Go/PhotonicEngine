@@ -79,6 +79,8 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
 
     @Override
     public IrisFramebuffer build() {
+        if (readAttachments.isEmpty()) return EmptyFramebuffer.INSTANCE;
+
         return swapAttachmentsCount == 0 ? new SingleFramebuffer(
                 writeAttachments,
                 sizeSupplier
