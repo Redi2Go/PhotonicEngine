@@ -37,16 +37,22 @@ RayResult new_ray_result(
     vec3 position,
     VoxelNormal normal,
     uint palette_ptr,
+    uint skylight,
     uint light_ptr,
     bool transparent
 ) {
     uvec3 pos = floatBitsToUint(position) | ((uvec3(normal) & ph_ray_result_normal_mask) << ph_ray_result_normal_shift);
+    uint skylight_face = skylight >> (normal << 2);
+
+    #define ph_transparent_part (transparent ? PH_SIGN_BIT : 0)
+    #define ph_skylight_part ((skylight_face & 0xf) << 27)
+    #define ph_palette_part (palette_ptr + 1)
 
     return RayResult(
         pos.x,
         pos.y,
         pos.z,
-        (palette_ptr + 1) | (transparent ? PH_SIGN_BIT : 0),
+        ph_transparent_part | ph_skylight_part | ph_palette_part,
         light_ptr
     );
 }
@@ -76,13 +82,20 @@ bool ray_result_is_transparent(RayResult hit) {
     return (hit._data1 & PH_SIGN_BIT) != 0;
 }
 
+uint ray_result_skylight(RayResult hit) {
+    const uint skylight_mask = 0xf;
+    return (hit._data1 >> 27) & skylight_mask;
+}
+
 
 layout (std430) restrict readonly buffer ph_world_voxel_buffer {
     uint ph_world_buffer[];
 };
 
 VoxelData ray_result_voxel_data(RayResult hit) {
-    return ph_fetch_voxel_data((hit._data1 & ~PH_SIGN_BIT) - 1, _ray_result_voxel_normal(hit));
+    const uint voxel_data_mask = 0x7ffffffu;
+
+    return ph_fetch_voxel_data((hit._data1 & voxel_data_mask) - 1, _ray_result_voxel_normal(hit));
 }
 
 Light ray_result_light_data(RayResult hit) {

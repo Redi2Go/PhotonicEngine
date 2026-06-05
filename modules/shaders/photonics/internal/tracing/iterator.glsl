@@ -166,11 +166,14 @@ void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
         vec3 normal = vec3(0.0f);
         normal[tmin] = -sign(ray.direction[tmin]);
 
+        uint child_pos = stack[(world_block_scale_exp - 2) >> 1];
+
         ray.hit = new_ray_result(
             ray.position,
             ph_encode_voxel_normal(normal),
             palette_entry,
-            ph_world_buffer[stack[(world_block_scale_exp - 2) >> 1] + 3],
+            ph_world_buffer[child_pos + 3],
+            ph_world_buffer[child_pos + 4],
             transparent
         );
     }

@@ -74,7 +74,7 @@ bool rt_node_has_child(RtNode node, uint child_index) {
 }
 
 uint rt_node_get_child(RtNode node, uint child_index, int scale_exp) {
-    uint multiplier = scale_exp == world_block_scale_exp ? 4u : 3u;
+    uint multiplier = scale_exp == world_block_scale_exp ? 5u : 3u;
 
     return rt_node_child_ptr(node) + (ph_bitCount_64(node.child_mask, child_index) * multiplier);
 }
