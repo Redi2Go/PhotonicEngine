@@ -182,6 +182,12 @@ Returns `true` if the voxel data of `hit` contains at least one transparent face
 
 This is useful the voxel data for a hit is fetched only at request.
 
+### `ray_result_skylight`
+```glsl
+uint ray_result_skylight(RayResult hit);
+```
+Returns the skylight value (0-15) of `hit`. The result of this method when `hit` is a miss is unspecified.
+
 ### `ray_result_voxel_data`
 ```glsl
 VoxelData ray_result_voxel_data(RayResult hit);
