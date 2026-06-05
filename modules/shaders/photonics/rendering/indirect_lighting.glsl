@@ -68,6 +68,7 @@ void sample_indirect(
     inout vec3 indirect_color,
     vec3 sample_rt_pos,
     vec3 geo_normal,
+    vec3 tex_normal,
     inout uint rnd_state,
 
     out vec3 first_hit,

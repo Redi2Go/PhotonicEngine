@@ -21,6 +21,7 @@ void main() {
         reservoir.smple.color,
         frag_rt_pos,
         frag_geo_normal,
+        frag_is_hand ? frag_geo_normal : frag_tex_normal,
         frag_rnd_state,
 
         reservoir.smple.hit_position,
