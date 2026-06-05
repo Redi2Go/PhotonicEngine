@@ -6,8 +6,8 @@
 layout(location = 0) out vec3 color_out;
 layout(location = 1) out float variance_out;
 
-uniform int atrous_iteration;
-uniform sampler2D depthtex0;
+//ph_required: uniform int atrous_iteration;
+//ph_required: uniform sampler2D depthtex0;
 //uniform float near, far;
 
 #include "/photonics/rendering/common.glsl"
@@ -63,11 +63,11 @@ vec3 ph_decode_lighting_normal(vec4 packed_normals) {
     return ph_decode_normal(frag_is_hand ? packed_normals.xy : packed_normals.zw);
 }
 
-uniform sampler2D denoise_color;
-uniform sampler2D denoise_variance;
+//ph_required: uniform sampler2D denoise_color;
+//ph_required: uniform sampler2D denoise_variance;
 
-uniform sampler2D prev_denoise_color;
-uniform sampler2D prev_denoise_variance;
+//ph_required: uniform sampler2D prev_denoise_color;
+//ph_required: uniform sampler2D prev_denoise_variance;
 
 void main() {
     if (!prepare_frag(0)) {

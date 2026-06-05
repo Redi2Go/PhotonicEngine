@@ -1,11 +1,11 @@
 #if PH_RESTIR_DENOISER_PASSES != 0
-uniform sampler2D denoise_color;
+//ph_required: uniform sampler2D denoise_color;
 #else
-uniform sampler2D restir_lighting;
+//ph_required: uniform sampler2D restir_lighting;
 #endif
 
 #if defined PH_ENABLE_HANDHELD_LIGHT
-uniform sampler2D other_handheld;
+//ph_required: uniform sampler2D other_handheld;
 #endif
 
 vec3 sample_photonics_direct(vec2 tex_coord) {

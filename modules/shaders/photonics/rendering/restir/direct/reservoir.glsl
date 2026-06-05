@@ -2,8 +2,8 @@
 
 #define DIRECT_RESERVOIR_0 3
 
-uniform sampler2D restir_direct_reservoirs0;
-uniform sampler2D prev_restir_direct_reservoirs0;
+//ph_required: uniform sampler2D restir_direct_reservoirs0;
+//ph_required: uniform sampler2D prev_restir_direct_reservoirs0;
 
 const float max_direct_temporal_samples = 20.0f * PH_RESTIR_INITIAL_SAMPLES;
 const float max_direct_reservoir_samples = 128.0f;

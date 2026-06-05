@@ -13,18 +13,18 @@
 #define RESTIR_LIGHTING_VARIANCE_OUT 1
 #define RESTIR_LIGHTING_SAMPLES_OUT 2
 
-uniform sampler2D restir_position_history;
-uniform sampler2D restir_normal_history;
+//ph_required: uniform sampler2D restir_position_history;
+//ph_required: uniform sampler2D restir_normal_history;
 
-uniform sampler2D prev_restir_position_history;
-uniform sampler2D prev_restir_normal_history;
+//ph_required: uniform sampler2D prev_restir_position_history;
+//ph_required: uniform sampler2D prev_restir_normal_history;
 
-uniform sampler2D restir_lighting;
-uniform sampler2D restir_lighting_variance;
-uniform sampler2D restir_lighting_samples;
+//ph_required: uniform sampler2D restir_lighting;
+//ph_required: uniform sampler2D restir_lighting_variance;
+//ph_required: uniform sampler2D restir_lighting_samples;
 
-uniform sampler2D prev_restir_lighting;
-uniform sampler2D prev_restir_lighting_variance;
+//ph_required: uniform sampler2D prev_restir_lighting;
+//ph_required: uniform sampler2D prev_restir_lighting_variance;
 
 struct SampleHistory {
     vec4 lighting;

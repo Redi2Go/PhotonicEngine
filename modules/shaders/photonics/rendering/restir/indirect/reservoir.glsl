@@ -16,13 +16,13 @@
 #define INDIRECT_RESERVOIR_2 5
 #endif
 
-uniform sampler2D restir_indirect_reservoirs0;
-uniform sampler2D restir_indirect_reservoirs1;
-uniform sampler2D restir_indirect_reservoirs2;
+//ph_required: uniform sampler2D restir_indirect_reservoirs0;
+//ph_required: uniform sampler2D restir_indirect_reservoirs1;
+//ph_required: uniform sampler2D restir_indirect_reservoirs2;
 
-uniform sampler2D prev_restir_indirect_reservoirs0;
-uniform sampler2D prev_restir_indirect_reservoirs1;
-uniform sampler2D prev_restir_indirect_reservoirs2;
+//ph_required: uniform sampler2D prev_restir_indirect_reservoirs0;
+//ph_required: uniform sampler2D prev_restir_indirect_reservoirs1;
+//ph_required: uniform sampler2D prev_restir_indirect_reservoirs2;
 
 const float max_indirect_temporal_samples = 4.0f;
 const float max_indirect_reservoir_samples = 12.0f;
