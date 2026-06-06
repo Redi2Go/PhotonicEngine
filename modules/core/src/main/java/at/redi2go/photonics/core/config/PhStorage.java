@@ -22,9 +22,4 @@ public class PhStorage {
      * Overrides the values in {@link #lights}
      */
     public Map<IBlock, Boolean> raytracedLights = Map.of();
-
-    public boolean enableVoxelizedBlocks = true;
-    public Set<IBlock> voxelizedBlocks = Set.of();
-
-
 }

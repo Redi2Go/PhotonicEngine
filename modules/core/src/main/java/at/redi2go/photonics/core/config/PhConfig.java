@@ -196,30 +196,6 @@ public class PhConfig {
         return lightRegistry;
     }
 
-    public static boolean isVoxelizedBlocksEnabled() {
-        return INSTANCE.enableVoxelizedBlocks;
-    }
-
-    public static void setVoxelizedBlocksEnabled(boolean enabled) {
-        INSTANCE.enableVoxelizedBlocks = enabled;
-    }
-
-    public static Set<IBlock> getVoxelizedBlocks() {
-        return INSTANCE.voxelizedBlocks;
-    }
-
-    public static boolean isVoxelized(IBlock block) {
-        return getVoxelizedBlocks().contains(block);
-    }
-
-    public static void setVoxelized(IBlock block, boolean enabled) {
-        if (enabled) {
-            getVoxelizedBlocks().add(block);
-        } else {
-            getVoxelizedBlocks().remove(block);
-        }
-    }
-
     public static Map<IBlock, Boolean> getTracedOverrides() {
         return INSTANCE.raytracedLights;
     }
