@@ -1,4 +1,4 @@
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
 #if defined PH_ENABLE_BLOCKLIGHT
@@ -12,7 +12,8 @@ layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
 #endif
 
 void main() {
-    if (!prepare_frag(0)) discard;
+    setup_frag_data(REUSE_ITERATION * 31);
+    if (!frag_is_in_world) discard;
 
     float samples = texelFetch(restir_lighting_samples, frag_tex_coord, 0).r;
     bool is_low_samples = samples < min(PH_RESTIR_ACCUMULATION_FRAMES - 1, 4);
@@ -48,13 +49,14 @@ void main() {
         vec2 offset = 2.0 * vec2(ph_rand_next_float(frag_rnd_state), ph_rand_next_float(frag_rnd_state)) - 1.0f;
         ivec2 sample_texel = ivec2(frag_tex_coord + offset * ph_spatial_reuse_radius);
 
-        vec3 sample_player_pos = texelFetch(restir_position_history, sample_texel, 0).xyz;
+        FragData sample_frag;
+        frag_data_load(sample_frag, sample_texel);
+
+        vec3 sample_player_pos = frag_data_player_pos(sample_frag);
         vec3 d = sample_player_pos - frag_player_pos;
         if (dot(d, d) >= 2f) continue;
 
-
-        vec4 sample_normals = texelFetch(restir_normal_history, sample_texel, 0);
-        vec3 sample_geo_normal = ph_decode_normal(sample_normals.xy);
+        vec3 sample_geo_normal = frag_data_geo_normal(sample_frag);
         if (dot(sample_geo_normal, frag_geo_normal) < 0.99f) continue;
 
 #if defined PH_ENABLE_BLOCKLIGHT

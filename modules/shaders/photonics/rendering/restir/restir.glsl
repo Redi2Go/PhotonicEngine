@@ -13,12 +13,6 @@
 #define RESTIR_LIGHTING_VARIANCE_OUT 1
 #define RESTIR_LIGHTING_SAMPLES_OUT 2
 
-//ph_required: uniform sampler2D restir_position_history;
-//ph_required: uniform sampler2D restir_normal_history;
-
-//ph_required: uniform sampler2D prev_restir_position_history;
-//ph_required: uniform sampler2D prev_restir_normal_history;
-
 //ph_required: uniform sampler2D restir_lighting;
 //ph_required: uniform sampler2D restir_lighting_variance;
 //ph_required: uniform sampler2D restir_lighting_samples;
@@ -54,13 +48,16 @@ SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
 }
 
 SampleHistory sample_history_reproject_single(ivec2 texel, vec3 previous_player_pos) {
+    FragData prev_frag;
+    frag_data_load_previous(prev_frag, texel);
+
     if (!frag_is_bad_angle) {
-        vec3 projected_player_pos = texelFetch(prev_restir_position_history, texel, 0).xyz;
+        vec3 projected_player_pos = frag_data_player_pos(prev_frag);
         vec3 d = projected_player_pos - previous_player_pos;
         if (dot(d, d) > 0.1f) return NULL_HISTORY;
     }
 
-    vec3 n = ph_decode_normal(texelFetch(prev_restir_normal_history, texel, 0).xy);
+    vec3 n = frag_data_geo_normal(prev_frag);
     if (dot(n, frag_geo_normal) < 0.99f) return NULL_HISTORY;
 
     vec4 lighting = texelFetch(prev_restir_lighting, ivec2(texel), 0);

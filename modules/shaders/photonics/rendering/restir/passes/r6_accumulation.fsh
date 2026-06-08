@@ -1,18 +1,17 @@
 #version 430
 
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
 layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting_frag_out;
 layout(location = RESTIR_LIGHTING_VARIANCE_OUT) out vec4 lighting_variance_frag_out;
 
 void main() {
-    if (!prepare_frag(0)) {
-        lighting_frag_out = vec4(0.0f);
-        lighting_variance_frag_out = vec4(0.0f);
+    lighting_frag_out = vec4(0.0f);
+    lighting_variance_frag_out = vec4(0.0f);
 
-        return;
-    }
+    setup_frag_data(0);
+    if (!frag_is_in_world) return;
 
     SampleHistory smple;
     sample_history_load(smple);

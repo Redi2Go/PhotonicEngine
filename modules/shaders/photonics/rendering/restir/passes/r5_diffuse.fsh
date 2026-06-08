@@ -1,6 +1,6 @@
 #version 430
 
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
@@ -20,7 +20,9 @@ layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting;
 
 void main() {
     lighting = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    if (!prepare_frag(0)) return;
+
+    setup_frag_data(0);
+    if (!frag_is_in_world) return;
 
 #if defined PH_ENABLE_RESTIR_GI
     // INDIRECT LIGHTING

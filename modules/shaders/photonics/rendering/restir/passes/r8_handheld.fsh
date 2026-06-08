@@ -1,6 +1,6 @@
 #version 430
 
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/handheld_lighting.glsl"
 
 layout(location = 0) out vec3 handheld_out;

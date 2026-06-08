@@ -3,6 +3,7 @@ package at.redi2go.photonics.core.iris.extensions;
 import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.AbstractPhotonicsExtension;
+import at.redi2go.photonics.core.iris.pipeline.FragDataRenderer;
 import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
 import at.redi2go.photonics.core.iris.pipeline.rendering.IrisRenderer;
 import at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage;
@@ -17,8 +18,7 @@ import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CR
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FLIP;
 
 public class RestirPipeline extends AbstractPhotonicsExtension {
-    private final IrisFramebuffer historyFramebuffer;
-    private final IrisRenderer historyRenderer;
+    private final IrisRenderer fragRenderer;
 
     private final IrisFramebuffer restirFramebuffer;
     private final IrisRenderer restirRenderer;
@@ -42,15 +42,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
     ) {
         super(properties, atlasDownloader, handheldItemSupplier);
 
-        this.historyFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("restir_position_history", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
-                .addAttachment("restir_normal_history", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER)
-                .build());
-
-        this.historyRenderer = passFactory.newRenderer("history")
-                .addPass("record history", "/photonics/rendering/restir/passes/r0_record_history.fsh", null, historyFramebuffer)
-                .build();
-        
+        this.fragRenderer = registerResource(new FragDataRenderer(passFactory, properties.getRenderScale()));
 
         this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
@@ -100,8 +92,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
     @Override
     public void onRender() {
-        historyFramebuffer.flip();
-        historyRenderer.renderAll();
+        fragRenderer.renderAll();
 
         restirFramebuffer.flip();
         restirRenderer.renderAll();

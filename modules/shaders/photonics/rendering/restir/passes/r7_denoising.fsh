@@ -10,7 +10,7 @@ layout(location = 1) out float variance_out;
 //ph_required: uniform sampler2D depthtex0;
 //uniform float near, far;
 
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
 // 3×3 Gaussian Kernel & Offsets

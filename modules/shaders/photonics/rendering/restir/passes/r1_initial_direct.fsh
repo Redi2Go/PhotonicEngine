@@ -1,12 +1,13 @@
 #version 430
 
-#include "/photonics/rendering/common.glsl"
+#include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
 
 void main() {
-    if (!prepare_frag(0)) discard;
+    setup_frag_data(0);
+    if (!frag_is_in_world) discard;
 
     DirectReservoir reservoir = direct_reservoir_empty();
     float sample_weight = 0.0f;
