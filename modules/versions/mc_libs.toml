@@ -1,6 +1,6 @@
 [versions]
-# Check for latest at https://maven.architectury.dev/dev/architectury/loom/dev.architectury.loom.gradle.plugin
-loom = "1.16.1"
+# Check for latest at https://fabricmc.net/develop/
+loom = "1.17.3"
 
 [plugins]
 loom-gradle = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
