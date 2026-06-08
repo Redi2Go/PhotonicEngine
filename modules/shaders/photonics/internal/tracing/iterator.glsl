@@ -58,7 +58,7 @@ void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
     if (ray.state != PH_RAY_STATE_READY) return;
     if (ray.iterations == 0) return;
 
-    uint[11] stack = uint[11](0);
+    uint[11] stack;
     int scale_exp = 21;
 
     uint node_index = 0;
