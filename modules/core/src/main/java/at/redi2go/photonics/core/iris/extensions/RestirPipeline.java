@@ -42,7 +42,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
     ) {
         super(properties, atlasDownloader, handheldItemSupplier);
 
-        this.fragRenderer = registerResource(new FragDataRenderer(passFactory, properties.getRenderScale()));
+        this.fragRenderer = registerComponent(new FragDataRenderer(passFactory, properties.getRenderScale()));
 
         this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
