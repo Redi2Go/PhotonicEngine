@@ -59,8 +59,11 @@ float ph_linearize_depth(float d)
 #define PH_DEPTH_MODIFIER(p) modify_denoiser_depth_fetch(p)
 #endif
 
-vec3 ph_decode_lighting_normal(vec4 packed_normals) {
-    return ph_decode_normal(frag_is_hand ? packed_normals.xy : packed_normals.zw);
+vec3 ph_get_lighting_normal(ivec2 texel) {
+    FragData frag;
+    frag_data_load(frag, texel);
+
+    return frag_is_hand ? frag_data_geo_normal(frag) : frag_data_tex_normal(frag);
 }
 
 //ph_required: uniform sampler2D denoise_color;
@@ -70,7 +73,8 @@ vec3 ph_decode_lighting_normal(vec4 packed_normals) {
 //ph_required: uniform sampler2D prev_denoise_variance;
 
 void main() {
-    if (!prepare_frag(0)) {
+    setup_frag_data(0);
+    if (!frag_is_in_world) {
         color_out = vec3(0.0f);
         variance_out = 1.0f;
 
@@ -98,7 +102,7 @@ void main() {
     // Center fetches
     vec3  C0 = texelFetch(prev_denoise_color, frag_tex_coord, 0).rgb;
     float L0 = dot(C0, LUM_COEFF);
-    vec3  N0 = ph_decode_lighting_normal(texelFetch(restir_normal_history, frag_tex_coord, 0));
+    vec3  N0 = frag_is_hand ? frag_geo_normal : frag_tex_normal;
     float D0 = ph_linearize_depth(depth);
 
     const float phi_depth = 0.5f;
@@ -110,7 +114,7 @@ void main() {
             ivec2 p = frag_tex_coord + offset[i];
 
             float Vi = texelFetch(prev_denoise_variance, p, 0).x;
-            vec3  Ni = ph_decode_normal(texelFetch(restir_normal_history, p, 0).xy);
+            vec3  Ni = ph_get_lighting_normal(p);
             float Di = ph_linearize_depth(texelFetch(depthtex0, PH_DEPTH_MODIFIER(p), 0).x);
 
             // Normal weight
@@ -140,9 +144,9 @@ void main() {
         vec3  Ci = texelFetch(prev_denoise_color, p, 0).rgb;
         float Vi = texelFetch(prev_denoise_variance, p, 0).x;
         float Li = dot(Ci.xyz, LUM_COEFF);
-        vec3  Ni = ph_decode_lighting_normal(texelFetch(restir_normal_history, p, 0));
+        vec3  Ni = ph_get_lighting_normal(p);
         float Di = ph_linearize_depth(texelFetch(depthtex0, PH_DEPTH_MODIFIER(p), 0).x);
-        float k  = kernel[i];
+        const float k  = kernel[i];
 
         // Color (luminance) weight
         float wC = luma_edge_stopping_weight(L0, Li, phi_luminance);
