@@ -1,6 +1,9 @@
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
+#define USE_FRAG_PLAYER_POS
+#define USE_FRAG_GEO_NORMAL
+
 #if defined PH_ENABLE_BLOCKLIGHT
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
 #endif

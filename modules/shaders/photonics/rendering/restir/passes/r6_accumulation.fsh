@@ -1,5 +1,8 @@
 #version 430
 
+#define FRAG_USE_PLAYER_POS
+#define FRAG_USE_GEO_NORMAL
+
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
