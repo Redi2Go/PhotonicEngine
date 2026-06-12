@@ -3,6 +3,7 @@
 
 #include "/photonics/utility/color.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
+#include "/photonics/modifiers/voxel_color_modifier.glsl"
 
 // VoxelData common
 
@@ -23,7 +24,22 @@ int voxel_data_block_id(VoxelData voxel_data) {
 
 vec4 voxel_data_albedo(VoxelData voxel_data) {
     const float rcp_255 = 1.0f / 255.0f;
-    return vec4(ph_unpack_int_color(voxel_data.y)) * rcp_255;
+    vec4 albedo = vec4(ph_unpack_int_color(voxel_data.y)) * rcp_255;
+
+#if !defined PH_VOXEL_COLOR_MODIFIER_DISABLED
+
+#if defined VOXEL_COLOR_MODIFIER_SIMPLE
+    voxel_color_modifier(albedo);
+#else
+    vec3 temp;
+    ivec3 temp2;
+
+    voxel_color_modifier(albedo, temp, temp2);
+#endif
+
+#endif
+
+    return albedo;
 }
 
 vec4 voxel_data_normal(VoxelData voxel_data) {
