@@ -35,7 +35,7 @@ public interface PhotonicsProperties {
 
     boolean isGiEnabled();
     boolean DEFAULT_IS_GI_ENABLED = true;
-    String IS_GI_ENABLED_KEY = "photoncis.enableGi";
+    String IS_GI_ENABLED_KEY = "photonics.enableGi";
 
     boolean isBlockLightGiEnabled();
     boolean DEFAULT_IS_BLOCK_LIGHT_GI_ENABLED = false;
