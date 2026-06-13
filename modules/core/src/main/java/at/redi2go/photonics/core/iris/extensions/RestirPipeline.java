@@ -56,14 +56,15 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
         this.restirRenderer = passFactory.newRenderer("restir")
                 .addPass("initial direct", "/photonics/rendering/restir/passes/r1_initial_direct.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
-                .addPass("initial indirect", "/photonics/rendering/restir/passes/r2_initial_indirect.fsh", null, restirFramebuffer, this::isRestirGiEnabled)
-                .addPass("temporal reuse", "/photonics/rendering/restir/passes/r3_temporal_reuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
+                .addPass("validate initial direct", "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
+                .addPass("initial indirect", "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, restirFramebuffer, this::isRestirGiEnabled)
+                .addPass("temporal reuse", "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
                 .addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
                 .addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
                 .addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
                 .addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
-                .addPass("diffuse", "/photonics/rendering/restir/passes/r5_diffuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
-                .addPass("accumulation", "/photonics/rendering/restir/passes/r6_accumulation.fsh", null, restirFramebuffer, this::isRestirEnabled)
+                .addPass("diffuse", "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
+                .addPass("accumulation", "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, restirFramebuffer, this::isRestirEnabled)
                 .build();
 
 
@@ -77,7 +78,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .build());
 
         this.denoiseRenderer = passFactory.newRenderer("denoiser")
-                .addPass("denoise", "/photonics/rendering/restir/passes/r7_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
+                .addPass("denoise", "/photonics/rendering/restir/passes/r8_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
                 .build();
 
 
@@ -86,7 +87,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .build());
 
         this.otherRenderer = passFactory.newRenderer("other")
-                .addPass("handheld", "/photonics/rendering/restir/passes/r8_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
+                .addPass("handheld", "/photonics/rendering/restir/passes/r9_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
                 .build();
     }
 

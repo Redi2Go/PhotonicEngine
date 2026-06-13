@@ -73,6 +73,20 @@ void direct_reservoir_clamp_samples(inout DirectReservoir reservoir) {
     reservoir.total_samples = max_direct_reservoir_samples;
 }
 
+void direct_reservoir_validate_visiblity(inout DirectReservoir reservoir, vec3 sample_pos) {
+    if (direct_sample_is_empty(reservoir.smple)) return;
+
+    Light light = direct_sample_get_light(reservoir.smple);
+
+    vec3 to_light = light.position - sample_pos;
+
+    vec3 unused0;
+    float unused1;
+
+    if (!trace_light_vis(sample_pos, to_light, light.position, 40, unused0, unused1))
+        reservoir.weight = 0.0f;
+}
+
 void direct_reservoir_finalize_weight(
     inout DirectReservoir reservoir,
     float sample_weight
@@ -114,12 +128,8 @@ vec3 direct_reservoir_get_final_color(
     }
 
     vec3 sampled_color = direct_sample_get_color(reservoir.smple, light, sample_pos, geo_normal, tex_normal);
-    float sampled_weight = direct_sample_weight(sampled_color);
-
     vec3 final_color = sampled_color * tint_color.rgb * light_transmittance;
-    float final_weight = sampled_weight;
 
-    reservoir.weight *= final_weight / sampled_weight;
     return final_color * reservoir.weight;
 }
 
