@@ -7,13 +7,6 @@
 layout(location = 0) out vec4 frag_data0_out;
 layout(location = 1) out vec4 frag_data1_out;
 
-bool is_bad_angle(vec3 rt_pos, vec3 normal) {
-    float dist = distance(floor(rt_pos), floor(rt_camera_position));
-
-    float resolution = ceil((dist / 16)) / (4 * PH_RENDER_SCALE);
-    return dot(normal, normalize(rt_pos - rt_camera_position)) > -0.2f && dist > 16.0f;
-}
-
 void load_frag_data(
     out vec3 frag_geo_normal,
     out vec3 frag_tex_normal,
@@ -30,22 +23,13 @@ void load_frag_data(
     frag_player_pos = load_player_position();
     frag_rt_pos = frag_player_pos + rt_camera_position;
 
+    float dist = distance(floor(frag_rt_pos), floor(rt_camera_position));
+    float resolution = ceil((dist / 16)) / (4 * PH_RENDER_SCALE);
+
+    frag_is_bad_angle = dot(frag_geo_normal, normalize(frag_rt_pos - rt_camera_position)) > -0.2f && dist > 16.0f;
+
     // Attempts to correct bias from depth
-
-    vec3 voxel_pos = frag_rt_pos * 16.0f;
-    uint normal_index = ph_encode_voxel_normal(frag_geo_normal);
-    float normal_pos = round(voxel_pos[normal_index >> 1]);
-
-    vec3 view_dir =  normalize(frag_rt_pos - rt_camera_position);
-    float view_distance = distance(frag_rt_pos, rt_camera_position);
-
-    voxel_pos += (view_dir * (view_distance * 0.03));
-    voxel_pos[normal_index >> 1] = normal_pos;
-
-    const float rcp_16 = 1.0f / 16.0f;
-    frag_rt_pos = voxel_pos * rcp_16;
-
-    frag_is_bad_angle = is_bad_angle(frag_rt_pos, frag_geo_normal);
+    frag_rt_pos += frag_geo_normal * (0.01f + (0.04f * resolution));
 }
 
 void ph_encode_frag(out vec4 data0, out uvec4 data1) {
