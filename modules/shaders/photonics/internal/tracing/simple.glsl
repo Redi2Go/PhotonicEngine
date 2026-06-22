@@ -13,7 +13,7 @@ bool trace_light_vis(
     vec4 running_tint_color = vec4(0.0f);
     light_transmittance = 1.0f;
 
-    while (ray_iter_has_next_block(ray, light_rt_pos)) {
+    while (true) {
         result = ray_iter_next_block(ray, light_rt_pos);
 
         if (ray_result_is_transparent(result)) {
