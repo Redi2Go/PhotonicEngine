@@ -138,7 +138,7 @@ void sample_indirect(
 
             Light hit_light = ray_result_light_data(hit);
             if (light_is_valid(hit_light) && PH_SHOULD_SAMPLE_LIGHT) {
-                radiance_color = light_sample_at(
+                radiance_color += light_sample_at(
                     hit_light,
                     sample_rt_pos,
                     floor(ray_result_position(hit)) + 0.5f,
