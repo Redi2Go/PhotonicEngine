@@ -21,7 +21,7 @@ void main() {
     for (int i = 0; i < 9; i++) {
         ivec2 p = frag_tex_coord + offset[i];
 
-        float variance = texelFetch(restir_lighting_variance, frag_tex_coord, 0).r;
+        float variance = texelFetch(restir_lighting_variance, p, 0).z;
         float kernel_weight = kernel[i];
 
         denoise_out.a += variance * kernel_weight;
