@@ -8,7 +8,6 @@
 #include "/photonics/rendering/restir/restir.glsl"
 
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
-#include "/photonics/interface/lighting_interface.glsl"
 
 #if defined PH_ENABLE_BLOCKLIGHT
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
