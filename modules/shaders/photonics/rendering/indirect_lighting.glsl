@@ -1,7 +1,3 @@
-#define IN_SUN 0
-#define SUN_IN_SHADOW -1
-#define SUN_MAYBE_CULLED -999
-
 #include "/photonics/interface/lighting_interface.glsl"
 #include "/photonics/tracing.glsl"
 #include "/photonics/utility/random.glsl"
