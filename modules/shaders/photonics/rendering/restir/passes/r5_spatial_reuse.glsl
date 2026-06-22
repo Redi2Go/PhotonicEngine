@@ -2,6 +2,7 @@
 #include "/photonics/rendering/restir/restir.glsl"
 
 #define USE_FRAG_PLAYER_POS
+#define USE_FRAG_RT_POS
 #define USE_FRAG_GEO_NORMAL
 
 #if defined PH_ENABLE_BLOCKLIGHT
@@ -74,7 +75,11 @@ void main() {
             indirect_reservoir_merge(
                 indirect_result,
                 temp_indirect,
-                1.0f,
+                is_low_samples ? 1.0f : indirect_sample_compute_jacobian(
+                    indirect_result.smple,
+                    frag_rt_pos,
+                    frag_geo_normal
+                ),
                 indirect_sample_weight
             );
         }
