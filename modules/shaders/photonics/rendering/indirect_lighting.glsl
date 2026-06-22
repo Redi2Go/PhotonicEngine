@@ -101,8 +101,7 @@ void sample_indirect(
         if (!ray_result_is_hit(hit) && ray_iter_is_in_bounds(ray)) break;
 
         vec4 albedo = vec4(1.0f);
-        vec3 light_color = vec3(0.0f);
-
+        vec3 light_color = vec3(-1.0f);
         vec3 hit_position = ray_result_position(hit);
 
         // Ray either hit something or reached sky
@@ -155,10 +154,10 @@ void sample_indirect(
             light_color = is_tracing_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
         }
 
-        if (light_color != vec3(0.0f)) {
-            vec3 gi_tint_color = running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f);
-            vec3 gi_bounce_color = running_bounce_color;
-            float gi_intensity = running_light_transmittance;
+        if (light_color.r != -1.0f) {
+            #define gi_tint_color (running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f))
+            #define gi_bounce_color running_bounce_color
+            #define gi_intensity running_light_transmittance
 
             indirect_color += light_color * gi_tint_color * gi_bounce_color * gi_intensity;
         }
