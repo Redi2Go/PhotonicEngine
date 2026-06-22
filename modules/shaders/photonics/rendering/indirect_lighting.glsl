@@ -99,9 +99,7 @@ void sample_indirect(
         if (!ray_result_is_hit(hit) && ray_iter_is_in_bounds(ray)) break;
 
         vec4 albedo = vec4(1.0f);
-
-        bool has_radiance = false;
-        vec3 radiance_color = vec3(0.0f, 0.0f, 0.0f);
+        vec3 radiance_color = vec3(0.0f);
 
         // Ray either hit something or reached sky
         if (ray_result_is_hit(hit)) {
@@ -121,15 +119,10 @@ void sample_indirect(
 
 #if !defined NO_SHADOW_MAPPING
             if (dot(get_sun_direction(), hit_normal) >= -0.01f) {
-                switch(sample_sun_color(hit_position - rt_camera_position, hit_normal, radiance_color)) {
-                    case IN_SUN:
-                        has_radiance = true;
-                        radiance_color *= albedo.rgb;
-                        break;
+                is_tracing_to_sun = !sample_sun_color(hit_position - rt_camera_position, hit_normal, radiance_color)
+                    && ph_rand_next_float(rnd_state) < 0.6f;
 
-                    case SUN_MAYBE_CULLED:
-                        is_tracing_to_sun = ph_rand_next_float(rnd_state) < 0.6f;
-                }
+                radiance_color *= albedo.rgb;
             }
 #endif
 
@@ -152,8 +145,6 @@ void sample_indirect(
                     geo_normal,
                     geo_normal
                 ) * gi_light_multiplier;
-
-                has_radiance = true;
             }
 #else
             modify_indirect_surface_sample(
@@ -162,9 +153,8 @@ void sample_indirect(
                 geo_normal,
                 bounce_count,
                 rnd_state,
-            
-                radiance_color,
-                has_radiance
+
+                radiance_color
             );
 #endif
         } else {
@@ -172,16 +162,13 @@ void sample_indirect(
             vec3 player_pos = hit_position - rt_camera_position;
 
             radiance_color = is_tracing_to_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
-            has_radiance = true;
         }
 
-        if (has_radiance) {
-            #define gi_tint_color (running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f))
-            #define gi_bounce_color running_bounce_color
-            #define gi_intensity running_light_transmittance
+        #define gi_tint_color (running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f))
+        #define gi_bounce_color running_bounce_color
+        #define gi_intensity running_light_transmittance
 
-            indirect_color += radiance_color * gi_tint_color * gi_bounce_color * gi_intensity;
-        }
+        indirect_color += radiance_color * gi_tint_color * gi_bounce_color * gi_intensity;
 
         bounce_count += 1;
         running_bounce_color *= albedo.rgb;

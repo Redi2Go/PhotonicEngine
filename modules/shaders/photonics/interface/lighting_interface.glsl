@@ -15,6 +15,6 @@ vec3 get_sky_color(vec3 player_pos, vec3 direction) {
     return indirect_light_color;
 }
 
-int sample_sun_color(vec3 player_pos, vec3 geo_normal, inout vec3 sun_color) {
-    return IN_SUN;
+bool sample_sun_color(vec3 player_pos, vec3 geo_normal, inout vec3 sun_color) {
+    return true;
 }
