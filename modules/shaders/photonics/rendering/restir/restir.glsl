@@ -134,7 +134,7 @@ void sample_history_compute_variance(inout SampleHistory history, in SampleHisto
 #if PH_RESTIR_ACCUMULATION_FRAMES < 4
     #define PH_MIN_VARIANCE 1f
 #else
-    #define PH_MIN_VARIANCE (samples < 4f) ? 10f : 0
+    #define PH_MIN_VARIANCE (samples < 4f) ? 10f : 0.01f
 #endif
 
     float samples = history.lighting.a;

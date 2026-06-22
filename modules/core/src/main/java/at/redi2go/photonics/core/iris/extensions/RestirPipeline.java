@@ -27,6 +27,8 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
     private final int denoiserPasses;
 
     private final IrisFramebuffer denoiseFramebuffer;
+
+    private final IrisRenderer denoisePrepassRenderer;
     private final IrisRenderer denoiseRenderer;
 
     private final IrisFramebuffer otherFramebuffer;
@@ -73,21 +75,23 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         this.denoiserPasses = requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0;
 
         this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("denoise_color", ITextureFormat.rgb16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
-                .addAttachment("denoise_variance", ITextureFormat.r16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
+                .addAttachment("denoise_result", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
                 .build());
 
-        this.denoiseRenderer = passFactory.newRenderer("denoiser")
-                .addPass("denoise", "/photonics/rendering/restir/passes/r8_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
+        this.denoisePrepassRenderer = passFactory.newRenderer("denoiser setup")
+                .addPass("variance prefilter", "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
                 .build();
 
+        this.denoiseRenderer = passFactory.newRenderer("denoiser")
+                .addPass("svgf", "/photonics/rendering/restir/passes/r9_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
+                .build();
 
         this.otherFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("other_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
                 .build());
 
         this.otherRenderer = passFactory.newRenderer("other")
-                .addPass("handheld", "/photonics/rendering/restir/passes/r9_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
+                .addPass("handheld", "/photonics/rendering/restir/passes/r10_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
                 .build();
     }
 
@@ -98,7 +102,8 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         restirFramebuffer.flip();
         restirRenderer.renderAll();
 
-        for (atrousIteration = -1; atrousIteration < denoiserPasses; atrousIteration++) {
+        denoisePrepassRenderer.renderAll();
+        for (atrousIteration = 0; atrousIteration < denoiserPasses; atrousIteration++) {
             atrousUpdater.updateNow();
 
             denoiseFramebuffer.flip();
