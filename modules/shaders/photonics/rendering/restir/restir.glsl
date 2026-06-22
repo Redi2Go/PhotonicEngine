@@ -25,7 +25,12 @@ struct SampleHistory {
     vec4 variance;
 };
 
-const SampleHistory NULL_HISTORY = SampleHistory(vec4(-999), vec4(-999));
+const float INVALID_SAMPLE_COMPONENT = -999.0f;
+const SampleHistory INVALID_HISTORY = SampleHistory(vec4(INVALID_SAMPLE_COMPONENT), vec4(INVALID_SAMPLE_COMPONENT));
+
+bool sample_history_is_valid(SampleHistory history) {
+    return history.lighting.x != INVALID_SAMPLE_COMPONENT;
+}
 
 void sample_history_load(out SampleHistory smple) {
     smple.lighting = texelFetch(restir_lighting, frag_tex_coord, 0),
@@ -33,12 +38,12 @@ void sample_history_load(out SampleHistory smple) {
 }
 
 SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
-    if (s1 == NULL_HISTORY) {
+    if (!sample_history_is_valid(s1)) {
         a = 1f;
-    } else if (s2 == NULL_HISTORY) {
+    } else if (!sample_history_is_valid(s2)) {
         a = 0f;
-    } else if (s1 == NULL_HISTORY && s2 == NULL_HISTORY) {
-        return NULL_HISTORY;
+    } else if (!sample_history_is_valid(s1) && !sample_history_is_valid(s2)) {
+        return INVALID_HISTORY;
     }
 
     return SampleHistory(
@@ -55,17 +60,17 @@ SampleHistory sample_history_reproject_single(ivec2 texel, vec3 previous_player_
         vec3 projected_player_pos = frag_data_player_pos(prev_frag);
         vec3 d = projected_player_pos - previous_player_pos;
 
-        if (dot(d, d) > distance_factor) return NULL_HISTORY;
+        if (dot(d, d) > distance_factor) return INVALID_HISTORY;
     }
 
     vec3 n = frag_data_geo_normal(prev_frag);
-    if (dot(n, frag_geo_normal) < 0.99f) return NULL_HISTORY;
+    if (dot(n, frag_geo_normal) < 0.99f) return INVALID_HISTORY;
 
     vec4 lighting = texelFetch(prev_restir_lighting, ivec2(texel), 0);
-    if (any(isnan(lighting))) return NULL_HISTORY;
+    if (any(isnan(lighting))) return INVALID_HISTORY;
 
     vec4 variance = texelFetch(prev_restir_lighting_variance, ivec2(texel), 0);
-    if (any(isnan(variance))) return NULL_HISTORY;
+    if (any(isnan(variance))) return INVALID_HISTORY;
 
     return SampleHistory(lighting, variance);
 }
@@ -84,7 +89,7 @@ SampleHistory sample_history_reproject_mixed(vec2 center, vec3 previous_player_p
         fract(center.y)
     );
 
-    if (result == NULL_HISTORY)
+    if (!sample_history_is_valid(result))
         return SampleHistory(vec4(0.0f), vec4(0.0f));
 
     return result;
