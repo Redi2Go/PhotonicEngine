@@ -29,15 +29,13 @@ float indirect_sample_clamp_jacobian(float value) {
 
 float indirect_sample_compute_jacobian(
     IndirectSample smple,
-    vec3 rt_pos,
+    vec3 player_pos,
     vec3 geo_normal
 ) {
     if (smple.traced_sky) return 1.0f;
     if (frag_is_hand) return 1.0f;
 
-    smple.hit_position += rt_camera_position;
-
-    vec3 vec_new = rt_pos - smple.hit_position;
+    vec3 vec_new = player_pos - smple.hit_position;
     vec3 vec_old = indirect_sample_get_visible_point(smple) - smple.hit_position;
 
     float new_dist_sq = dot(vec_new, vec_new);

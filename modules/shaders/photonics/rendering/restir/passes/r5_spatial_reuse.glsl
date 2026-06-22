@@ -77,7 +77,7 @@ void main() {
                 temp_indirect,
                 is_low_samples ? 1.0f : indirect_sample_compute_jacobian(
                     indirect_result.smple,
-                    frag_rt_pos,
+                    frag_player_pos,
                     frag_geo_normal
                 ),
                 indirect_sample_weight
