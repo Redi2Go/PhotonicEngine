@@ -126,7 +126,7 @@ void sample_indirect(
 
 #if defined PH_ENABLE_BLOCKLIGHT_GI
             #define PH_SHOULD_SAMPLE_LIGHT (bounce_count != -1 || hit_light.type == LIGHT_TYPE_NOT_TRACED)
-            const float gi_light_multiplier = 5.0f;
+            const float gi_light_multiplier = 6.7f;
 #else
             #define PH_SHOULD_SAMPLE_LIGHT hit_light.type == LIGHT_TYPE_NOT_TRACED
             const float gi_light_multiplier = 3.0f;
