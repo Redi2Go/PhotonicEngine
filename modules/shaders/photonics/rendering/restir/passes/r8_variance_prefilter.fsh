@@ -9,8 +9,20 @@
 layout(location = 0) out vec4 denoise_out;
 
 void main() {
-    denoise_out.rgb = texelFetch(restir_lighting, frag_tex_coord, 0).rgb;
-    denoise_out.a = 5.0f;
+    // Firefly rejection
+    vec4 center = texelFetch(restir_lighting, frag_tex_coord, 0);
+    vec3 maxNeighbour = vec3(0.0f);
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            if (x == 0 && y == 0) continue;
+
+            ivec2 pos = frag_tex_coord + ivec2(x, y);
+            vec3 color = texelFetch(restir_lighting, pos, 0).rgb;
+            maxNeighbour = max(maxNeighbour, color);
+        }
+    }
+
+    denoise_out = vec4(min(center.rgb, maxNeighbour), 10.0f);
 
     setup_frag_data(0);
     if (!frag_is_in_world || frag_is_hand) return;
