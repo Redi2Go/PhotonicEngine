@@ -19,14 +19,14 @@ void main() {
     reservoir.smple.visible_normal = frag_geo_normal;
 
     sample_indirect(
-        reservoir.smple.color,
-        frag_rt_pos,
-        frag_geo_normal,
-        frag_is_hand ? frag_geo_normal : frag_tex_normal,
-        frag_rnd_state,
+            reservoir.smple.color,
+            frag_rt_pos,
+            frag_geo_normal,
+            frag_is_hand ? frag_geo_normal : frag_tex_normal,
+            frag_rnd_state,
 
-        reservoir.smple.hit_position,
-        reservoir.smple.hit_normal
+            reservoir.smple.hit_position,
+            reservoir.smple.hit_normal
     );
 
     if (reservoir.smple.hit_position.x == -1.0f) {

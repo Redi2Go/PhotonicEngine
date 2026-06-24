@@ -7,13 +7,13 @@
 #endif
 
 #if defined PH_ENABLE_BLOCKLIGHT
-#define INDIRECT_RESERVOIR_0 4
-#define INDIRECT_RESERVOIR_1 5
-#define INDIRECT_RESERVOIR_2 6
-#else
 #define INDIRECT_RESERVOIR_0 3
 #define INDIRECT_RESERVOIR_1 4
 #define INDIRECT_RESERVOIR_2 5
+#else
+#define INDIRECT_RESERVOIR_0 2
+#define INDIRECT_RESERVOIR_1 3
+#define INDIRECT_RESERVOIR_2 4
 #endif
 
 //ph_required: uniform sampler2D restir_indirect_reservoirs0;
@@ -96,7 +96,7 @@ void indirect_reservoir_finalize_weight(
     reservoir.weight = (1.0f / sample_weight) * (reservoir.weight / reservoir.total_samples);
 }
 
-vec3 indirect_reservoir_get_final_color(inout IndirectReservoir reservoir) {
+vec3 indirect_reservoir_get_final_color(IndirectReservoir reservoir) {
     // is causing a crash on nvidia windows(???)
 //    vec3 color = indirect_sample_validate_visibility(reservoir.smple, frag_rt_pos);
 //    if (all(equal(color, vec3(0.0f)))) {

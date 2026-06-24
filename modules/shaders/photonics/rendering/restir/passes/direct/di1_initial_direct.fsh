@@ -20,14 +20,14 @@ void main() {
         for (int i = 0; i < PH_RESTIR_INITIAL_SAMPLES; i++) {
             DirectSample smple = direct_sample_random(frag_rnd_state);
             float weight = direct_sample_get_weight(
-                smple,
-                frag_rt_pos,
-                frag_geo_normal,
-                frag_is_hand ? frag_geo_normal : frag_tex_normal
+                    smple,
+                    frag_rt_pos,
+                    frag_geo_normal,
+                    frag_is_hand ? frag_geo_normal : frag_tex_normal
             );
 
             if (direct_reservoir_update(reservoir, smple, weight, 1.0f))
-                sample_weight = weight;
+            sample_weight = weight;
         }
     }
 
