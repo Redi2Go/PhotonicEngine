@@ -17,21 +17,21 @@ public interface IrisPipeline {
             return condition.getAsBoolean() ? debugGroup(name) : this;
         }
 
+        Builder withFramebuffer(IrisFramebuffer framebuffer);
+
         Builder deferredPass(
                 String name,
-                @Nullable IrisFramebuffer framebuffer,
                 @Nullable String fragmentShader,
                 @Nullable String vertexShader
         );
 
         default Builder deferredPass(
                 String name,
-                @Nullable IrisFramebuffer framebuffer,
                 @Nullable String fragmentShader,
                 @Nullable String vertexShader,
                 BooleanSupplier condition
         ) {
-            return condition.getAsBoolean() ? deferredPass(name, framebuffer, fragmentShader, vertexShader) : this;
+            return condition.getAsBoolean() ? deferredPass(name, fragmentShader, vertexShader) : this;
         }
 
         Builder thenFlip(IrisFramebuffer... framebuffers);
@@ -52,13 +52,7 @@ public interface IrisPipeline {
             return condition.getAsBoolean() ? repeat(n, builderAction) : this;
         }
 
-        default Builder when(BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction) {
-            if (condition.getAsBoolean()) {
-                builderAction.accept(this);
-            }
-
-            return this;
-        }
+        Builder when(BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction);
 
         IrisPipeline build(Function<IrisPipeline, IrisPipeline> registration);
 

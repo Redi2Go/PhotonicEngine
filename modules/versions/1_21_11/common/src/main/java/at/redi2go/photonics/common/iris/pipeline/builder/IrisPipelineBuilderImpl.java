@@ -13,8 +13,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer implements IrisPipeline.Builder {
+    private @Nullable IrisFramebuffer framebuffer = null;
+
     public IrisPipelineBuilderImpl(IrisFactoryImpl factory) {
         super(factory, "Photonics");
+    }
+
+    private void scope(Consumer<IrisPipeline.Builder> builderAction) {
+        var oldFrameBuffer = framebuffer;
+        builderAction.accept(this);
+        framebuffer = oldFrameBuffer;
     }
 
     @Override
@@ -25,7 +33,13 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     }
 
     @Override
-    public IrisPipeline.Builder deferredPass(String name, @Nullable IrisFramebuffer framebuffer, @Nullable String fragmentShader, @Nullable String vertexShader) {
+    public IrisPipeline.Builder withFramebuffer(IrisFramebuffer framebuffer) {
+        this.framebuffer = framebuffer;
+        return this;
+    }
+
+    @Override
+    public IrisPipeline.Builder deferredPass(String name, @Nullable String fragmentShader, @Nullable String vertexShader) {
         addDeferredPass(name, framebuffer, fragmentShader, vertexShader);
 
         return this;
@@ -48,8 +62,16 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     @Override
     public IrisPipeline.Builder repeat(int n, Consumer<IrisPipeline.Builder> builderAction) {
         addBeginRepeating(n);
-        builderAction.accept(this);
+        scope(builderAction);
         addEndRepeating();
+
+        return this;
+    }
+
+    @Override
+    public IrisPipeline.Builder when(BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction) {
+        if (condition.getAsBoolean())
+            scope(builderAction);
 
         return this;
     }

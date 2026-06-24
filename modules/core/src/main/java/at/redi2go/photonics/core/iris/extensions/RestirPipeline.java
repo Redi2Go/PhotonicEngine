@@ -69,30 +69,35 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
         irisFactory.newPipeline()
                 .debugGroup("restir")
+                .withFramebuffer(restirFramebuffer)
                 .thenFlip(restirFramebuffer)
-                .deferredPass("initial direct", restirFramebuffer, "/photonics/rendering/restir/passes/r1_initial_direct.fsh", null, this::isBlockLightEnabled)
-                .deferredPass("validate initial direct", restirFramebuffer, "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, this::isBlockLightEnabled)
-                .deferredPass("initial indirect", restirFramebuffer, "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, this::isRestirGiEnabled)
-                .deferredPass("temporal reuse", restirFramebuffer, "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, this::isRestirEnabled)
-                .deferredPass("spatial reuse (setup)", restirFramebuffer, spatialReusePass("setup.fsh"), null, this::isSpatialReuseEnabled)
-                .deferredPass("spatial reuse #1", restirFramebuffer, spatialReusePass("pass0.fsh"), null, this::isSpatialReuseEnabled)
-                .deferredPass("spatial reuse #2", restirFramebuffer, spatialReusePass("pass1.fsh"), null, this::isSpatialReuseEnabled)
-                .deferredPass("spatial reuse #3", restirFramebuffer, spatialReusePass("pass2.fsh"), null, this::isSpatialReuseEnabled)
-                .deferredPass("diffuse", restirFramebuffer, "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, this::isRestirEnabled)
-                .deferredPass("accumulation", restirFramebuffer, "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, this::isRestirEnabled)
+                .deferredPass("initial direct", "/photonics/rendering/restir/passes/r1_initial_direct.fsh", null, this::isBlockLightEnabled)
+                .deferredPass("validate initial direct", "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, this::isBlockLightEnabled)
+                .deferredPass("initial indirect", "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, this::isRestirGiEnabled)
+                .deferredPass("temporal reuse", "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, this::isRestirEnabled)
+                .when(this::isSpatialReuseEnabled, b0 -> {
+                    b0.deferredPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null);
+                    b0.deferredPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null);
+                    b0.deferredPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null);
+                    b0.deferredPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null);
+                })
+                .deferredPass("diffuse", "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, this::isRestirEnabled)
+                .deferredPass("accumulation", "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, this::isRestirEnabled)
                 .when(this::isDenoisingEnabled, b0 -> {
+                    b0.withFramebuffer(denoiseFramebuffer);
                     b0.debugGroup("svgf");
                     b0.thenRun(() -> atrousIteration = 0);
-                    b0.deferredPass("variance prefilter", denoiseFramebuffer, "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null);
+                    b0.deferredPass("variance prefilter", "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null);
                     b0.repeat(denoiserPasses, b1 -> {
                         b1.thenRun(() -> atrousIteration++);
                         b1.thenRun(atrousUpdater::updateNow);
                         b1.thenFlip(denoiseFramebuffer);
-                        b1.deferredPass("atrous iteration", denoiseFramebuffer, "/photonics/rendering/restir/passes/r9_denoising.fsh", null);
+                        b1.deferredPass("atrous iteration", "/photonics/rendering/restir/passes/r9_denoising.fsh", null);
                     });
                 })
                 .debugGroup("other")
-                .deferredPass("handheld", otherFramebuffer, "/photonics/rendering/restir/passes/r10_handheld.fsh", null, this::isHandheldLightingEnabled)
+                .withFramebuffer(otherFramebuffer)
+                .deferredPass("handheld", "/photonics/rendering/restir/passes/r10_handheld.fsh", null, this::isHandheldLightingEnabled)
                 .build(this::registerRenderer);
     }
 

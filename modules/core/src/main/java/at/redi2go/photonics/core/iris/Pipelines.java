@@ -20,8 +20,9 @@ public class Pipelines {
 
         irisFactory.newPipeline()
                 .debugGroup("frag data")
+                .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
-                .deferredPass("frag data", framebuffer, "/photonics/rendering/frag/f0_load_frag.fsh", null)
+                .deferredPass("frag data", "/photonics/rendering/frag/f0_load_frag.fsh", null)
                 .build(ext::registerRenderer);
     }
 }
