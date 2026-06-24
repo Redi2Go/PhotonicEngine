@@ -5,6 +5,7 @@ import at.redi2go.photonics.api.mc.Minecraft;
 import at.redi2go.photonics.api.shaders.LightingMode;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
+import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipeline;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
@@ -29,6 +30,7 @@ public abstract class AbstractPhotonicsExtension extends AbstractRenderingCompon
     private static final int ROOT_VOXEL_DEPTH = 3;
 
     protected final PhotonicsProperties properties;
+    private final List<IrisPipeline> renderers = new ArrayList<>();
 
     public AbstractPhotonicsExtension(
             PhotonicsProperties properties,
@@ -77,5 +79,21 @@ public abstract class AbstractPhotonicsExtension extends AbstractRenderingCompon
                             properties
                     )
             );
+    }
+
+    public <T extends IrisPipeline> T registerRenderer(T component) {
+        if (component != null) {
+            if (component instanceof RenderingComponent renderingComponent)
+                registerComponent(renderingComponent);
+
+            renderers.add(component);
+        }
+
+        return component;
+    }
+
+    @Override
+    public void onRender() {
+        renderers.forEach(IrisPipeline::renderAll);
     }
 }

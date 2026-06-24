@@ -2,7 +2,6 @@ package at.redi2go.photonics.common.iris.pipeline.renderer;
 
 import at.redi2go.photonics.common.iris.pipeline.CompositeRendererPassExt;
 import at.redi2go.photonics.common.mixins.iris.pipeline.passes.composite.CompositeRendererAccessor;
-import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.buffer.ShaderStorageBufferHolder;
@@ -21,14 +20,16 @@ import net.irisshaders.iris.targets.BufferFlipper;
 import net.irisshaders.iris.targets.RenderTargets;
 import net.irisshaders.iris.uniforms.FrameUpdateNotifier;
 import net.irisshaders.iris.uniforms.custom.CustomUniforms;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
 public class PhotonicsRenderer extends CompositeRenderer {
+    private final String name;
+
     public PhotonicsRenderer(
+            String name,
             WorldRenderingPipeline pipeline,
             PackDirectives packDirectives,
             ProgramSource[] sources,
@@ -44,7 +45,7 @@ public class PhotonicsRenderer extends CompositeRenderer {
             Object2ObjectMap<String, TextureAccess> irisCustomTextures,
             Set<GlImage> customImages,
             CustomUniforms customUniforms,
-            List<IrisRendererImpl.Pass> passes
+            List<DeferredIrisRenderer.Pass> passes
     ) {
         super(
                 pipeline,
@@ -67,8 +68,13 @@ public class PhotonicsRenderer extends CompositeRenderer {
                 customUniforms
         );
 
+        this.name = name;
         for (CompositeRendererPassExt pass : getPasses())
             pass.setFramebuffer(passes.get(pass.index()).framebuffer());
+    }
+
+    public String getName() {
+        return name;
     }
 
     private List<CompositeRendererPassExt> getPasses() {

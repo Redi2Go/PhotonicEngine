@@ -2,7 +2,7 @@ package at.redi2go.photonics.core.iris.pipeline.rendering;
 
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 
-public interface IrisPipelineFactory {
+public interface IrisFactory {
     IrisFramebuffer.Builder newFramebuffer(int width, int height);
 
     IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale);
@@ -11,5 +11,5 @@ public interface IrisPipelineFactory {
         return newFramebuffer(scale, scale);
     }
 
-    IrisRenderer.Builder newRenderer(String name);
+    IrisPipeline.Builder newPipeline();
 }

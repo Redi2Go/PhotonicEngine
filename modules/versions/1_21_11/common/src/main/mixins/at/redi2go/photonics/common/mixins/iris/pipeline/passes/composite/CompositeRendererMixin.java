@@ -4,24 +4,17 @@ import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.pipeline.CompositeRendererPassExt;
 import at.redi2go.photonics.common.iris.pipeline.framebuffer.InternalIrisFramebuffer;
 import at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer;
-import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
-import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.systems.RenderPass;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.Program;
-import net.irisshaders.iris.mixinterface.CustomPass;
-import net.irisshaders.iris.mixinterface.RenderPassInterface;
+import net.irisshaders.iris.pipeline.CompositePass;
 import net.irisshaders.iris.pipeline.CompositeRenderer;
 import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(CompositeRenderer.class)
@@ -29,6 +22,17 @@ public abstract class CompositeRendererMixin {
     @Shadow
     @Final
     private WorldRenderingPipeline pipeline;
+
+    @WrapOperation(
+            method = "renderAll",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/pipeline/CompositePass;name()Ljava/lang/String;"
+            )
+    )
+    private String replaceName(CompositePass instance, Operation<String> original) {
+        return (Object) this instanceof PhotonicsRenderer renderer ? renderer.getName() : original.call(instance);
+    }
 
     @WrapOperation(
             method = "renderAll",

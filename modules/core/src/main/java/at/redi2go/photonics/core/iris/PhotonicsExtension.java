@@ -8,7 +8,7 @@ import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
-import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
+import at.redi2go.photonics.core.iris.pipeline.rendering.IrisFactory;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
@@ -25,7 +25,7 @@ public interface PhotonicsExtension extends RenderingComponent {
             PhotonicsProperties properties,
             Supplier<AtlasDownloader> atlasDownloader,
             Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
-            IrisPipelineFactory passFactory
+            IrisFactory passFactory
     ) {
         if (!properties.isPhotonicsEnabled()) return new Disabled();
 

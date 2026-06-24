@@ -10,6 +10,7 @@ import org.joml.Vector2ic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
     private static final int FLIP_PREV_MASK = AttachmentUsage.FLIP | AttachmentUsage.CREATE_PREV_SAMPLER;
@@ -77,16 +78,15 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
         return this;
     }
 
-    @Override
-    public IrisFramebuffer build() {
+    public IrisFramebuffer build(Function<IrisFramebuffer, IrisFramebuffer> registration) {
         if (readAttachments.isEmpty()) return EmptyFramebuffer.INSTANCE;
 
-        return swapAttachmentsCount == 0 ? new SingleFramebuffer(
+        return registration.apply(swapAttachmentsCount == 0 ? new SingleFramebuffer(
                 writeAttachments,
                 sizeSupplier
         ) : new FlippableFramebuffer(
                 new SingleFramebuffer(writeAttachments, sizeSupplier),
                 new SingleFramebuffer(readAttachments, sizeSupplier)
-        );
+        ));
     }
 }

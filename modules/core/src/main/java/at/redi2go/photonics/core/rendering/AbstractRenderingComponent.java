@@ -25,14 +25,14 @@ public abstract class AbstractRenderingComponent implements RenderingComponent {
         }
     }
 
-    protected <T extends RenderingComponent> T registerComponent(T component) {
+    public <T extends RenderingComponent> T registerComponent(T component) {
         if (component != null)
             this.components.add(component);
 
         return component;
     }
 
-    protected <T extends Disposable> T registerResource(T resource) {
+    public <T extends Disposable> T registerResource(T resource) {
         if (resource != null)
             this.resources.add(resource);
 

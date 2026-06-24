@@ -10,7 +10,6 @@ public interface CompositeRendererPassExt {
 
     void setIndex(int index);
 
-
     Optional<IrisFramebuffer> getFramebuffer();
 
     void setFramebuffer(@Nullable IrisFramebuffer framebuffer);

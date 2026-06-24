@@ -3,11 +3,8 @@ package at.redi2go.photonics.core.iris.extensions;
 import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
 import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.AbstractPhotonicsExtension;
-import at.redi2go.photonics.core.iris.pipeline.FragDataRenderer;
-import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipelineFactory;
-import at.redi2go.photonics.core.iris.pipeline.rendering.IrisRenderer;
-import at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage;
-import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
+import at.redi2go.photonics.core.iris.Pipelines;
+import at.redi2go.photonics.core.iris.pipeline.rendering.IrisFactory;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
@@ -18,35 +15,39 @@ import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CR
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FLIP;
 
 public class RestirPipeline extends AbstractPhotonicsExtension {
-    private final IrisRenderer fragRenderer;
+//    private final IrisRenderer fragRenderer;
+//
+//    private final IrisFramebuffer restirFramebuffer;
+//    private final IrisRenderer restirRenderer;
+//
 
-    private final IrisFramebuffer restirFramebuffer;
-    private final IrisRenderer restirRenderer;
+//
+//    private final IrisFramebuffer denoiseFramebuffer;
+//
+//    private final IrisRenderer denoisePrepassRenderer;
+//    private final IrisRenderer denoiseRenderer;
+//
+//    private final IrisFramebuffer otherFramebuffer;
+//    private final IrisRenderer otherRenderer;
 
-    private int atrousIteration = 0;
     private final int denoiserPasses;
 
-    private final IrisFramebuffer denoiseFramebuffer;
-
-    private final IrisRenderer denoisePrepassRenderer;
-    private final IrisRenderer denoiseRenderer;
-
-    private final IrisFramebuffer otherFramebuffer;
-    private final IrisRenderer otherRenderer;
-
+    private int atrousIteration = 0;
     private final UniformUpdater atrousUpdater = new UniformUpdater();
 
     public RestirPipeline(
             PhotonicsProperties properties,
             AtlasDownloader atlasDownloader,
             HandheldItemSupplier handheldItemSupplier,
-            IrisPipelineFactory passFactory
+            IrisFactory irisFactory
     ) {
         super(properties, atlasDownloader, handheldItemSupplier);
 
-        this.fragRenderer = registerComponent(new FragDataRenderer(passFactory, properties.getRenderScale()));
+        // The hand always needs at least 7 denoiser passes.
+        int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
+        this.denoiserPasses = requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0;
 
-        this.restirFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+        var restirFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
                 .addAttachment("restir_lighting_variance", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
                 .addAttachment("restir_lighting_samples", ITextureFormat.r16f(), CREATE_SAMPLER, this::isRestirEnabled)
@@ -54,63 +55,47 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .addAttachment("restir_indirect_reservoirs0", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
                 .addAttachment("restir_indirect_reservoirs1", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
                 .addAttachment("restir_indirect_reservoirs2", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
-                .build());
+                .build(this::registerComponent);
 
-        this.restirRenderer = passFactory.newRenderer("restir")
-                .addPass("initial direct", "/photonics/rendering/restir/passes/r1_initial_direct.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
-                .addPass("validate initial direct", "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, restirFramebuffer, this::isBlockLightEnabled)
-                .addPass("initial indirect", "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, restirFramebuffer, this::isRestirGiEnabled)
-                .addPass("temporal reuse", "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
-                .addPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
-                .addPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
-                .addPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
-                .addPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null, restirFramebuffer, this::isSpatialReuseEnabled)
-                .addPass("diffuse", "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, restirFramebuffer, this::isRestirEnabled)
-                .addPass("accumulation", "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, restirFramebuffer, this::isRestirEnabled)
-                .build();
-
-
-        // The hand always needs at least 7 denoiser passes.
-        int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
-        this.denoiserPasses = requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0;
-
-        this.denoiseFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+        var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("denoise_result", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
-                .build());
+                .build(this::registerComponent);
 
-        this.denoisePrepassRenderer = passFactory.newRenderer("denoiser setup")
-                .addPass("variance prefilter", "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
-                .build();
-
-        this.denoiseRenderer = passFactory.newRenderer("denoiser")
-                .addPass("svgf", "/photonics/rendering/restir/passes/r9_denoising.fsh", null, denoiseFramebuffer, this::isDenoisingEnabled)
-                .build();
-
-        this.otherFramebuffer = registerComponent(passFactory.newFramebuffer(properties.getRenderScale())
+        var otherFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("other_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
-                .build());
+                .build(this::registerComponent);
 
-        this.otherRenderer = passFactory.newRenderer("other")
-                .addPass("handheld", "/photonics/rendering/restir/passes/r10_handheld.fsh", null, otherFramebuffer, this::isHandheldLightingEnabled)
-                .build();
-    }
+        Pipelines.fragData(this, irisFactory, properties.getRenderScale());
 
-    @Override
-    public void onRender() {
-        fragRenderer.renderAll();
+        irisFactory.newPipeline()
+                .debugGroup("restir")
+                .thenFlip(restirFramebuffer)
+                .deferredPass("initial direct", restirFramebuffer, "/photonics/rendering/restir/passes/r1_initial_direct.fsh", null, this::isBlockLightEnabled)
+                .deferredPass("validate initial direct", restirFramebuffer, "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, this::isBlockLightEnabled)
+                .deferredPass("initial indirect", restirFramebuffer, "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, this::isRestirGiEnabled)
+                .deferredPass("temporal reuse", restirFramebuffer, "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, this::isRestirEnabled)
+                .deferredPass("spatial reuse (setup)", restirFramebuffer, spatialReusePass("setup.fsh"), null, this::isSpatialReuseEnabled)
+                .deferredPass("spatial reuse #1", restirFramebuffer, spatialReusePass("pass0.fsh"), null, this::isSpatialReuseEnabled)
+                .deferredPass("spatial reuse #2", restirFramebuffer, spatialReusePass("pass1.fsh"), null, this::isSpatialReuseEnabled)
+                .deferredPass("spatial reuse #3", restirFramebuffer, spatialReusePass("pass2.fsh"), null, this::isSpatialReuseEnabled)
+                .deferredPass("diffuse", restirFramebuffer, "/photonics/rendering/restir/passes/r6_diffuse.fsh", null,this::isRestirEnabled)
+                .deferredPass("accumulation", restirFramebuffer, "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, this::isRestirEnabled)
 
-        restirFramebuffer.flip();
-        restirRenderer.renderAll();
+                .debugGroup("svgf")
+                .thenRun(() -> atrousIteration = 0)
+                .deferredPass("variance prefilter", denoiseFramebuffer, "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null, this::isDenoisingEnabled)
+                .beginRepeating(denoiserPasses)
 
-        denoisePrepassRenderer.renderAll();
-        for (atrousIteration = 0; atrousIteration < denoiserPasses; atrousIteration++) {
-            atrousUpdater.updateNow();
+                .thenRun(() -> atrousIteration++)
+                .thenRun(atrousUpdater::updateNow)
+                .thenFlip(denoiseFramebuffer)
+                .deferredPass("atrous iteration", denoiseFramebuffer, "/photonics/rendering/restir/passes/r9_denoising.fsh", null, this::isDenoisingEnabled)
 
-            denoiseFramebuffer.flip();
-            denoiseRenderer.renderAll();
-        }
+                .endRepeating()
 
-        otherRenderer.renderAll();
+                .debugGroup("other")
+                .deferredPass("handheld", otherFramebuffer, "/photonics/rendering/restir/passes/r10_handheld.fsh", null, this::isHandheldLightingEnabled)
+                .build(this::registerRenderer);
     }
 
     @Override

@@ -126,6 +126,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
 
             phRenderers.add(
                     new PhotonicsRenderer(
+                            renderer.name(),
                             (IrisRenderingPipeline) (Object) this,
                             programSet.getPackDirectives(),
                             compositeSources,

@@ -4,10 +4,10 @@ import at.redi2go.photonics.api.shaders.IShaderPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
 import at.redi2go.photonics.common.HandheldLightSupplierImpl;
 import at.redi2go.photonics.common.iris.IrisPackLightsImpl;
-import at.redi2go.photonics.common.iris.pipeline.IrisPipelineFactoryImpl;
+import at.redi2go.photonics.common.iris.pipeline.IrisFactoryImpl;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
-import at.redi2go.photonics.common.iris.pipeline.renderer.IrisRendererImpl;
+import at.redi2go.photonics.common.iris.pipeline.renderer.DeferredIrisRenderer;
 import at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer;
 import at.redi2go.photonics.common.meshing.MinecraftBlockMesher;
 import at.redi2go.photonics.common.mixins.iris.ShaderPackAccessor;
@@ -48,7 +48,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     private @Nullable LightsProvider lightsProvider;
 
     @Unique
-    private List<IrisRendererImpl> renderers = new ArrayList<>();
+    private final List<DeferredIrisRenderer> renderers = new ArrayList<>();
 
     @Inject(method = "preparePipeline", at = @At("HEAD"))
     private void preparePipeline(NamespacedId currentDimension, CallbackInfoReturnable<WorldRenderingPipeline> cir) {
@@ -69,7 +69,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
                 properties,
                 AtlasDownloaderImpl::new,
                 HandheldLightSupplierImpl::new,
-                new IrisPipelineFactoryImpl(renderers)
+                new IrisFactoryImpl(renderers)
         );
     }
 
@@ -106,7 +106,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     }
 
     @Override
-    public List<IrisRendererImpl> getRenderers() {
+    public List<DeferredIrisRenderer> getRenderers() {
         return renderers;
     }
 
