@@ -78,21 +78,19 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .deferredPass("spatial reuse #1", restirFramebuffer, spatialReusePass("pass0.fsh"), null, this::isSpatialReuseEnabled)
                 .deferredPass("spatial reuse #2", restirFramebuffer, spatialReusePass("pass1.fsh"), null, this::isSpatialReuseEnabled)
                 .deferredPass("spatial reuse #3", restirFramebuffer, spatialReusePass("pass2.fsh"), null, this::isSpatialReuseEnabled)
-                .deferredPass("diffuse", restirFramebuffer, "/photonics/rendering/restir/passes/r6_diffuse.fsh", null,this::isRestirEnabled)
+                .deferredPass("diffuse", restirFramebuffer, "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, this::isRestirEnabled)
                 .deferredPass("accumulation", restirFramebuffer, "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, this::isRestirEnabled)
-
-                .debugGroup("svgf")
-                .thenRun(() -> atrousIteration = 0)
-                .deferredPass("variance prefilter", denoiseFramebuffer, "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null, this::isDenoisingEnabled)
-                .beginRepeating(denoiserPasses)
-
-                .thenRun(() -> atrousIteration++)
-                .thenRun(atrousUpdater::updateNow)
-                .thenFlip(denoiseFramebuffer)
-                .deferredPass("atrous iteration", denoiseFramebuffer, "/photonics/rendering/restir/passes/r9_denoising.fsh", null, this::isDenoisingEnabled)
-
-                .endRepeating()
-
+                .when(this::isDenoisingEnabled, b0 -> {
+                    b0.debugGroup("svgf");
+                    b0.thenRun(() -> atrousIteration = 0);
+                    b0.deferredPass("variance prefilter", denoiseFramebuffer, "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null);
+                    b0.repeat(denoiserPasses, b1 -> {
+                        b1.thenRun(() -> atrousIteration++);
+                        b1.thenRun(atrousUpdater::updateNow);
+                        b1.thenFlip(denoiseFramebuffer);
+                        b1.deferredPass("atrous iteration", denoiseFramebuffer, "/photonics/rendering/restir/passes/r9_denoising.fsh", null);
+                    });
+                })
                 .debugGroup("other")
                 .deferredPass("handheld", otherFramebuffer, "/photonics/rendering/restir/passes/r10_handheld.fsh", null, this::isHandheldLightingEnabled)
                 .build(this::registerRenderer);

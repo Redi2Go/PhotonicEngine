@@ -4,6 +4,7 @@ import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface IrisPipeline {
@@ -45,9 +46,19 @@ public interface IrisPipeline {
             return condition.getAsBoolean() ? thenRun(action) : this;
         }
 
-        Builder beginRepeating(int n);
+        Builder repeat(int n, Consumer<IrisPipeline.Builder> builderAction);
 
-        Builder endRepeating();
+        default Builder repeat(int n, BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction) {
+            return condition.getAsBoolean() ? repeat(n, builderAction) : this;
+        }
+
+        default Builder when(BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction) {
+            if (condition.getAsBoolean()) {
+                builderAction.accept(this);
+            }
+
+            return this;
+        }
 
         IrisPipeline build(Function<IrisPipeline, IrisPipeline> registration);
 

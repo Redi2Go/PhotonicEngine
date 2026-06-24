@@ -8,6 +8,8 @@ import at.redi2go.photonics.core.iris.pipeline.rendering.IrisPipeline;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer implements IrisPipeline.Builder {
@@ -44,14 +46,9 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     }
 
     @Override
-    public IrisPipeline.Builder beginRepeating(int n) {
+    public IrisPipeline.Builder repeat(int n, Consumer<IrisPipeline.Builder> builderAction) {
         addBeginRepeating(n);
-
-        return this;
-    }
-
-    @Override
-    public IrisPipeline.Builder endRepeating() {
+        builderAction.accept(this);
         addEndRepeating();
 
         return this;
