@@ -56,12 +56,11 @@ void main() {
         FragData sample_frag;
         frag_data_load(sample_frag, sample_texel);
 
-        vec3 sample_player_pos = frag_data_player_pos(sample_frag);
-        vec3 d = sample_player_pos - frag_player_pos;
-        if (dot(d, d) >= 2f) continue;
+        vec3 sample_data = frag_data_player_pos(sample_frag) - frag_player_pos;
+        if (dot(sample_data, sample_data) >= 0.6f) continue;
 
-        vec3 sample_geo_normal = frag_data_geo_normal(sample_frag);
-        if (dot(sample_geo_normal, frag_geo_normal) < 0.99f) continue;
+        sample_data = frag_data_geo_normal(sample_frag);
+        if (dot(sample_data, frag_geo_normal) < 0.99f) continue;
 
 #if defined PH_ENABLE_BLOCKLIGHT
         if (direct_reservoir_load(temp_direct, sample_texel))
@@ -70,16 +69,12 @@ void main() {
 
 #if defined PH_ENABLE_RESTIR_GI
         if (indirect_reservoir_load(temp_indirect, sample_texel)) {
-            temp_indirect.total_samples = 1.0f;
+            temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_reservoir_samples);
 
             indirect_reservoir_merge(
                 indirect_result,
                 temp_indirect,
-                is_low_samples ? 1.0f : indirect_sample_compute_jacobian(
-                    indirect_result.smple,
-                    frag_player_pos,
-                    frag_geo_normal
-                ),
+                1.0f,
                 indirect_sample_weight
             );
         }

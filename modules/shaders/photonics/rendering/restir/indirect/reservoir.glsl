@@ -25,7 +25,7 @@
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs2;
 
 const float max_indirect_temporal_samples = 20.0f;
-const float max_indirect_reservoir_samples = 128.0f;
+const float max_indirect_reservoir_samples = 20.0f;
 
 struct IndirectReservoir {
     IndirectSample smple;
