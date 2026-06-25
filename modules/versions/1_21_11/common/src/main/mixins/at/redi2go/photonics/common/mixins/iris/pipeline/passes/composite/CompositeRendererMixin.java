@@ -4,8 +4,10 @@ import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.pipeline.CompositeRendererPassExt;
 import at.redi2go.photonics.common.iris.pipeline.framebuffer.InternalIrisFramebuffer;
 import at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer;
+import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderPass;
 import net.irisshaders.iris.gl.program.ComputeProgram;
 import net.irisshaders.iris.gl.program.Program;
@@ -22,6 +24,25 @@ public abstract class CompositeRendererMixin {
     @Shadow
     @Final
     private WorldRenderingPipeline pipeline;
+
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/google/common/collect/ImmutableList$Builder;add(Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;",
+                    ordinal = 1
+            )
+    )
+    private ImmutableList.Builder<Object> addPass(
+            ImmutableList.Builder<Object> instance,
+            Object element,
+            Operation<ImmutableList.Builder<Object>> original,
+            @Local(name = "i") int i
+    ) {
+        ((CompositeRendererPassExt) element).setIndex(i);
+
+        return original.call(instance, element);
+    }
 
     @WrapOperation(
             method = "renderAll",
