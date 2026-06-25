@@ -16,12 +16,12 @@ void main() {
     setup_frag_data(0);
     if (!frag_is_in_world) return;
 
-    SampleHistory accumulator;
-    sample_history_reproject(accumulator);
-
     SampleHistory smple;
     sample_history_load(smple);
 
+    SampleHistory accumulator;
+
+    sample_history_reproject(accumulator);
     sample_history_combine_lighting(accumulator, smple);
 
 #if PH_RESTIR_DENOISER_PASSES != 0

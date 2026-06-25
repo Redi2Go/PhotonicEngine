@@ -11,9 +11,11 @@
 
 #define RESTIR_LIGHTING_OUT 0
 #define RESTIR_LIGHTING_VARIANCE_OUT 1
+#define RESTIR_LIGHTING_SAMPLES_OUT 2
 
 //ph_required: uniform sampler2D restir_lighting;
 //ph_required: uniform sampler2D restir_lighting_variance;
+//ph_required: uniform sampler2D restir_lighting_samples;
 
 //ph_required: uniform sampler2D prev_restir_lighting;
 //ph_required: uniform sampler2D prev_restir_lighting_variance;
