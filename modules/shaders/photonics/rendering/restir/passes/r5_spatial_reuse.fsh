@@ -1,3 +1,5 @@
+#version 430
+
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
@@ -16,15 +18,8 @@ layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
 #endif
 
 void main() {
-    setup_frag_data(REUSE_ITERATION * 31);
+    setup_frag_data(31);
     if (!frag_is_in_world) discard;
-
-    float samples = texelFetch(restir_lighting_samples, frag_tex_coord, 0).r;
-    bool is_low_samples = samples < min(PH_RESTIR_ACCUMULATION_FRAMES - 1, 4);
-
-#if REUSE_ITERATION > 0
-    if (!is_low_samples) discard;
-#endif
 
 #if defined PH_ENABLE_BLOCKLIGHT
     float direct_sample_weight = 0.0f;
@@ -44,14 +39,13 @@ void main() {
     indirect_reservoir_load(temp_indirect, frag_tex_coord);
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 #endif
-
-
-    const float ph_spatial_reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE * (REUSE_ITERATION + 1);
-    int reuse_samples = is_low_samples ? PH_RESTIR_SPATIAL_REUSE_SAMPLES * 3 : PH_RESTIR_SPATIAL_REUSE_SAMPLES;
+    
+    const float reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE;
+    const int reuse_samples = PH_RESTIR_SPATIAL_REUSE_SAMPLES;
 
     for (int i = 0; i < reuse_samples; i++) {
         vec2 offset = 2.0 * vec2(ph_rand_next_float(frag_rnd_state), ph_rand_next_float(frag_rnd_state)) - 1.0f;
-        ivec2 sample_texel = ivec2(frag_tex_coord + offset * ph_spatial_reuse_radius);
+        ivec2 sample_texel = ivec2(frag_tex_coord + offset * reuse_radius);
 
         FragData sample_frag;
         frag_data_load(sample_frag, sample_texel);

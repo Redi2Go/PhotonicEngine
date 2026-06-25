@@ -7,13 +7,13 @@
 #endif
 
 #if defined PH_ENABLE_BLOCKLIGHT
-#define INDIRECT_RESERVOIR_0 4
-#define INDIRECT_RESERVOIR_1 5
-#define INDIRECT_RESERVOIR_2 6
-#else
 #define INDIRECT_RESERVOIR_0 3
 #define INDIRECT_RESERVOIR_1 4
 #define INDIRECT_RESERVOIR_2 5
+#else
+#define INDIRECT_RESERVOIR_0 2
+#define INDIRECT_RESERVOIR_1 3
+#define INDIRECT_RESERVOIR_2 4
 #endif
 
 //ph_required: uniform sampler2D restir_indirect_reservoirs0;

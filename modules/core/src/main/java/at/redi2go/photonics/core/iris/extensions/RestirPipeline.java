@@ -15,21 +15,6 @@ import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CR
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FLIP;
 
 public class RestirPipeline extends AbstractPhotonicsExtension {
-//    private final IrisRenderer fragRenderer;
-//
-//    private final IrisFramebuffer restirFramebuffer;
-//    private final IrisRenderer restirRenderer;
-//
-
-//
-//    private final IrisFramebuffer denoiseFramebuffer;
-//
-//    private final IrisRenderer denoisePrepassRenderer;
-//    private final IrisRenderer denoiseRenderer;
-//
-//    private final IrisFramebuffer otherFramebuffer;
-//    private final IrisRenderer otherRenderer;
-
     private final int denoiserPasses;
 
     private int atrousIteration = 0;
@@ -50,7 +35,6 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         var restirFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
                 .addAttachment("restir_lighting_variance", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
-                .addAttachment("restir_lighting_samples", ITextureFormat.r16f(), CREATE_SAMPLER, this::isRestirEnabled)
                 .addAttachment("restir_direct_reservoirs0", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isBlockLightEnabled)
                 .addAttachment("restir_indirect_reservoirs0", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
                 .addAttachment("restir_indirect_reservoirs1", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
@@ -75,12 +59,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .deferredPass("validate initial direct", "/photonics/rendering/restir/passes/r2_validate_initial_direct.fsh", null, this::isBlockLightEnabled)
                 .deferredPass("initial indirect", "/photonics/rendering/restir/passes/r3_initial_indirect.fsh", null, this::isRestirGiEnabled)
                 .deferredPass("temporal reuse", "/photonics/rendering/restir/passes/r4_temporal_reuse.fsh", null, this::isRestirEnabled)
-                .when(this::isSpatialReuseEnabled, b0 -> {
-                    b0.deferredPass("spatial reuse (setup)", spatialReusePass("setup.fsh"), null);
-                    b0.deferredPass("spatial reuse #1", spatialReusePass("pass0.fsh"), null);
-                    b0.deferredPass("spatial reuse #2", spatialReusePass("pass1.fsh"), null);
-                    b0.deferredPass("spatial reuse #3", spatialReusePass("pass2.fsh"), null);
-                })
+                .deferredPass("spatial reuse", "/photonics/rendering/restir/passes/r5_spatial_reuse.fsh", null)
                 .deferredPass("diffuse", "/photonics/rendering/restir/passes/r6_diffuse.fsh", null, this::isRestirEnabled)
                 .deferredPass("accumulation", "/photonics/rendering/restir/passes/r7_accumulation.fsh", null, this::isRestirEnabled)
                 .when(this::isDenoisingEnabled, b0 -> {
