@@ -55,7 +55,7 @@ void prepare_next_gi_ray(
             )
     );
 
-    ray_iter_offset_position(ray, ray.direction * 0.01f);
+    ray_iter_offset_position(ray, ray.direction * 0.03f);
 }
 
 void sample_indirect(
