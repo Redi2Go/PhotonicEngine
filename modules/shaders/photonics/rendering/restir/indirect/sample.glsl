@@ -39,10 +39,7 @@ bool indirect_sample_traced_sky(IndirectSample smple) {
 }
 
 vec3 indirect_sample_get_visible_point(IndirectSample smple) {
-    #define smple_visible_normal indirect_sample_get_visible_normal(smple)
-    #define smple_hit_normal indirect_sample_get_hit_normal(smple)
-
-    vec3 direction = ph_rand_direction(smple.rnd_state, smple_visible_normal);
+    vec3 direction = ph_rand_direction(smple.rnd_state, indirect_sample_get_visible_normal(smple));
     return smple.hit_position - (direction * smple.hit_distance);
 }
 
