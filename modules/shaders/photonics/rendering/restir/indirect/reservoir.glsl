@@ -88,11 +88,6 @@ void indirect_reservoir_finalize_weight(
     inout IndirectReservoir reservoir,
     float sample_weight
 ) {
-    if (sample_weight <= 0.0f) {
-        reservoir.weight = 0.0f;
-        return;
-    }
-
     reservoir.weight = (1.0f / sample_weight) * (reservoir.weight / reservoir.total_samples);
 }
 
@@ -118,7 +113,7 @@ void indirect_reservoir_encode(
     out vec4 data2
 ) {
     data0.xyz = reservoir.smple.hit_position;
-    data0.w = reservoir.weight;
+    data0.w = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
 
     data1.rgb = reservoir.smple.color;
     data1.a = reservoir.total_samples;

@@ -1,6 +1,8 @@
 #ifndef PH_SHARED_INCLUDE
 #define PH_SHARED_INCLUDE
 
+#define MINIMUM_RESERVOIR_WEIGHT 0.000001f
+
 #include "/photonics/utility/color.glsl"
 
 #include "/photonics/rendering/restir/direct/reservoir.glsl"

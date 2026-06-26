@@ -136,7 +136,7 @@ vec3 direct_reservoir_get_final_color(
 void direct_reservoir_encode(DirectReservoir reservoir, out vec4 data0) {
     data0[0] = intBitsToFloat(reservoir.smple.light_index);
     data0[1] = intBitsToFloat(reservoir.smple.light_count);
-    data0[2] = reservoir.weight;
+    data0[2] = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
     data0[3] = reservoir.total_samples;
 }
 
