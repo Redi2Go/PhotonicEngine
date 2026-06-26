@@ -5,6 +5,7 @@
 
 //ph_required: uniform vec3 rt_camera_position;
 //ph_required: uniform vec3 world_offset;
+//ph_required: uniform vec3 delta_world_offset;
 //ph_required: uniform vec3 world_max_block;
 //ph_required: uniform vec3 world_min_block;
 //ph_required: uniform vec3 world_tree_size;

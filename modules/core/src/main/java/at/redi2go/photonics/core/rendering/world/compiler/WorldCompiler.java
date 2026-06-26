@@ -65,6 +65,7 @@ public class WorldCompiler implements Runnable, RenderingComponent {
     private final UniformUpdater uniformUpdater = new UniformUpdater();
 
     private WorldOrigin mostRecentOrigin = new WorldOrigin(0.0f, 0.0f, 0.0f);
+    private Vector3d previousOrigin = null;
 
     private Vector3f mostRecentMinBounds = new Vector3f();
     private Vector3f mostRecentMaxBounds = new Vector3f();
@@ -302,6 +303,21 @@ public class WorldCompiler implements Runnable, RenderingComponent {
                     return new Vector3f(offset);
                 },
                 uniformUpdater.newNotifier()
+        );
+
+        dynamicUniforms.uniform3d(
+                IUniformUpdateFrequency.perFrame(),
+                "delta_world_offset",
+                () -> {
+                    var previous = previousOrigin;
+                    var current = new Vector3d(mostRecentOrigin);
+
+                    previousOrigin = current;
+                    if (previous == null || current == null)
+                        return new Vector3d();
+
+                    return current.sub(previous, new Vector3d());
+                }
         );
 
         dynamicUniforms.uniform3f("world_min_block", () -> new Vector3f(mostRecentMinBlock), uniformUpdater.newNotifier());
