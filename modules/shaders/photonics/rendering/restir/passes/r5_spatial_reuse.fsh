@@ -3,7 +3,6 @@
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/restir.glsl"
 
-#define USE_FRAG_PLAYER_POS
 #define USE_FRAG_RT_POS
 #define USE_FRAG_GEO_NORMAL
 
@@ -39,7 +38,7 @@ void main() {
     indirect_reservoir_load(temp_indirect, frag_tex_coord);
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 #endif
-    
+
     const float reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE;
     const int reuse_samples = PH_RESTIR_SPATIAL_REUSE_SAMPLES;
 
@@ -50,7 +49,7 @@ void main() {
         FragData sample_frag;
         frag_data_load(sample_frag, sample_texel);
 
-        vec3 sample_data = frag_data_player_pos(sample_frag) - frag_player_pos;
+        vec3 sample_data = frag_data_rt_pos(sample_frag) - frag_rt_pos;
         if (dot(sample_data, sample_data) >= 0.6f) continue;
 
         sample_data = frag_data_geo_normal(sample_frag);

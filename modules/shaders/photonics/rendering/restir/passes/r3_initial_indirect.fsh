@@ -16,8 +16,9 @@ void main() {
     IndirectReservoir reservoir = indirect_reservoir_empty();
 
     reservoir.smple.rnd_state = frag_rnd_state;
-    reservoir.smple.visible_normal = frag_geo_normal;
+    indirect_sample_set_visible_normal(reservoir.smple, frag_geo_normal);
 
+    vec3 hit_normal;
     sample_indirect(
         reservoir.smple.color,
         frag_rt_pos,
@@ -26,15 +27,11 @@ void main() {
         frag_rnd_state,
 
         reservoir.smple.hit_position,
-        reservoir.smple.hit_normal
+        hit_normal
     );
 
-    if (reservoir.smple.hit_position.x == -1.0f) {
-        reservoir.smple.traced_sky = true;
-    } else {
-        reservoir.smple.hit_distance = distance(frag_rt_pos, reservoir.smple.hit_position);
-        reservoir.smple.hit_position-= rt_camera_position;
-    }
+    indirect_sample_set_hit_normal(reservoir.smple, hit_normal);
+    reservoir.smple.hit_distance = distance(frag_rt_pos, reservoir.smple.hit_position);
 
     reservoir.weight = ph_luminance(reservoir.smple.color);
     reservoir.total_samples = 1.0f;

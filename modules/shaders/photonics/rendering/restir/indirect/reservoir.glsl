@@ -123,17 +123,10 @@ void indirect_reservoir_encode(
     data1.rgb = reservoir.smple.color;
     data1.a = reservoir.total_samples;
 
-    data2.x = uintBitsToFloat(packUnorm2x16(ph_encode_normal(reservoir.smple.visible_normal)));
-    data2.y = uintBitsToFloat(packUnorm2x16(ph_encode_normal(reservoir.smple.hit_normal)));
+    data2.x = uintBitsToFloat(reservoir.smple.packed_visible_normal);
+    data2.y = uintBitsToFloat(reservoir.smple.packed_hit_normal);
 
-
-    const uint sign_bit = 1u << 31;
-    uint hit_distance = floatBitsToUint(reservoir.smple.hit_distance);
-
-    if (reservoir.smple.traced_sky)
-        hit_distance |= sign_bit;
-
-    data2.z = uintBitsToFloat(hit_distance);
+    data2.z = reservoir.smple.hit_distance;
     data2.w = uintBitsToFloat(reservoir.smple.rnd_state);
 }
 
@@ -149,17 +142,10 @@ void indirect_reservoir_decode(
     reservoir.smple.color = data1.rgb;
     reservoir.total_samples = data1.a;
 
-    reservoir.smple.visible_normal = ph_decode_normal(data2.xy);
+    reservoir.smple.packed_visible_normal = floatBitsToUint(data2.x);
+    reservoir.smple.packed_hit_normal = floatBitsToUint(data2.x);
 
-    reservoir.smple.visible_normal = ph_decode_normal(unpackUnorm2x16(floatBitsToUint(data2.x)));
-    reservoir.smple.hit_normal = ph_decode_normal(unpackUnorm2x16(floatBitsToUint(data2.y)));
-
-    const uint sign_bit = 1u << 31;
-    uint hit_distance = floatBitsToUint(data2.z);
-
-    reservoir.smple.hit_distance = uintBitsToFloat(hit_distance & ~sign_bit);
-    reservoir.smple.traced_sky = (hit_distance & sign_bit) != 0u;
-
+    reservoir.smple.hit_distance = data2.z;
     reservoir.smple.rnd_state = floatBitsToUint(data2.w);
 }
 
@@ -186,8 +172,7 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
         texelFetch(prev_restir_indirect_reservoirs2, tex_coord, 0)
     );
 
-    vec3 camera_offset = previousCameraPosition - cameraPosition;
-    reservoir.smple.hit_position+= camera_offset;
+    reservoir.smple.hit_position+= delta_world_offset;
 
     return !indirect_reservoir_is_nan(reservoir);
 }
