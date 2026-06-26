@@ -27,8 +27,8 @@ void _ray_iter_setup(inout RayIterator ray) {
         ray.state = PH_RAY_STATE_OUT_OF_BOUNDS;
         return;
     }
-
-    ray.position+= (t0 + 0.03f) * ray.direction;
+    
+    ray.position+= t0 * ray.direction;
     ray.state = PH_RAY_STATE_READY;
 }
 
