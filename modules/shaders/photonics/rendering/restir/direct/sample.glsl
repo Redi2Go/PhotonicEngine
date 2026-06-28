@@ -5,18 +5,14 @@
 
 struct DirectSample {
     int light_index; // The index of the sampled light, will be -1 when empty
-    int light_count; // The size of the light list at this samples creation
 };
 
 DirectSample direct_sample_empty() {
-    return DirectSample(-1, 0);
+    return DirectSample(-1);
 }
 
 DirectSample direct_sample_random(inout uint rnd_state) {
-    return DirectSample(
-        ph_rand_next_int(rnd_state, 0, light_list_size),
-        light_list_size
-    );
+    return DirectSample(ph_rand_next_int(rnd_state, 0, light_list_size));
 }
 
 bool direct_sample_is_empty(DirectSample smple) {
@@ -53,7 +49,7 @@ vec3 direct_sample_get_color(
         light.position,
         geo_normal,
         tex_normal
-    ) * smple.light_count;
+    ) * light_list_size;
 }
 
 float direct_sample_get_weight(

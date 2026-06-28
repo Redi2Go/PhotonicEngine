@@ -133,18 +133,16 @@ vec3 direct_reservoir_get_final_color(
     return final_color * reservoir.weight;
 }
 
-void direct_reservoir_encode(DirectReservoir reservoir, out vec4 data0) {
-    data0[0] = intBitsToFloat(reservoir.smple.light_index);
-    data0[1] = intBitsToFloat(reservoir.smple.light_count);
-    data0[2] = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
-    data0[3] = reservoir.total_samples;
+void direct_reservoir_encode(DirectReservoir reservoir, out vec3 data0) {
+    data0[0] = float(reservoir.smple.light_index);
+    data0[1] = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
+    data0[2] = reservoir.total_samples;
 }
 
-void direct_reservoir_decode(out DirectReservoir reservoir, vec4 data0) {
-    reservoir.smple.light_index = floatBitsToInt(data0[0]);
-    reservoir.smple.light_count = floatBitsToInt(data0[1]);
-    reservoir.weight            = data0[2];
-    reservoir.total_samples     = data0[3];
+void direct_reservoir_decode(out DirectReservoir reservoir, vec3 data0) {
+    reservoir.smple.light_index = int(data0[0]);
+    reservoir.weight            = data0[1];
+    reservoir.total_samples     = data0[2];
 }
 
 bool direct_reservoir_is_nan(DirectReservoir reservoir) {
@@ -154,7 +152,7 @@ bool direct_reservoir_is_nan(DirectReservoir reservoir) {
 bool direct_reservoir_load(out DirectReservoir reservoir, ivec2 tex_coord) {
     direct_reservoir_decode(
         reservoir,
-        texelFetch(restir_direct_reservoirs0, tex_coord, 0)
+        texelFetch(restir_direct_reservoirs0, tex_coord, 0).rgb
     );
 
     return !direct_reservoir_is_nan(reservoir);
@@ -163,7 +161,7 @@ bool direct_reservoir_load(out DirectReservoir reservoir, ivec2 tex_coord) {
 bool direct_reservoir_load_previous(out DirectReservoir reservoir, ivec2 tex_coord) {
     direct_reservoir_decode(
         reservoir,
-        texelFetch(prev_restir_direct_reservoirs0, tex_coord, 0)
+        texelFetch(prev_restir_direct_reservoirs0, tex_coord, 0).rgb
     );
 
     return !direct_reservoir_is_nan(reservoir) && direct_sample_reproject(reservoir.smple);

@@ -10,7 +10,7 @@
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
 
 #if defined PH_ENABLE_BLOCKLIGHT
-layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
+layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 #endif
 
 #if defined PH_ENABLE_RESTIR_GI
