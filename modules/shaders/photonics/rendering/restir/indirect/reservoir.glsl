@@ -112,7 +112,7 @@ void indirect_reservoir_encode(
     out vec4 data1,
     out vec4 data2
 ) {
-    data0.xyz = reservoir.smple.hit_position;
+    data0.xyz = reservoir.smple.visible_point;
     data0.w = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
 
     data1.rgb = reservoir.smple.color;
@@ -121,7 +121,7 @@ void indirect_reservoir_encode(
     data2.x = uintBitsToFloat(reservoir.smple.packed_visible_normal);
     data2.y = uintBitsToFloat(reservoir.smple.packed_hit_normal);
 
-    data2.z = reservoir.smple.hit_distance;
+    data2.z = reservoir.smple.trace_distance;
     data2.w = uintBitsToFloat(reservoir.smple.rnd_state);
 }
 
@@ -131,7 +131,7 @@ void indirect_reservoir_decode(
     vec4 data1,
     vec4 data2
 ) {
-    reservoir.smple.hit_position = data0.xyz;
+    reservoir.smple.visible_point = data0.xyz;
     reservoir.weight = data0.w;
 
     reservoir.smple.color = data1.rgb;
@@ -140,7 +140,7 @@ void indirect_reservoir_decode(
     reservoir.smple.packed_visible_normal = floatBitsToUint(data2.x);
     reservoir.smple.packed_hit_normal = floatBitsToUint(data2.x);
 
-    reservoir.smple.hit_distance = data2.z;
+    reservoir.smple.trace_distance = data2.z;
     reservoir.smple.rnd_state = floatBitsToUint(data2.w);
 }
 
@@ -167,7 +167,7 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
         texelFetch(prev_restir_indirect_reservoirs2, tex_coord, 0)
     );
 
-    reservoir.smple.hit_position+= delta_world_offset;
+    reservoir.smple.visible_point+= delta_world_offset;
 
     return !indirect_reservoir_is_nan(reservoir);
 }

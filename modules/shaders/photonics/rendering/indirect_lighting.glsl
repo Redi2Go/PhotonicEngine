@@ -87,7 +87,7 @@ void sample_indirect(
         vec3 hit_normal = ray_result_normal(hit);
 
         if (bounce_count == -1) {
-            first_hit = ray_result_is_hit(hit) ? hit_position : vec3(0.0f / 0.0f);
+            first_hit = ray_result_is_hit(hit) ? hit_position : vec3(-1.0f);
             first_normal = hit_normal;
         }
 

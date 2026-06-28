@@ -67,7 +67,7 @@ void main() {
             indirect_reservoir_merge(
                 indirect_result,
                 temp_indirect,
-                1.0f,
+                min(indirect_sample_compute_jacobian(temp_indirect.smple, frag_rt_pos), 1.0f), // figure out why it dies when not clamped to 1
                 indirect_sample_weight
             );
         }

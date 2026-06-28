@@ -13,25 +13,33 @@ void main() {
     setup_frag_data(0);
     if (!frag_is_in_world) discard;
 
-    IndirectReservoir reservoir = indirect_reservoir_empty();
+    uint initial_rnd_state = frag_rnd_state;
 
-    reservoir.smple.rnd_state = frag_rnd_state;
-    indirect_sample_set_visible_normal(reservoir.smple, frag_geo_normal);
-
+    vec3 indirect_result = vec3(0.0f);
     vec3 hit_normal;
+    vec3 hit_position;
+
     sample_indirect(
-        reservoir.smple.color,
+        indirect_result,
         frag_rt_pos,
         frag_geo_normal,
         frag_is_hand ? frag_geo_normal : frag_tex_normal,
         frag_rnd_state,
 
-        reservoir.smple.hit_position,
+        hit_position,
         hit_normal
     );
 
+    IndirectReservoir reservoir = indirect_reservoir_empty();
+
+    indirect_sample_set_color(reservoir.smple, indirect_result);
+    indirect_sample_set_rnd_state(reservoir.smple, initial_rnd_state);
+
+    indirect_sample_set_visible_normal(reservoir.smple, frag_geo_normal);
+    indirect_sample_set_visible_point(reservoir.smple, frag_rt_pos);
+
     indirect_sample_set_hit_normal(reservoir.smple, hit_normal);
-    reservoir.smple.hit_distance = distance(frag_rt_pos, reservoir.smple.hit_position);
+    indirect_sample_set_hit_position(reservoir.smple, hit_position);
 
     reservoir.weight = ph_luminance(reservoir.smple.color);
     reservoir.total_samples = 1.0f;
