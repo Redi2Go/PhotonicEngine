@@ -62,12 +62,12 @@ void main() {
 
 #if defined PH_ENABLE_RESTIR_GI
         if (indirect_reservoir_load(temp_indirect, sample_texel)) {
-            temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_reservoir_samples);
+            temp_indirect.total_samples = 1.0f;//min(temp_indirect.total_samples, max_indirect_reservoir_samples);
 
             indirect_reservoir_merge(
                 indirect_result,
                 temp_indirect,
-                min(indirect_sample_compute_jacobian(temp_indirect.smple, frag_rt_pos), 1.0f), // figure out why it dies when not clamped to 1
+                1.0f,
                 indirect_sample_weight
             );
         }
