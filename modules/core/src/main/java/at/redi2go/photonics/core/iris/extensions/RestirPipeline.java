@@ -65,10 +65,10 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .when(this::isDenoisingEnabled, b0 -> {
                     b0.withFramebuffer(denoiseFramebuffer);
                     b0.debugGroup("svgf");
-                    b0.thenRun(() -> atrousIteration = 0);
+                    b0.thenRun(() -> atrousIteration = denoiserPasses);
                     b0.deferredPass("variance prefilter", "/photonics/rendering/restir/passes/r8_variance_prefilter.fsh", null);
                     b0.repeat(denoiserPasses, b1 -> {
-                        b1.thenRun(() -> atrousIteration++);
+                        b1.thenRun(() -> atrousIteration--);
                         b1.thenRun(atrousUpdater::updateNow);
                         b1.thenFlip(denoiseFramebuffer);
                         b1.deferredPass("atrous iteration", "/photonics/rendering/restir/passes/r9_denoising.fsh", null);
