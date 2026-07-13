@@ -19,10 +19,7 @@ uint ph_rand_next_uint(inout uint rand_state)
 }
 
 float ph_rand_next_float(inout uint rand_state) {
-    uint x = ph_rand_next_uint(rand_state);
-    rand_state = x;
-
-    return float(x) * uintBitsToFloat(0x2f800000u);
+    return float(ph_rand_next_uint(rand_state)) * uintBitsToFloat(0x2f800000u);
 }
 
 int ph_rand_next_int(inout uint rand_state, float min, float max) {
