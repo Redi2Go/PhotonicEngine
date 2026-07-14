@@ -24,8 +24,8 @@
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs1;
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs2;
 
-const float max_indirect_temporal_samples = 4.0f;
-const float max_indirect_reservoir_samples = 4.0f;
+const float max_indirect_temporal_samples = 20.0f;
+const float max_indirect_reservoir_samples = 20.0f;
 
 struct IndirectReservoir {
     IndirectSample smple;
@@ -167,7 +167,8 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
         texelFetch(prev_restir_indirect_reservoirs2, tex_coord, 0)
     );
 
-    reservoir.smple.visible_point+= delta_world_offset;
+    vec3 camera_offset = cameraPosition - previousCameraPosition;
+    reservoir.smple.visible_point+= camera_offset;
 
     return !indirect_reservoir_is_nan(reservoir);
 }

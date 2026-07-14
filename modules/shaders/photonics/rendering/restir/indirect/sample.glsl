@@ -35,11 +35,11 @@ void indirect_sample_set_visible_normal(inout IndirectSample smple, vec3 visible
 }
 
 vec3 indirect_sample_get_visible_point(IndirectSample smple) {
-    return smple.visible_point;
+    return smple.visible_point + rt_camera_position;
 }
 
 void indirect_sample_set_visible_point(inout IndirectSample smple, vec3 visible_point) {
-    smple.visible_point = visible_point;
+    smple.visible_point = visible_point - rt_camera_position;
 }
 
 vec3 indirect_sample_get_hit_normal(IndirectSample smple) {
@@ -56,14 +56,14 @@ vec3 indirect_sample_get_hit_point(IndirectSample smple) {
 }
 
 void indirect_sample_set_hit_position(inout IndirectSample smple, vec3 hit_position) {
-    smple.trace_distance = hit_position.x == -1.0f ? 1000.0f : distance(smple.visible_point, hit_position);
+    smple.trace_distance = hit_position.x == -1.0f ? 1000.0f : distance(indirect_sample_get_visible_point(smple), hit_position);
 }
 
 float indirect_sample_compute_jacobian(IndirectSample smple, vec3 rt_pos) {
     vec3 hit_position = indirect_sample_get_hit_point(smple);
 
     vec3 to_current = rt_pos - hit_position;
-    vec3 to_source  = smple.visible_point - hit_position;
+    vec3 to_source  = indirect_sample_get_visible_point(smple) - hit_position;
 
     float to_current_sq = dot(to_current, to_current);
     float to_source_sq = dot(to_source, to_source);
