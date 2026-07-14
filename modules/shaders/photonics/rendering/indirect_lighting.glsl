@@ -101,6 +101,9 @@ void sample_indirect(
                 continue;
             }
 
+            first_hit = hit_position;
+            first_normal = hit_normal;
+
             is_tracing_to_sun = false;
 
 #if !defined NO_SHADOW_MAPPING
@@ -143,10 +146,11 @@ void sample_indirect(
             );
 #endif
         } else { // Hit sky
-            ray.iterations = 0;
-
             vec3 player_pos = hit_position - rt_camera_position;
             radiance_color = is_tracing_to_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
+
+            first_hit = vec3(-1.0f);
+            first_normal = -ray.direction;
         }
 
         #define gi_tint_color (running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f))
