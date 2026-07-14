@@ -24,8 +24,8 @@
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs1;
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs2;
 
-const float max_indirect_temporal_samples = 20.0f;
-const float max_indirect_reservoir_samples = 20.0f;
+const float max_indirect_temporal_samples = 8.0f;
+const float max_indirect_reservoir_samples = 8.0f;
 
 struct IndirectReservoir {
     IndirectSample smple;
@@ -84,6 +84,51 @@ void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
     reservoir.total_samples = max_indirect_reservoir_samples;
 }
 
+bool _indirect_retrace_skip_hit(RayResult hit) {
+    return ray_result_is_hit(hit) && ray_result_is_transparent(hit);
+}
+
+RayResult indirect_sample_retrace(vec3 rt_pos, vec3 hit_point) {
+    RayIterator ray;
+
+    ray_iter_begin(ray, rt_pos, hit_point - rt_pos);
+    ray_iter_offset_position(ray, ray.direction * 0.03f);
+    ray.iterations = 40;
+
+    RayResult hit = missed_ray_result();
+    while (true) {
+        hit = ray_iter_next(ray);
+
+        if (ray_result_is_transparent(hit)) {
+            ray_iter_skip_block(ray);
+            ray_iter_offset_position(ray, ray.direction * 0.03f);
+
+            continue;
+        }
+
+        break;
+    }
+
+    return hit;
+}
+
+void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos) {
+    vec3 hit_point = indirect_sample_get_hit_point(reservoir.smple);
+    RayResult hit = indirect_sample_retrace(rt_pos, hit_point);
+
+    if (!ray_result_is_hit(hit)) {
+        if (reservoir.smple.trace_distance != indirect_sky_distance)
+            reservoir.weight = 0.0f;
+
+        return;
+    }
+
+    vec3 diff = ray_result_position(hit) - hit_point;
+    if (dot(diff, diff) < 0.05f) return;
+
+    reservoir.weight = 0.0f;
+}
+
 void indirect_reservoir_finalize_weight(
     inout IndirectReservoir reservoir,
     float sample_weight
@@ -92,17 +137,6 @@ void indirect_reservoir_finalize_weight(
 }
 
 vec3 indirect_reservoir_get_final_color(inout IndirectReservoir reservoir) {
-    // is causing a crash on nvidia windows(???)
-//    vec3 color = indirect_sample_validate_visibility(reservoir.smple, frag_rt_pos);
-//    if (all(equal(color, vec3(0.0f)))) {
-//        reservoir.smple.color = vec3(0.0f);
-//        reservoir.weight = 0.0f;
-//
-//        return vec3(0.0f);
-//    }
-
-//    return color * reservoir.weight;
-
     return reservoir.smple.color * reservoir.weight;
 }
 
@@ -168,7 +202,7 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
     );
 
     vec3 camera_offset = cameraPosition - previousCameraPosition;
-    reservoir.smple.visible_point+= camera_offset;
+    reservoir.smple.visible_point-= camera_offset;
 
     return !indirect_reservoir_is_nan(reservoir);
 }

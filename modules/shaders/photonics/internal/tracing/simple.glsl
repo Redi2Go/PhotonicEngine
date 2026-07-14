@@ -22,7 +22,9 @@ bool trace_light_vis(
 
             light_transmittance *= 1.0f - albedo.a;
             ray_iter_apply_transparency(running_tint_color, albedo);
+
             ray_iter_skip_block(ray);
+            ray_iter_offset_position(ray, ray.direction * 0.03f);
 
             continue;
         }
