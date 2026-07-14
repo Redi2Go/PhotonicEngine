@@ -139,7 +139,7 @@ void sample_indirect(
                     hit,
                     sample_rt_pos,
                     geo_normal,
-                    bounce_count,
+                    bounce,
                     rnd_state,
 
                     radiance_color
