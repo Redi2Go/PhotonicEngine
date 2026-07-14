@@ -7,9 +7,6 @@
 //TODO: Make these into settings
 #define PH_MAX_GI_ITERATIONS 100
 
-const int max_gi_rays = PH_MAX_GI_BOUNCES;
-const int max_gi_iterations = PH_MAX_GI_ITERATIONS;
-
 #if defined NO_SHADOW_MAPPED
 #define should_trace_to_sun(rnd_state, bounce_count, surface_rt_pos, surface_normal, is_tracing_to_sun) \
     (bounce_count) > -1 && ph_rand_next_float(rnd_state) < 0.25f && dot(get_sun_direction(), (surface_normal)) >= 0.707f;
@@ -47,11 +44,11 @@ void prepare_next_gi_ray(
     ray_iter_set_direction(
             ray,
             next_gi_direction(
-                rnd_state,
-                bounce_count,
-                rt_pos,
-                geo_normal,
-                is_tracing_to_sun
+                    rnd_state,
+                    bounce_count,
+                    rt_pos,
+                    geo_normal,
+                    is_tracing_to_sun
             )
     );
 
@@ -71,43 +68,36 @@ void sample_indirect(
     vec4 running_tint_color = vec4(0.0f);
     float running_light_transmittance = 1.0f;
     vec3 running_bounce_color = vec3(1.0f);
-
-    int bounce_count = -1;
     bool is_tracing_to_sun = false;
 
     RayIterator ray;
 
-    ray.iterations = max_gi_iterations;
+    ray.iterations = PH_MAX_GI_ITERATIONS;
     ray_iter_set_position(ray, sample_rt_pos);
-    prepare_next_gi_ray(ray, rnd_state, bounce_count, sample_rt_pos, geo_normal, is_tracing_to_sun);
+    prepare_next_gi_ray(ray, rnd_state, -1, sample_rt_pos, geo_normal, is_tracing_to_sun);
 
-    while (bounce_count < PH_MAX_GI_BOUNCES) {
+    for (int bounce = -1; bounce < PH_MAX_GI_BOUNCES; bounce++) {
         RayResult hit = ray_iter_next(ray);
-        vec3 hit_position = ray_result_position(hit);
-        vec3 hit_normal = ray_result_normal(hit);
-
-        if (bounce_count == -1) {
-            first_hit = ray_result_is_hit(hit) ? hit_position : vec3(-1.0f);
-            first_normal = hit_normal;
-        }
 
         // No hit & not out of bounds means we likely out of iterations
         if (!ray_result_is_hit(hit) && ray_iter_is_in_bounds(ray)) break;
 
+        vec3 hit_position = ray_result_position(hit);
+        vec3 hit_normal = ray_result_normal(hit);
+
         vec4 albedo = vec4(1.0f);
         vec3 radiance_color = vec3(0.0f);
 
-        // Ray either hit something or reached sky
-        if (ray_result_is_hit(hit)) {
-            VoxelData voxel_data = ray_result_voxel_data(hit);
-            albedo = voxel_data_albedo(voxel_data);
+        if (ray_result_is_hit(hit)) { // Hit something
+            albedo = voxel_data_albedo(ray_result_voxel_data(hit));
 
-            if (ray_result_is_transparent(hit)) {
+            if (albedo.a < 1.0f) {
                 // Multiply alpha by 0.25 as it looks better with glass
                 running_light_transmittance *= 1.0f - (albedo.a * 0.25f);
                 ray_iter_apply_transparency(running_tint_color, albedo);
                 ray_iter_skip_block(ray);
 
+                bounce--;
                 continue;
             }
 
@@ -122,41 +112,40 @@ void sample_indirect(
             }
 #endif
 
-#if defined PH_INDIRECT_SURFACE_SAMPLE_MODIFIER_DISABLED
-
 #if defined PH_ENABLE_BLOCKLIGHT_GI
-            #define PH_SHOULD_SAMPLE_LIGHT (bounce_count != -1 || hit_light.type == LIGHT_TYPE_NOT_TRACED)
+            #define PH_SHOULD_SAMPLE_LIGHT (bounce != -1 || hit_light.type == LIGHT_TYPE_NOT_TRACED)
             const float gi_light_multiplier = 6.7f;
 #else
             #define PH_SHOULD_SAMPLE_LIGHT hit_light.type == LIGHT_TYPE_NOT_TRACED
             const float gi_light_multiplier = 3.0f;
 #endif
 
+#if defined PH_INDIRECT_SURFACE_SAMPLE_MODIFIER_DISABLED
             Light hit_light = ray_result_light_data(hit);
             if (light_is_valid(hit_light) && PH_SHOULD_SAMPLE_LIGHT) {
                 radiance_color += light_sample_at(
-                    hit_light,
-                    sample_rt_pos,
-                    floor(ray_result_position(hit)) + 0.5f,
-                    geo_normal,
-                    geo_normal
+                        hit_light,
+                        sample_rt_pos,
+                        floor(hit_position) + 0.5f,
+                        geo_normal,
+                        geo_normal
                 ) * gi_light_multiplier;
             }
 #else
             modify_indirect_surface_sample(
-                hit,
-                sample_rt_pos,
-                geo_normal,
-                bounce_count,
-                rnd_state,
+                    hit,
+                    sample_rt_pos,
+                    geo_normal,
+                    bounce_count,
+                    rnd_state,
 
-                radiance_color
+                    radiance_color
             );
 #endif
-        } else {
+        } else { // Hit sky
             ray.iterations = 0;
-            vec3 player_pos = hit_position - rt_camera_position;
 
+            vec3 player_pos = hit_position - rt_camera_position;
             radiance_color = is_tracing_to_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
         }
 
@@ -164,14 +153,13 @@ void sample_indirect(
         #define gi_bounce_color running_bounce_color
         #define gi_intensity running_light_transmittance
 
-        indirect_color += radiance_color * gi_tint_color * gi_bounce_color * gi_intensity;
+        indirect_color += radiance_color * gi_tint_color * gi_bounce_color * gi_intensity;\
 
-        bounce_count += 1;
+        if (!ray_result_is_hit(hit)) break;
+
         running_bounce_color *= albedo.rgb;
-
         sample_rt_pos = hit_position;
         geo_normal = hit_normal;
-
-        prepare_next_gi_ray(ray, rnd_state, bounce_count, sample_rt_pos, geo_normal, is_tracing_to_sun);
+        prepare_next_gi_ray(ray, rnd_state, bounce, sample_rt_pos, geo_normal, is_tracing_to_sun);
     }
 }
