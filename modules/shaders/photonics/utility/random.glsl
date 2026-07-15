@@ -15,6 +15,8 @@ uint ph_rand_next_uint(inout uint rand_state)
     uint state = rand_state;
     rand_state = rand_state * 747796405u + 2891336453u;
     uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+
+    rand_state = word;
     return (word >> 22u) ^ word;
 }
 
