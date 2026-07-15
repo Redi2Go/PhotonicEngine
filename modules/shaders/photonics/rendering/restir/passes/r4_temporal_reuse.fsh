@@ -51,7 +51,7 @@ void main() {
     direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
 
     // load temporal sampled reservoir
-    if (direct_reservoir_load_previous(temp_direct, prev_texel)) {
+    if (direct_reservoir_load_previous(temp_direct, prev_texel, true)) {
         temp_direct.total_samples = min(max_direct_temporal_samples, temp_direct.total_samples);
         direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
     }
@@ -73,7 +73,7 @@ void main() {
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 
     // load temporal sampled reservoir
-    if (indirect_reservoir_load_previous(temp_indirect, prev_texel)) {
+    if (indirect_reservoir_load_previous(temp_indirect, prev_texel, true)) {
         temp_indirect.total_samples = min(max_indirect_temporal_samples, temp_indirect.total_samples);
         indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
     }

@@ -193,7 +193,7 @@ bool indirect_reservoir_load(out IndirectReservoir reservoir, ivec2 tex_coord) {
     return !indirect_reservoir_is_nan(reservoir);
 }
 
-bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex_coord) {
+bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex_coord, bool reprojected) {
     indirect_reservoir_decode(
         reservoir,
         texelFetch(prev_restir_indirect_reservoirs0, tex_coord, 0),
@@ -201,8 +201,10 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
         texelFetch(prev_restir_indirect_reservoirs2, tex_coord, 0)
     );
 
-    vec3 camera_offset = cameraPosition - previousCameraPosition;
-    reservoir.smple.visible_point-= camera_offset;
+    if (reprojected) {
+        vec3 camera_offset = cameraPosition - previousCameraPosition;
+        reservoir.smple.visible_point -= camera_offset;
+    }
 
     return !indirect_reservoir_is_nan(reservoir);
 }

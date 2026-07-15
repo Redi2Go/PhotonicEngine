@@ -158,11 +158,17 @@ bool direct_reservoir_load(out DirectReservoir reservoir, ivec2 tex_coord) {
     return !direct_reservoir_is_nan(reservoir);
 }
 
-bool direct_reservoir_load_previous(out DirectReservoir reservoir, ivec2 tex_coord) {
+bool direct_reservoir_load_previous(out DirectReservoir reservoir, ivec2 tex_coord, bool reprojected) {
     direct_reservoir_decode(
         reservoir,
         texelFetch(prev_restir_direct_reservoirs0, tex_coord, 0).rgb
     );
 
-    return !direct_reservoir_is_nan(reservoir) && direct_sample_reproject(reservoir.smple);
+    if (direct_reservoir_is_nan(reservoir))
+        return false;
+
+    if (!reprojected)
+        return true;
+
+    return direct_sample_reproject(reservoir.smple);
 }

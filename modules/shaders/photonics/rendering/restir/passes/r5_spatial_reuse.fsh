@@ -25,7 +25,7 @@ void main() {
     DirectReservoir direct_result = direct_reservoir_empty();
     DirectReservoir temp_direct = direct_reservoir_empty();
 
-    direct_reservoir_load(temp_direct, frag_tex_coord);
+    direct_reservoir_load_previous(temp_direct, frag_tex_coord, false);
     direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
 #endif
 
@@ -35,7 +35,7 @@ void main() {
     IndirectReservoir indirect_result = indirect_reservoir_empty();
     IndirectReservoir temp_indirect = indirect_reservoir_empty();
 
-    indirect_reservoir_load(temp_indirect, frag_tex_coord);
+    indirect_reservoir_load_previous(temp_indirect, frag_tex_coord, false);
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 #endif
 
@@ -56,12 +56,12 @@ void main() {
         if (dot(sample_data, frag_geo_normal) < 0.99f) continue;
 
 #if defined PH_ENABLE_BLOCKLIGHT
-        if (direct_reservoir_load(temp_direct, sample_texel))
+        if (direct_reservoir_load_previous(temp_direct, sample_texel, false))
             direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
 #endif
 
 #if defined PH_ENABLE_RESTIR_GI
-        if (indirect_reservoir_load(temp_indirect, sample_texel)) {
+        if (indirect_reservoir_load_previous(temp_indirect, sample_texel, false)) {
             temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_reservoir_samples);
 
             indirect_reservoir_merge(

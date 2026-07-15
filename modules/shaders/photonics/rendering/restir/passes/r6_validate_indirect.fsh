@@ -12,7 +12,7 @@ void main() {
     if (!frag_is_in_world) discard;
 
     IndirectReservoir reservoir = indirect_reservoir_empty();
-    indirect_reservoir_load(reservoir, frag_tex_coord);
+    indirect_reservoir_load_previous(reservoir, frag_tex_coord, false);
 
     indirect_reservoir_validate_visiblity(reservoir, frag_rt_pos);
     indirect_reservoir_encode(reservoir, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
