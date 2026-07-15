@@ -78,9 +78,7 @@ void sample_indirect(
 
     for (int bounce = -1; bounce < PH_MAX_GI_BOUNCES; bounce++) {
         RayResult hit = ray_iter_next(ray);
-
-        // No hit & not out of bounds means we likely out of iterations
-        if (!ray_result_is_hit(hit) && ray_iter_is_in_bounds(ray)) break;
+        if (ray.iterations <= 0) return;
 
         vec3 hit_position = ray_result_position(hit);
         vec3 hit_normal = ray_result_normal(hit);
