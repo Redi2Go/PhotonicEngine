@@ -57,7 +57,7 @@ vec3 indirect_sample_get_hit_point(IndirectSample smple) {
 }
 
 void indirect_sample_set_hit_position(inout IndirectSample smple, vec3 hit_position) {
-    smple.trace_distance = hit_position.x == -1.0f ? indirect_sky_distance : distance(indirect_sample_get_visible_point(smple), hit_position);
+    smple.trace_distance = isnan(hit_position.x) ? indirect_sky_distance : distance(indirect_sample_get_visible_point(smple), hit_position);
 }
 
 float indirect_sample_compute_jacobian(IndirectSample smple, vec3 rt_pos) {
