@@ -152,7 +152,9 @@ void sample_indirect(
             radiance_color = is_tracing_to_sun ? get_sun_color(player_pos, ray.direction) : get_sky_color(player_pos, ray.direction);
 
             if (bounce == -1) {
-                first_hit = vec3(0.0f/0.0f);
+                const float infinity = intBitsToFloat(0x7f800000);
+
+                first_hit = vec3(infinity);
                 first_normal = -ray.direction;
             }
         }
