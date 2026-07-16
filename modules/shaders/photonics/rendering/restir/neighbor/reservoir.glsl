@@ -51,5 +51,5 @@ void neighbor_reservoir_encode_samples(NeighborReservoir reservoir, out vec4 res
 }
 
 void neighbor_load_samples(ivec2 texel, out uvec4 samples) {
-    samples = floatBitsToUint(texelFetch(prev_restir_lighting, texel, 0));
+    samples = floatBitsToUint(texelFetch(prev_restir_lighting_variance, texel, 0));
 }

@@ -21,6 +21,9 @@ void main() {
     setup_frag_data(961);
     if (!frag_is_in_world) discard;
 
+    uvec4 samples;
+    neighbor_load_samples(frag_tex_coord, samples);
+
 #if defined PH_ENABLE_BLOCKLIGHT
     float direct_sample_weight = 0.0f;
     DirectReservoir direct_result = direct_reservoir_empty();
@@ -39,9 +42,6 @@ void main() {
     indirect_reservoir_load_previous(temp_indirect, frag_tex_coord, false);
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 #endif
-
-    uvec4 samples = uvec4(frag_rnd_state);
-//    neighbor_load_samples(frag_tex_coord, samples);
 
     for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
         ivec2 sample_texel = neighbor_next_sample(samples[i]);
