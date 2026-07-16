@@ -1,10 +1,11 @@
 #version 430
 
-#include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
-
 #define USE_FRAG_RT_POS
 #define USE_FRAG_GEO_NORMAL
+
+#include "/photonics/rendering/frag/common.glsl"
+#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/neighbor/reservoir.glsl"
 
 #if defined PH_ENABLE_BLOCKLIGHT
 layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
@@ -17,7 +18,7 @@ layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
 #endif
 
 void main() {
-    setup_frag_data(31);
+    setup_frag_data(961);
     if (!frag_is_in_world) discard;
 
 #if defined PH_ENABLE_BLOCKLIGHT
@@ -39,21 +40,11 @@ void main() {
     indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
 #endif
 
-    const float reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE;
-    const int reuse_samples = PH_RESTIR_SPATIAL_REUSE_SAMPLES;
+    uvec4 samples = uvec4(frag_rnd_state);
+//    neighbor_load_samples(frag_tex_coord, samples);
 
-    for (int i = 0; i < reuse_samples; i++) {
-        vec2 offset = 2.0 * vec2(ph_rand_next_float(frag_rnd_state), ph_rand_next_float(frag_rnd_state)) - 1.0f;
-        ivec2 sample_texel = ivec2(frag_tex_coord + offset * reuse_radius);
-
-        FragData sample_frag;
-        frag_data_load(sample_frag, sample_texel);
-
-        vec3 sample_data = frag_data_rt_pos(sample_frag) - frag_rt_pos;
-        if (dot(sample_data, sample_data) >= 0.6f) continue;
-
-        sample_data = frag_data_geo_normal(sample_frag);
-        if (dot(sample_data, frag_geo_normal) < 0.99f) continue;
+    for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
+        ivec2 sample_texel = neighbor_next_sample(samples[i]);
 
 #if defined PH_ENABLE_BLOCKLIGHT
         if (direct_reservoir_load_previous(temp_direct, sample_texel, false))
