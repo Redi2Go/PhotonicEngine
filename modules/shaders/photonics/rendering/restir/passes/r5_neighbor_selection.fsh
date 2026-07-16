@@ -17,7 +17,7 @@ layout(location = RESTIR_LIGHTING_OUT) out vec4 neighbor_samples;
 
 void prepare_neighbor_batch(out vec3[BATCH_SIZE] batch) {
     for (int i = 0; i < BATCH_SIZE; i++) {
-        batch[i].x = frag_rnd_state;
+        batch[i].x = uintBitsToFloat(frag_rnd_state);
 
         ivec2 sample_texel = neighbor_next_sample(frag_rnd_state);
 
