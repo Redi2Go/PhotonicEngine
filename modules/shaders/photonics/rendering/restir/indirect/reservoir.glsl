@@ -84,10 +84,6 @@ void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
     reservoir.total_samples = max_indirect_reservoir_samples;
 }
 
-bool _indirect_retrace_skip_hit(RayResult hit) {
-    return ray_result_is_hit(hit) && ray_result_is_transparent(hit);
-}
-
 RayResult indirect_sample_retrace(vec3 rt_pos, vec3 hit_point) {
     RayIterator ray;
 
@@ -123,8 +119,11 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
         return;
     }
 
-    vec3 diff = ray_result_position(hit) - hit_point;
-    if (dot(diff, diff) < 0.05f) return;
+    vec3 sample_data = indirect_sample_get_hit_normal(reservoir.smple);
+    if (dot(sample_data, ray_result_normal(hit)) >= 1.00f) return;
+
+    vec3 pos_diff = ray_result_position(hit) - hit_point;
+    if (dot(pos_diff, pos_diff) < 0.05f) return;
 
     reservoir.weight = 0.0f;
 }
