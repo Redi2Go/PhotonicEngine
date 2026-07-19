@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.mixins.iris.extension;
 
 import at.redi2go.photonics.common.iris.IrisUtil;
-import at.redi2go.photonics.core.iris.PhotonicsExtension;
+import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import net.minecraft.client.Camera;
@@ -34,6 +34,6 @@ public abstract class LevelRendererMixin {
             boolean bl2,
             CallbackInfo ci
     ) {
-        IrisUtil.getPhotonics().ifPresent(PhotonicsExtension::onFrameBegin);
+        IrisUtil.getPhotonics().ifPresent(PhotonicsPipeline::onFrameBegin);
     }
 }

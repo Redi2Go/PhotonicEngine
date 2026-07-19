@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.mixins.iris;
 
-import at.redi2go.photonics.api.shaders.IPackPath;
+import at.redi2go.photonics.core.iris.IrisPackPath;
 import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +64,7 @@ public abstract class IncludeGraphMixin {
             )
     )
     private String readFile(Path path, Operation<String> original) throws IOException {
-        var packPath = IPackPath.fromAbsolutePath("/" + root.relativize(path));
+        var packPath = IrisPackPath.fromAbsolutePath("/" + root.relativize(path));
         var result = patcher.readShaderFile(
                 packPath,
                 p -> {

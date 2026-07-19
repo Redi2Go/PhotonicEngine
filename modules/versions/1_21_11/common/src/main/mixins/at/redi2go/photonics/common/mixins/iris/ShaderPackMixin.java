@@ -1,16 +1,14 @@
 package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.api.shaders.IShaderPack;
-import at.redi2go.photonics.api.shaders.LightingMode;
-import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.core.iris.IrisPack;
+import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.common.StringPairDefineHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.common.iris.UniformPatcher;
-import at.redi2go.photonics.core.Photonics;
-import at.redi2go.photonics.core.iris.IrisDefines;
+import at.redi2go.photonics.core.iris.pipeline.IrisDefines;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +41,7 @@ import java.util.Map;
 import java.util.Properties;
 
 @Mixin(ShaderPack.class)
-public abstract class ShaderPackMixin implements IShaderPack {
+public abstract class ShaderPackMixin implements IrisPack {
     @Unique
     private PhotonicsPropertiesImpl phProperties;
     @Unique
@@ -82,24 +80,24 @@ public abstract class ShaderPackMixin implements IShaderPack {
     }
 
     @Override
-    public String name() {
+    public String ph$name() {
         return Iris.getIrisConfig()
                 .getShaderPackName()
                 .orElse("<unknown>");
     }
 
     @Override
-    public int getBlockId(IBlockState block) {
+    public int ph$getBlockId(IBlockState block) {
         return IrisUtil.getBlockId((BlockState) block);
     }
 
     @Override
-    public boolean supportsPhotonics() {
+    public boolean ph$supportsPhotonics() {
         return supportsPhotonics;
     }
 
     @Override
-    public PhotonicsProperties properties() {
+    public PhotonicsProperties ph$properties() {
         return phProperties;
     }
 

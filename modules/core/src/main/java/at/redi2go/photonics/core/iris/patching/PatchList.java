@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.iris.patching;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.Photonics;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -59,7 +59,7 @@ public class PatchList implements Disposable {
         }
     }
 
-    public Optional<Patch> loadPatch(IShaderPack shaderPack) {
+    public Optional<Patch> loadPatch(IrisPack shaderPack) {
         for (var patch : patches) {
             if (patch.canBeApplied(shaderPack))
                 return Optional.of(patch);

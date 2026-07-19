@@ -7,5 +7,5 @@ public interface DefineHolder {
 
     void floatDefine(String name, float value);
 
-    <T extends Enum<T>> void enumDefine(String name, T value);
+    void enumDefine(String name, Enum<?> value);
 }

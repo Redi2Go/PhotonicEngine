@@ -1,21 +1,20 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline;
 
-import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
 import at.redi2go.photonics.common.HandheldLightSupplierImpl;
 import at.redi2go.photonics.common.iris.IrisPackLightsImpl;
-import at.redi2go.photonics.common.iris.pipeline.IrisFactoryImpl;
+import at.redi2go.photonics.common.iris.pipeline.IrisPipelineImpl;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.common.iris.pipeline.renderer.DeferredIrisRenderer;
-import at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer;
 import at.redi2go.photonics.common.meshing.MinecraftBlockMesher;
 import at.redi2go.photonics.common.mixins.iris.ShaderPackAccessor;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.lights.LightsProvider;
 import at.redi2go.photonics.core.iris.AbstractIrisPackLights;
-import at.redi2go.photonics.core.iris.PhotonicsExtension;
+import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
@@ -42,7 +41,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     @Shadow
     private WorldRenderingPipeline pipeline;
     @Unique
-    private PhotonicsExtension photonics;
+    private PhotonicsPipeline photonics;
 
     @Unique
     private @Nullable LightsProvider lightsProvider;
@@ -57,24 +56,24 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         //TODO Add to more sensible spot
         BlockMesher.REGISTRY.addDefault(new MinecraftBlockMesher());
 
-        var shaderPack = (IShaderPack) Iris.getCurrentPack().orElse(null);
+        var shaderPack = (IrisPack) Iris.getCurrentPack().orElse(null);
         if (shaderPack == null) return;
 
         lightsProvider = readLightsProvider(shaderPack);
         if (lightsProvider != null)
             PhConfig.registerLightProvider(lightsProvider);
 
-        var properties = shaderPack.properties();
-        photonics = PhotonicsExtension.create(
+        var properties = shaderPack.ph$properties();
+        photonics = PhotonicsPipeline.create(
                 properties,
                 AtlasDownloaderImpl::new,
                 HandheldLightSupplierImpl::new,
-                new IrisFactoryImpl(renderers)
+                new IrisPipelineImpl(renderers)
         );
     }
 
     @Unique
-    private @Nullable LightsProvider readLightsProvider(IShaderPack pack) {
+    private @Nullable LightsProvider readLightsProvider(IrisPack pack) {
         var contents = ((ShaderPackAccessor) pack).getSourceProvider()
                 .apply(AbsolutePackPath.fromAbsolutePath("/ph_lights.json"));
 
@@ -87,7 +86,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
 
             return lights;
         } catch (Exception e) {
-            Photonics.LOGGER.error("Error while parsing ph_lights.json for {}", pack.name(), e);
+            Photonics.LOGGER.error("Error while parsing ph_lights.json for {}", pack.ph$name(), e);
             return null;
         }
     }
@@ -101,7 +100,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     }
 
     @Override
-    public Optional<PhotonicsExtension> photonics() {
+    public Optional<PhotonicsPipeline> photonics() {
         return Optional.ofNullable(photonics);
     }
 
@@ -117,7 +116,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     }
 
     @Override
-    public void setRenderers(@Nullable List<PhotonicsRenderer> activeRenderers) {
+    public void setRenderers(@Nullable List<at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer> activeRenderers) {
         if (activeRenderers == null) {
             clearRenderers();
             return;

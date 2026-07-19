@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.iris.pipeline.builder;
 
-import at.redi2go.photonics.common.iris.pipeline.IrisFactoryImpl;
+import at.redi2go.photonics.common.iris.pipeline.IrisPipelineImpl;
 import at.redi2go.photonics.common.iris.pipeline.builder.actions.FlipAction;
 import at.redi2go.photonics.common.iris.pipeline.builder.actions.RunAction;
 import at.redi2go.photonics.common.iris.pipeline.impl.PipelineAction;
@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public abstract class AbstractActionBuilderConsumer implements PipelineActionBuilder {
-    protected final IrisFactoryImpl factory;
+    protected final IrisPipelineImpl factory;
     private final List<PipelineActionBuilder> actions = new ArrayList<>();
 
     private String currentDebugGroup;
 
-    protected AbstractActionBuilderConsumer(IrisFactoryImpl factory, String debugGroup) {
+    protected AbstractActionBuilderConsumer(IrisPipelineImpl factory, String debugGroup) {
         this.factory = factory;
         this.currentDebugGroup = debugGroup;
     }

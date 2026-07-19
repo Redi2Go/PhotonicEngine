@@ -1,7 +1,5 @@
 package at.redi2go.photonics.common.mixins.iris;
 
-import at.redi2go.photonics.api.shaders.AlphaMode;
-import at.redi2go.photonics.api.shaders.LightingMode;
 import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
@@ -15,27 +13,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
 
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ALPHA_MODE_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.ENCHANTMENT_GLINT_STRENGTH_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_BLOCK_LIGHT_ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_BLOCK_LIGHT_GI_ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_GI_ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_HANDHELD_LIGHT_ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.IS_LIGHT_BINNING_ENABLED_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.LIGHTING_MODE_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_GI_BOUNCES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_LIGHTS_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.MAX_SAMPLES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RENDER_SCALE_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_ACCUMULATION_FRAMES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_COMBINED_GI_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_DENOISER_PASSES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_INITIAL_SAMPLES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_SOFT_SHADOWS_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_SPATIAL_REUSE_RADIUS_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.RESTIR_SPATIAL_REUSE_SAMPLES_KEY;
-import static at.redi2go.photonics.api.shaders.PhotonicsProperties.SEPARATE_HANDHELD_RAYS_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.ALPHA_MODE_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.ENCHANTMENT_GLINT_STRENGTH_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.IS_BLOCK_LIGHT_ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.IS_BLOCK_LIGHT_GI_ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.IS_GI_ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.IS_HANDHELD_LIGHT_ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.IS_LIGHT_BINNING_ENABLED_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.LIGHTING_MODE_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.MAX_GI_BOUNCES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.MAX_LIGHTS_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.MAX_SAMPLES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RENDER_SCALE_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_ACCUMULATION_FRAMES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_COMBINED_GI_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_DENOISER_PASSES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_INITIAL_SAMPLES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_SOFT_SHADOWS_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_SPATIAL_REUSE_RADIUS_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.RESTIR_SPATIAL_REUSE_SAMPLES_KEY;
+import static at.redi2go.photonics.core.iris.properties.PhotonicsProperties.SEPARATE_HANDHELD_RAYS_KEY;
 
 @Mixin(ShaderProperties.class)
 public abstract class ShaderPropertiesMixin {

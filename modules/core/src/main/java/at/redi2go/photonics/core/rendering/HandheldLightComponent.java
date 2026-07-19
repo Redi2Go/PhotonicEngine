@@ -1,16 +1,13 @@
 package at.redi2go.photonics.core.rendering;
 
-import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.api.shaders.IShaderPack;
-import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.core.iris.IrisPack;
+import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.lights.BlockLightInfo;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformUpdateFrequency;
 import at.redi2go.photonics.core.rendering.lights.HandheldItem;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
@@ -124,8 +121,8 @@ public class HandheldLightComponent implements RenderingComponent {
 
             return light == null ? createEnchantedItemLight(handheldItem) : light.toMatrix4(
                     new Vector3f(0f),
-                    IShaderPack.getCurrentPack()
-                        .map(e -> e.getBlockId(blockState))
+                    IrisPack.getCurrentPack()
+                        .map(e -> e.ph$getBlockId(blockState))
                         .orElse(-1)
             );
         }

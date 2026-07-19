@@ -1,8 +1,6 @@
 package at.redi2go.photonics.common;
 
-import at.redi2go.photonics.api.shaders.AlphaMode;
-import at.redi2go.photonics.api.shaders.LightingMode;
-import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 
 public class PhotonicsPropertiesImpl implements PhotonicsProperties {
     public boolean enabled = PhotonicsProperties.DEFAULT_ENABLED;

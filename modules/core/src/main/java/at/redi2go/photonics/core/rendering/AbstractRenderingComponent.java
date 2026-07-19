@@ -1,7 +1,6 @@
 package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.shaders.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;

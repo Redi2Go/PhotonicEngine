@@ -1,8 +1,8 @@
 package at.redi2go.photonics.core.iris.patching;
 
 import at.redi2go.photonics.api.ModLoader;
-import at.redi2go.photonics.api.shaders.IPackPath;
-import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.core.iris.IrisPackPath;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.patching.sources.DevEnvSource;
 import at.redi2go.photonics.core.iris.patching.sources.JarSource;
@@ -38,13 +38,13 @@ public class ShaderPatcher {
     private static final Path PATCHED_DEBUG_PATH = ModLoader.getGameDir().resolve(".ph-patched-shaders");
     private static final Path PHOTONICS_SHADERS_PATH = getPhotonicsShadersPath();
 
-    private final IShaderPack pack;
+    private final IrisPack pack;
     private final @Nullable Patch patch;
 
-    public ShaderPatcher(IShaderPack pack) {
+    public ShaderPatcher(IrisPack pack) {
         this.pack = pack;
 
-        if (pack.supportsPhotonics()) {
+        if (pack.ph$supportsPhotonics()) {
             patch = null;
             return;
         }
@@ -57,8 +57,8 @@ public class ShaderPatcher {
         return patch != null;
     }
 
-    public List<IPackPath> getCreatedFiles() {
-        List<IPackPath> createdFiles = new ArrayList<>();
+    public List<IrisPackPath> getCreatedFiles() {
+        List<IrisPackPath> createdFiles = new ArrayList<>();
 
         if (patch != null)
             createdFiles.addAll(patch.getFiles());
@@ -72,7 +72,7 @@ public class ShaderPatcher {
 
                 var relativePath = includedShaders.relativize(file);
                 createdFiles.add(
-                        IPackPath.fromAbsolutePath("/photonics")
+                        IrisPackPath.fromAbsolutePath("/photonics")
                                 .ph$resolve(relativePath.toString().replace('\\', '/'))
                 );
             });
@@ -96,8 +96,8 @@ public class ShaderPatcher {
     }
 
     public @Nullable String readPhotonicsFile(
-            IPackPath packPath,
-            Function<IPackPath, @Nullable String> shaderSourceSupplier
+            IrisPackPath packPath,
+            Function<IrisPackPath, @Nullable String> shaderSourceSupplier
     ) {
         Path realPath = packPath.ph$resolved(PHOTONICS_SHADERS_PATH);
         Path relativePath = PHOTONICS_SHADERS_PATH.resolve("photonics")
@@ -131,7 +131,7 @@ public class ShaderPatcher {
 
                     return shaderSourceSupplier.apply(p);
                 },
-                pack.properties().isPhotonicsEnabled()
+                pack.ph$properties().isEnabled()
         );
 
         return source;
@@ -141,8 +141,8 @@ public class ShaderPatcher {
      * Reads a potentially patched shader file, also responsible for loading Photonics' built in shader files.
      */
     public @Nullable String readShaderFile(
-            IPackPath path,
-            Function<IPackPath, @Nullable String> shaderSourceSupplier
+            IrisPackPath path,
+            Function<IrisPackPath, @Nullable String> shaderSourceSupplier
     ) {
         if (path.ph$startsWith("/photonics")) return readPhotonicsFile(path, shaderSourceSupplier);
         if (patch == null) return shaderSourceSupplier.apply(path);
@@ -150,7 +150,7 @@ public class ShaderPatcher {
         return patch.applyPatches(
                 path,
                 shaderSourceSupplier,
-                pack.properties().isPhotonicsEnabled()
+                pack.ph$properties().isEnabled()
         );
     }
 
@@ -166,7 +166,7 @@ public class ShaderPatcher {
     }
 
     public static void writeDebug(
-            IPackPath file,
+            IrisPackPath file,
             String source
     ) {
         try {

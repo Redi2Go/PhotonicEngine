@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.iris.patching;
 
-import at.redi2go.photonics.api.shaders.IPackPath;
-import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.core.iris.IrisPackPath;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.Photonics;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 public class Patch {
     private static final int FORMAT_VERSION = 1;
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(IPackPath.class, new IPackPath.Adapter())
+            .registerTypeAdapter(IrisPackPath.class, new IrisPackPath.Adapter())
             .excludeFieldsWithoutExposeAnnotation()
             .setStrictness(Strictness.LENIENT)
             .create();
@@ -44,9 +44,9 @@ public class Patch {
     @Expose private List<String> shaderPackNames;
     @Expose private List<String> supportedVersions;
     @Expose private boolean debug;
-    @Expose private Set<IPackPath> alwaysPatched;
+    @Expose private Set<IrisPackPath> alwaysPatched;
 
-    private final Multimap<IPackPath, Path> patches =
+    private final Multimap<IrisPackPath, Path> patches =
             MultimapBuilder.hashKeys()
                     .arrayListValues()
                     .build();
@@ -80,7 +80,7 @@ public class Patch {
                 if (Files.isDirectory(pathFile)) continue;
                 if (pathFile.equals(patchJson)) continue;
 
-                Optional<IPackPath[]> files = readFileMacro(pathFile, patchName);
+                Optional<IrisPackPath[]> files = readFileMacro(pathFile, patchName);
                 if (files.isEmpty()) return Optional.empty();
 
                 for (var file : files.get())
@@ -98,9 +98,9 @@ public class Patch {
         return name;
     }
 
-    public boolean canBeApplied(IShaderPack shaderPack) {
+    public boolean canBeApplied(IrisPack shaderPack) {
         for (var name : shaderPackNames) {
-            if (shaderPack.name().contains(name))
+            if (shaderPack.ph$name().contains(name))
                 return true;
         }
 
@@ -111,13 +111,13 @@ public class Patch {
         return Photonics.isDevEnvironment() || debug;
     }
 
-    public Collection<IPackPath> getFiles() {
+    public Collection<IrisPackPath> getFiles() {
         return patches.keySet();
     }
 
     public String applyPatches(
-            IPackPath path,
-            Function<IPackPath, @Nullable String> shaderSourceSupplier,
+            IrisPackPath path,
+            Function<IrisPackPath, @Nullable String> shaderSourceSupplier,
             boolean photonicsEnabled
     ) {
         String source = shaderSourceSupplier.apply(path);
@@ -140,8 +140,8 @@ public class Patch {
 
     private String applySinglePatch(
             @Nullable String source,
-            IPackPath path,
-            Function<IPackPath, String> shaderSourceSupplier,
+            IrisPackPath path,
+            Function<IrisPackPath, String> shaderSourceSupplier,
             Path patchFile
     ) throws IOException {
         Queue<String> lines = new ArrayDeque<>();
@@ -155,8 +155,8 @@ public class Patch {
             }
         }
 
-        IPackPath[] fileLocations = null;
-        IPackPath[] templateLocations = null;
+        IrisPackPath[] fileLocations = null;
+        IrisPackPath[] templateLocations = null;
 
         List<Pair<String, String>> replacements = new ArrayList<>();
 
@@ -221,8 +221,8 @@ public class Patch {
         if (templateLocations == null) {
             templateLocations = fileLocations;
         } else if (templateLocations.length == 1) {
-            IPackPath templateLocation = templateLocations[0];
-            templateLocations = new IPackPath[fileLocations.length];
+            IrisPackPath templateLocation = templateLocations[0];
+            templateLocations = new IrisPackPath[fileLocations.length];
 
             Arrays.fill(templateLocations, templateLocation);
         } else if (templateLocations.length != fileLocations.length) {
@@ -231,7 +231,7 @@ public class Patch {
 
         var index = List.of(fileLocations).indexOf(path);
 
-        IPackPath templateLocation = templateLocations[index];
+        IrisPackPath templateLocation = templateLocations[index];
         if (!templateLocation.equals(path))
             source = shaderSourceSupplier.apply(templateLocation);
 
@@ -257,7 +257,7 @@ public class Patch {
         }
     }
 
-    private static Optional<IPackPath[]> readFileMacro(Path path, String patchName) {
+    private static Optional<IrisPackPath[]> readFileMacro(Path path, String patchName) {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             var line = reader.readLine();
             if (!line.startsWith("#file")) {
@@ -272,17 +272,17 @@ public class Patch {
         }
     }
 
-    private static IPackPath[] readLocations(String[] lineTokens) throws PatchLoadException {
+    private static IrisPackPath[] readLocations(String[] lineTokens) throws PatchLoadException {
         if (lineTokens.length == 1)
             throw new PatchLoadException("You must provide location directives");
 
-        IPackPath[] locations = new IPackPath[lineTokens.length - 1];
+        IrisPackPath[] locations = new IrisPackPath[lineTokens.length - 1];
         for (int i = 1; i < lineTokens.length; i++) {
             String location = lineTokens[i].substring(1, lineTokens[i].length() - 1);
             if (!location.startsWith("/"))
                 throw new PatchLoadException("Location file must start with a '/'");
 
-            locations[i - 1] = IPackPath.fromAbsolutePath(location);
+            locations[i - 1] = IrisPackPath.fromAbsolutePath(location);
         }
 
         return locations;
