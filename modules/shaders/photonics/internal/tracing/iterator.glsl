@@ -89,7 +89,7 @@ void _ray_iter_trace_next(inout RayIterator ray, vec3 target) {
     for (; ray.iterations > 0; ray.iterations--) {
         child_index = ph_get_node_cell_index(pos, scale_exp) ^ mirror_mask;
 
-        while (!rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
+        while (scale_exp >= 0 && !rt_node_is_leaf(node) && rt_node_has_child(node, child_index)) {
             stack[scale_exp >> 1] = node_index;
             node_index = rt_node_get_child(node, child_index, scale_exp);
 
