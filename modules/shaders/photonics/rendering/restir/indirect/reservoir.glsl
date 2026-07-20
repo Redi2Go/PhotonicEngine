@@ -114,7 +114,7 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
 
     if (!ray_result_is_hit(hit)) {
         if (reservoir.smple.trace_distance != indirect_sky_distance)
-            reservoir.weight = 0.0f;
+            reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 
         return;
     }
@@ -125,7 +125,7 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
     vec3 pos_diff = ray_result_position(hit) - hit_point;
     if (dot(pos_diff, pos_diff) < 0.05f) return;
 
-    reservoir.weight = 0.0f;
+    reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 }
 
 void indirect_reservoir_finalize_weight(

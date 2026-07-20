@@ -21,10 +21,7 @@ void main() {
 
     if (indirect_reservoir_load_previous(reused_reservoir, frag_tex_coord, false)) {
         indirect_reservoir_validate_visiblity(reused_reservoir, frag_rt_pos);
-
-        if (reused_reservoir.weight > 0.0f) {
-            indirect_reservoir_merge(indirect_result, reused_reservoir, 1.0f, indirect_sample_weight);
-        }
+        indirect_reservoir_merge(indirect_result, reused_reservoir, 1.0f, indirect_sample_weight);
     }
 
     indirect_reservoir_clamp_samples(indirect_result);
