@@ -14,6 +14,10 @@
 
 layout(location = 0) out vec4 denoise_out;
 
+bool should_skip_pass(float variance) {
+    return !frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES && variance < 0.1f;
+}
+
 bool should_use_geo_normals(float variance) {
     return frag_is_hand || variance > 0.05f;
 }
@@ -32,8 +36,7 @@ void main() {
     if (!frag_is_in_world) return;
 
     denoise_out = texelFetch(prev_denoise_result, frag_tex_coord, 0);
-
-    if (!frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES) return;
+    if (should_skip_pass(denoise_out.a)) return;
 
     int step_width = 1 << atrous_iteration;
     float depth = texelFetch(depthtex0, SVGF_DEPTH_MODIFIER(frag_tex_coord), 0).r;
