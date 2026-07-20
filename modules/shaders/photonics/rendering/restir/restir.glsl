@@ -135,19 +135,31 @@ void sample_history_combine_moment(inout SampleHistory history, in SampleHistory
     history.variance.w = 1f;
 }
 
-void sample_history_compute_variance(inout SampleHistory history, in SampleHistory smple) {
 #if PH_RESTIR_ACCUMULATION_FRAMES < 4
-    #define PH_MIN_VARIANCE 1f
+float sample_history_min_variance(float samples) {
+    return 1.0f;
+}
 #else
-    #define PH_MIN_VARIANCE (samples < 4f) ? 1.0f : 0.0001f
+float sample_history_min_variance(float samples) {
+    if (samples > 4f) return 0.0001f;
+    if (samples > 2f) return 0.01f;
+
+    const float padding = 0.13f;
+    const vec2 min = vec2(0 + padding) * PH_RENDER_SCALE;
+    const vec2 max = vec2(1.0 - padding) * PH_RENDER_SCALE;
+
+    vec2 uv = gl_FragCoord.xy * (vec2(1.0f) / vec2(viewWidth, viewHeight));
+    return clamp(uv, min, max) != uv ? 100.0f : 0.01f;
+}
 #endif
 
+void sample_history_compute_variance(inout SampleHistory history, in SampleHistory smple) {
     float samples = history.lighting.a;
     float sample_variance = max(
         history.variance.y - (history.variance.x * history.variance.x),
 
         // With few samples, variance estimate is unreliable — use a high floor
-        PH_MIN_VARIANCE
+            sample_history_min_variance(history.lighting.a)
     );
 
     history.variance.z = sample_variance / samples;
