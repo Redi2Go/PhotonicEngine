@@ -14,11 +14,15 @@
 
 layout(location = 0) out vec4 denoise_out;
 
-vec3 ph_get_normal_for_denoise(ivec2 texel) {
+bool should_use_geo_normals(float variance) {
+    return frag_is_hand || variance > 0.05f;
+}
+
+vec3 ph_get_normal_for_denoise(ivec2 texel, float variance) {
     FragData frag;
     frag_data_load(frag, texel);
 
-    return frag_is_hand ? frag_data_geo_normal(frag) : frag_data_tex_normal(frag);
+    return should_use_geo_normals(variance) ? frag_data_geo_normal(frag) : frag_data_tex_normal(frag);
 }
 
 void main() {
@@ -28,6 +32,7 @@ void main() {
     if (!frag_is_in_world) return;
 
     denoise_out = texelFetch(prev_denoise_result, frag_tex_coord, 0);
+
     if (!frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES) return;
 
     int step_width = 1 << atrous_iteration;
@@ -38,7 +43,7 @@ void main() {
     #define V0 denoise_out.a
 
     float L0 = ph_luminance(C0);
-    vec3  N0 = frag_is_hand ? frag_geo_normal : frag_tex_normal;
+    vec3  N0 = should_use_geo_normals(denoise_out.a) ? frag_geo_normal : frag_tex_normal;
     float D0 = svgf_linearize_depth(depth);
 
 
@@ -58,7 +63,7 @@ void main() {
         #define Vi sample_data.a
 
         float Li = ph_luminance(Ci);
-        vec3  Ni = ph_get_normal_for_denoise(p);
+        vec3  Ni = ph_get_normal_for_denoise(p, denoise_out.a);
         float Di = svgf_linearize_depth(texelFetch(depthtex0, SVGF_DEPTH_MODIFIER(p), 0).x);
         const float k = kernel[i];
 
