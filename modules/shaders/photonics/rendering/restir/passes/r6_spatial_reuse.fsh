@@ -46,6 +46,11 @@ void main() {
     for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
         ivec2 sample_texel = neighbor_next_sample(samples[i]);
 
+#if defined PH_ENABLE_RESTIR_GI
+        FragData sample_frag;
+        frag_data_load(sample_frag, sample_texel);
+#endif
+
 #if defined PH_ENABLE_BLOCKLIGHT
         if (direct_reservoir_load_previous(temp_direct, sample_texel, false))
             direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
@@ -55,10 +60,18 @@ void main() {
         if (indirect_reservoir_load_previous(temp_indirect, sample_texel, false)) {
             temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_reservoir_samples);
 
+            vec3 hit_position = indirect_sample_get_hit_point(temp_indirect.smple);
+
+            float occlusion_old = indirect_normal_factor(sample_frag, hit_position);
+            float occlusion_new = indirect_normal_factor(_frag_data, hit_position);
+
+            float occlusion_factor = occlusion_new / occlusion_old;
+            float jacobian_factor = indirect_sample_compute_jacobian(temp_indirect.smple, frag_rt_pos);
+
             indirect_reservoir_merge(
                 indirect_result,
                 temp_indirect,
-                min(indirect_sample_compute_jacobian(temp_indirect.smple, frag_rt_pos), 1.0f),
+                clamp(jacobian_factor, 0.0f, 1.0f) * clamp(occlusion_factor, 0.0f, 2.0f),
                 indirect_sample_weight
             );
         }

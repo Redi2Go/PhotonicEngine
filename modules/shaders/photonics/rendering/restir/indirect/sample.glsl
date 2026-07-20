@@ -19,6 +19,15 @@ IndirectSample indirect_sample_empty() {
     return IndirectSample(0u, 0u, vec3(0.0f), 0.0f, vec3(0.0f), 0u);
 }
 
+float indirect_normal_factor(FragData frag, vec3 hit_pos) {
+    vec3 dir = normalize(hit_pos - frag_data_rt_pos(frag));
+
+    float geo_normal_occlusion = clamp(dot(frag_data_geo_normal(frag), dir), 0.01f, 1.0f);
+    float tex_normal_occlusion = clamp(dot(frag_data_tex_normal(frag), dir), 0.01f, 1.0f);
+
+    return tex_normal_occlusion / geo_normal_occlusion;
+}
+
 void indirect_sample_set_color(inout IndirectSample smple, vec3 color) {
     smple.color = color;
 }
