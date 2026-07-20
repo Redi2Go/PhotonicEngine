@@ -11,6 +11,7 @@
 layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 #endif
 
+
 #if defined PH_ENABLE_RESTIR_GI
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
 layout(location = INDIRECT_RESERVOIR_1) out vec4 gi_reservoir_1;
@@ -37,10 +38,7 @@ void main() {
 #if defined PH_ENABLE_RESTIR_GI
     float indirect_sample_weight = 0.0f;
     IndirectReservoir indirect_result = indirect_reservoir_empty();
-    IndirectReservoir temp_indirect = indirect_reservoir_empty();
-
-    indirect_reservoir_load_previous(temp_indirect, frag_tex_coord, false);
-    indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
+    IndirectReservoir sample_indirect = indirect_reservoir_empty();
 #endif
 
     for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
@@ -52,28 +50,31 @@ void main() {
 #endif
 
 #if defined PH_ENABLE_BLOCKLIGHT
-        if (direct_reservoir_load_previous(temp_direct, sample_texel, false))
+        if (direct_reservoir_load_previous(temp_direct, sample_texel, false)) {
             direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
+        }
 #endif
 
+
 #if defined PH_ENABLE_RESTIR_GI
-        if (indirect_reservoir_load_previous(temp_indirect, sample_texel, false)) {
-            temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_reservoir_samples);
+        if (indirect_reservoir_load_previous(sample_indirect, sample_texel, false)) {
+            sample_indirect.total_samples = min(sample_indirect.total_samples, max_indirect_reservoir_samples);
 
-            vec3 hit_position = indirect_sample_get_hit_point(temp_indirect.smple);
-
-            float occlusion_old = indirect_normal_factor(sample_frag, hit_position);
-            float occlusion_new = indirect_normal_factor(_frag_data, hit_position);
+            vec3 hit_point = indirect_sample_get_hit_point(sample_indirect.smple);
+            float occlusion_old = indirect_normal_factor(sample_frag, hit_point);
+            float occlusion_new = indirect_normal_factor(_frag_data, hit_point);
 
             float occlusion_factor = occlusion_new / occlusion_old;
-            float jacobian_factor = indirect_sample_compute_jacobian(temp_indirect.smple, frag_rt_pos);
+            float jacobian_factor = indirect_sample_compute_jacobian(sample_indirect.smple, frag_rt_pos);
 
-            indirect_reservoir_merge(
-                indirect_result,
-                temp_indirect,
-                clamp(jacobian_factor, 0.0f, 1.0f) * clamp(occlusion_factor, 0.0f, 2.0f),
-                indirect_sample_weight
-            );
+            if (occlusion_factor < 1.5f) {
+                indirect_reservoir_merge(
+                        indirect_result,
+                        sample_indirect,
+                        clamp(jacobian_factor, 0.0f, 1.0f) * occlusion_factor,
+                        indirect_sample_weight
+                );
+            }
         }
 #endif
     }
@@ -85,10 +86,7 @@ void main() {
     direct_reservoir_encode(direct_result, di_reservoir_0);
 #endif
 
-
 #if defined PH_ENABLE_RESTIR_GI
-    indirect_reservoir_clamp_samples(indirect_result);
-
     indirect_reservoir_finalize_weight(indirect_result, indirect_sample_weight);
     indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
 #endif
