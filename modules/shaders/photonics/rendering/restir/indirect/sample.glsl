@@ -69,11 +69,11 @@ void indirect_sample_set_hit_position(inout IndirectSample smple, vec3 hit_posit
     smple.trace_distance = isinf(hit_position.x) ? indirect_sky_distance : distance(indirect_sample_get_visible_point(smple), hit_position);
 }
 
-float indirect_sample_compute_jacobian(IndirectSample smple, vec3 rt_pos) {
+float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 src_pos) {
     vec3 hit_position = indirect_sample_get_hit_point(smple);
 
-    vec3 to_current = rt_pos - hit_position;
-    vec3 to_source  = indirect_sample_get_visible_point(smple) - hit_position;
+    vec3 to_current = dst_pos - hit_position;
+    vec3 to_source  = src_pos - hit_position;
 
     float to_current_sq = dot(to_current, to_current);
     float to_source_sq = dot(to_source, to_source);
@@ -83,5 +83,16 @@ float indirect_sample_compute_jacobian(IndirectSample smple, vec3 rt_pos) {
     float jacobian = (dot(hit_normal, to_current * inversesqrt(to_current_sq)) / to_current_sq);
     jacobian /= (dot(hit_normal, to_source * inversesqrt(to_source_sq)) / to_source_sq);
 
-    return isinf(jacobian) || isnan(jacobian) ? 0.0f : jacobian;
+    return isinf(jacobian) || isnan(jacobian) ? 0.0f : max(0.0000001f, jacobian);
+}
+
+float indirect_sample_compute_shift(IndirectSample smple, FragData dst_frag, FragData src_frag) {
+    vec3 hit_point = indirect_sample_get_hit_point(smple);
+    float occlusion_old = indirect_normal_factor(src_frag, hit_point);
+    float occlusion_new = indirect_normal_factor(dst_frag, hit_point);
+
+    float occlusion_factor = occlusion_new / occlusion_old;
+    float jacobian_factor = indirect_sample_compute_jacobian(smple, frag_data_rt_pos(dst_frag), frag_data_rt_pos(src_frag));
+
+    return jacobian_factor * occlusion_factor;
 }

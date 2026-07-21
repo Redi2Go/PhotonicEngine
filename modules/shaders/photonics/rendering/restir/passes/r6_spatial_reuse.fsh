@@ -55,26 +55,12 @@ void main() {
         }
 #endif
 
-
 #if defined PH_ENABLE_RESTIR_GI
         if (indirect_reservoir_load_previous(sample_indirect, sample_texel, false)) {
             sample_indirect.total_samples = min(sample_indirect.total_samples, max_indirect_reservoir_samples);
+            float shift = indirect_sample_compute_shift(sample_indirect.smple, _frag_data, sample_frag);
 
-            vec3 hit_point = indirect_sample_get_hit_point(sample_indirect.smple);
-            float occlusion_old = indirect_normal_factor(sample_frag, hit_point);
-            float occlusion_new = indirect_normal_factor(_frag_data, hit_point);
-
-            float occlusion_factor = occlusion_new / occlusion_old;
-            float jacobian_factor = indirect_sample_compute_jacobian(sample_indirect.smple, frag_rt_pos);
-
-            if (occlusion_factor < 1.5f) {
-                indirect_reservoir_merge(
-                        indirect_result,
-                        sample_indirect,
-                        clamp(jacobian_factor, 0.0f, 1.0f) * occlusion_factor,
-                        indirect_sample_weight
-                );
-            }
+            indirect_reservoir_merge(indirect_result, sample_indirect, shift, indirect_sample_weight);
         }
 #endif
     }
