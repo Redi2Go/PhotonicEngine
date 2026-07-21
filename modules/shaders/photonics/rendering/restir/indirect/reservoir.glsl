@@ -88,7 +88,6 @@ RayResult indirect_sample_retrace(vec3 rt_pos, vec3 hit_point) {
     RayIterator ray;
 
     ray_iter_begin(ray, rt_pos, hit_point - rt_pos);
-    ray_iter_offset_position(ray, ray.direction * 0.03f);
     ray.iterations = 40;
 
     RayResult hit = missed_ray_result();

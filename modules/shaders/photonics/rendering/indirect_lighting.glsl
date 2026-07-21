@@ -52,7 +52,8 @@ void prepare_next_gi_ray(
             )
     );
 
-    ray_iter_offset_position(ray, ray.direction * 0.03f);
+    if (bounce_count != -1)
+        ray_iter_offset_position(ray, ray.direction * 0.03f);
 }
 
 void sample_indirect(
