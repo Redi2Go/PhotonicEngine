@@ -52,14 +52,12 @@ SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
     );
 }
 
-SampleHistory sample_history_reproject_single(ivec2 texel, vec3 previous_player_pos, float distance_factor) {
+SampleHistory sample_history_reproject_single(ivec2 texel, float distance_factor) {
     FragData prev_frag;
     frag_data_load_previous(prev_frag, texel);
 
     if (!frag_is_bad_angle) {
-        vec3 projected_player_pos = frag_data_player_pos(prev_frag);
-        vec3 d = projected_player_pos - previous_player_pos;
-
+        vec3 d = frag_data_player_pos(prev_frag) - frag_player_pos;
         if (dot(d, d) > distance_factor) return INVALID_HISTORY;
     }
 
@@ -75,13 +73,13 @@ SampleHistory sample_history_reproject_single(ivec2 texel, vec3 previous_player_
     return SampleHistory(lighting, variance);
 }
 
-SampleHistory sample_history_reproject_mixed(vec2 center, vec3 previous_player_pos, float distance_factor) {
+SampleHistory sample_history_reproject_mixed(vec2 center, float distance_factor) {
     ivec2 icenter = ivec2(center);
 
-    SampleHistory c_00 = sample_history_reproject_single(icenter + ivec2(0, 0), previous_player_pos, distance_factor);
-    SampleHistory c_10 = sample_history_reproject_single(icenter + ivec2(1, 0), previous_player_pos, distance_factor);
-    SampleHistory c_01 = sample_history_reproject_single(icenter + ivec2(0, 1), previous_player_pos, distance_factor);
-    SampleHistory c_11 = sample_history_reproject_single(icenter + ivec2(1, 1), previous_player_pos, distance_factor);
+    SampleHistory c_00 = sample_history_reproject_single(icenter + ivec2(0, 0), distance_factor);
+    SampleHistory c_10 = sample_history_reproject_single(icenter + ivec2(1, 0), distance_factor);
+    SampleHistory c_01 = sample_history_reproject_single(icenter + ivec2(0, 1), distance_factor);
+    SampleHistory c_11 = sample_history_reproject_single(icenter + ivec2(1, 1), distance_factor);
 
     SampleHistory result = sample_history_mix(
         sample_history_mix(c_00, c_10, fract(center.x)),
@@ -96,19 +94,18 @@ SampleHistory sample_history_reproject_mixed(vec2 center, vec3 previous_player_p
 }
 
 void sample_history_reproject(out SampleHistory smple) {
-    vec3 previous_player_pos = frag_rt_pos - rt_camera_position;
+    vec3 dist = frag_rt_pos - rt_camera_position;
 
     const float block_divsor = 64.0f * PH_RENDER_SCALE;
-    float distance_factor = max(dot(previous_player_pos, previous_player_pos) / block_divsor, 0.1f);
+    float distance_factor = max(dot(dist, dist) / block_divsor, 0.1f);
 
-    vec2 center = (ph_reproject_player_pos(
-        frag_player_pos,
-        frag_is_hand,
-        get_taa_jitter(),
-        previous_player_pos
-    ).xy * PH_VIEW_SIZE) - 0.5f;
+    vec2 center = ph_reproject_player_pos(
+            frag_player_pos,
+            frag_is_hand,
+            get_taa_jitter()
+    ).xy * PH_VIEW_SIZE;
 
-    smple = sample_history_reproject_mixed(center, previous_player_pos, distance_factor);
+    smple = sample_history_reproject_mixed(center - 0.5f, distance_factor);
 }
 
 void sample_history_combine_lighting(inout SampleHistory history, in SampleHistory smple) {

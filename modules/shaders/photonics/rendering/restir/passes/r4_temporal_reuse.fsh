@@ -20,8 +20,7 @@ void main() {
     if (!frag_is_in_world) discard;
 
     // REPROJECTION
-    vec3 previous_player_pos;
-    vec2 uv = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter(), previous_player_pos).xy;
+    vec2 uv = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter()).xy;
 
     if (clamp(uv, 0, 1) != uv) discard;
 
@@ -29,12 +28,6 @@ void main() {
 
     FragData prev_frag;
     frag_data_load_previous(prev_frag, prev_texel);
-
-    if (!frag_is_bad_angle) {
-        vec3 projected_player_pos = frag_data_player_pos(prev_frag);
-        vec3 d = projected_player_pos - previous_player_pos;
-        if (dot(d, d) >= 0.3f) discard;
-    }
 
     vec3 n = frag_data_geo_normal(prev_frag);
     if (dot(n, frag_geo_normal) < 0.99f) discard;
