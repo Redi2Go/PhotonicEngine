@@ -19,10 +19,14 @@ void main() {
     indirect_reservoir_load(reused_reservoir, frag_tex_coord);
     indirect_reservoir_merge(indirect_result, reused_reservoir, 1.0f, indirect_sample_weight);
 
+#if PH_RESTIR_SPATIAL_REUSE_SAMPLES > 0
     if (indirect_reservoir_load_previous(reused_reservoir, frag_tex_coord, false)) {
         indirect_reservoir_validate_visiblity(reused_reservoir, frag_rt_pos);
         indirect_reservoir_merge(indirect_result, reused_reservoir, 1.0f, indirect_sample_weight);
     }
+#else
+    indirect_reservoir_validate_visiblity(indirect_result, frag_rt_pos);
+#endif
 
     indirect_reservoir_clamp_samples(indirect_result);
 
