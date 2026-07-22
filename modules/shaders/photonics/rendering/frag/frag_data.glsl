@@ -23,6 +23,19 @@ void frag_data_load(out FragData frag, ivec2 texel) {
 void frag_data_load_previous(out FragData frag, ivec2 texel) {
     frag.data0 = texelFetch(prev_ph_frag_data0, texel, 0);
     frag.data1 = floatBitsToUint(texelFetch(prev_ph_frag_data1, texel, 0));
+
+    vec3 camera_offset = cameraPosition - previousCameraPosition;
+    frag.data0.xyz -= camera_offset;
+}
+
+vec3 frag_data_load_geo_normal(ivec2 texel) {
+    uint normal_data = floatBitsToUint(texelFetch(ph_frag_data1, texel, 0).y);
+    return ph_decode_normal(unpackSnorm2x16(normal_data));
+}
+
+vec3 frag_data_load_tex_normal(ivec2 texel) {
+    uint normal_data = floatBitsToUint(texelFetch(ph_frag_data1, texel, 0).z);
+    return ph_decode_normal(unpackSnorm2x16(normal_data));
 }
 
 vec3 frag_data_player_pos(FragData frag) {

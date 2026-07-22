@@ -73,7 +73,7 @@ public abstract class ShaderPropertiesMixin {
         handleNonZeroDirective(key, value, MAX_SAMPLES_KEY, e -> phProperties.maxSamples = e);
 
         handleNonZeroDirective(key, value, RESTIR_INITIAL_SAMPLES_KEY, e -> phProperties.restirInitialSamples = e);
-        handleUnsignedIntDirective(key, value, RESTIR_SPATIAL_REUSE_SAMPLES_KEY, e -> phProperties.restirSpatialReuseSamples = e);
+        handleUnsignedIntDirective(key, value, RESTIR_SPATIAL_REUSE_SAMPLES_KEY, e -> phProperties.restirSpatialReuseSamples = Math.min(e, 4));
         handleFloatDirective(key, value, RESTIR_SPATIAL_REUSE_RADIUS_KEY, e -> phProperties.restirRestirSpatialReuseRadius = e);
         handleNonZeroDirective(key, value, RESTIR_ACCUMULATION_FRAMES_KEY, e -> phProperties.restirAccumulationFrames = e);
         handleUnsignedIntDirective(key, value, RESTIR_DENOISER_PASSES_KEY, e -> phProperties.restirDenoiserPasses = e);

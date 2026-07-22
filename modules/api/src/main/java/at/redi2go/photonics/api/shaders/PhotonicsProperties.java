@@ -63,7 +63,7 @@ public interface PhotonicsProperties {
     String RESTIR_INITIAL_SAMPLES_KEY = "photonics.restirInitialSamples";
 
     int getRestirSpatialReuseSamples();
-    int DEFAULT_RESTIR_SPATIAL_REUSE_SAMPLES = 5;
+    int DEFAULT_RESTIR_SPATIAL_REUSE_SAMPLES = 4;
     String RESTIR_SPATIAL_REUSE_SAMPLES_KEY = "photonics.restirSpatialReuseSamples";
 
     float getRestirSpatialReuseRadius();

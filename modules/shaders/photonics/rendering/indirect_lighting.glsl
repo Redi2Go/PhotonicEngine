@@ -56,11 +56,15 @@ void prepare_next_gi_ray(
         ray_iter_offset_position(ray, ray.direction * 0.03f);
 }
 
+#define should_apply_transparency(hit, albedo, rnd_state) \
+    (ray_result_is_transparent(hit) && ph_rand_next_float(rnd_state) > albedo.a)
+
+
 void sample_indirect(
         inout vec3 indirect_color,
         vec3 sample_rt_pos,
         vec3 normal,
-        inout uint rnd_state,
+        uint rnd_state,
 
         out vec3 first_hit,
         out vec3 first_normal
@@ -89,7 +93,7 @@ void sample_indirect(
         if (ray_result_is_hit(hit)) { // Hit something
             albedo = voxel_data_albedo(ray_result_voxel_data(hit));
 
-            if (albedo.a < 1.0f) {
+            if (should_apply_transparency(hit, albedo, rnd_state)) {
                 // Multiply alpha by 0.25 as it looks better with glass
                 running_light_transmittance *= 1.0f - (albedo.a * 0.25f);
                 ray_iter_apply_transparency(running_tint_color, albedo);
@@ -117,7 +121,7 @@ void sample_indirect(
 
 #if defined PH_ENABLE_BLOCKLIGHT_GI
             #define PH_SHOULD_SAMPLE_LIGHT (bounce != -1 || hit_light.type == LIGHT_TYPE_NOT_TRACED)
-            const float gi_light_multiplier = 6.7f;
+            const float gi_light_multiplier = 3.0f;
 #else
             #define PH_SHOULD_SAMPLE_LIGHT hit_light.type == LIGHT_TYPE_NOT_TRACED
             const float gi_light_multiplier = 3.0f;
@@ -132,7 +136,7 @@ void sample_indirect(
                         floor(hit_position) + 0.5f,
                         normal,
                         normal
-                ) * gi_light_multiplier;
+                ) * gi_light_multiplier * (1.0f / albedo.a);
             }
 #else
             modify_indirect_surface_sample(
