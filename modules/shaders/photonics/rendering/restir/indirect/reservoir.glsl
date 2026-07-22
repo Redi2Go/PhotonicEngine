@@ -84,17 +84,27 @@ void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
     reservoir.total_samples = max_indirect_reservoir_samples;
 }
 
-RayResult indirect_sample_retrace(vec3 rt_pos, vec3 hit_point) {
+void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos) {
+    vec3 hit_point = indirect_sample_get_hit_point(reservoir.smple);
+    bool hit_sky = reservoir.smple.trace_distance == indirect_sky_distance;
+
     RayIterator ray;
-
     ray_iter_begin(ray, rt_pos, hit_point - rt_pos);
-    ray.iterations = 40;
 
-    RayResult hit = missed_ray_result();
     while (true) {
-        hit = ray_iter_next(ray);
+        RayResult result = ray_iter_next(ray);
 
-        if (ray_result_is_transparent(hit)) {
+        if (!ray_result_is_hit(result)) {
+            if (!hit_sky)
+                reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
+
+            return;
+        }
+
+        vec3 pos_diff = ray_result_position(result) - hit_point;
+        if (dot(pos_diff, pos_diff) < 0.05f) return;
+
+        if (ray_result_is_transparent(result)) {
             ray_iter_skip_block(ray);
             ray_iter_offset_position(ray, ray.direction * 0.03f);
 
@@ -103,26 +113,6 @@ RayResult indirect_sample_retrace(vec3 rt_pos, vec3 hit_point) {
 
         break;
     }
-
-    return hit;
-}
-
-void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos) {
-    vec3 hit_point = indirect_sample_get_hit_point(reservoir.smple);
-    RayResult hit = indirect_sample_retrace(rt_pos, hit_point);
-
-    if (!ray_result_is_hit(hit)) {
-        if (reservoir.smple.trace_distance != indirect_sky_distance)
-            reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
-
-        return;
-    }
-
-    vec3 sample_data = indirect_sample_get_hit_normal(reservoir.smple);
-    if (dot(sample_data, ray_result_normal(hit)) >= 1.00f) return;
-
-    vec3 pos_diff = ray_result_position(hit) - hit_point;
-    if (dot(pos_diff, pos_diff) < 0.05f) return;
 
     reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 }
