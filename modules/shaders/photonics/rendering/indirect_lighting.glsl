@@ -60,7 +60,7 @@ void sample_indirect(
         inout vec3 indirect_color,
         vec3 sample_rt_pos,
         vec3 normal,
-        inout uint rnd_state,
+        uint rnd_state,
 
         out vec3 first_hit,
         out vec3 first_normal

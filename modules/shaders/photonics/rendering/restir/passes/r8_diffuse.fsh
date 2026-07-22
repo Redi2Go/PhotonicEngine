@@ -15,7 +15,7 @@ layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 
 #if defined PH_ENABLE_RESTIR_GI
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
-layout(location = INDIRECT_RESERVOIR_1) out uvec4 gi_reservoir_1;
+layout(location = INDIRECT_RESERVOIR_1) out uvec3 gi_reservoir_1;
 #endif
 
 layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting;

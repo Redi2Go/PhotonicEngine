@@ -5,16 +5,15 @@
 struct IndirectSample {
     vec3 hit_point;
     uint packed_hit_normal;
-    bool hit_sky; // TODO: Pack this into rnd_state
+    bool hit_sky;
 
     vec3 color;
-    uint rnd_state;
 };
 
 const float indirect_sky_distance = 10000.0f;
 
 IndirectSample indirect_sample_empty() {
-    return IndirectSample(vec3(0.0f), 0u, false, vec3(0.0f), 0u);
+    return IndirectSample(vec3(0.0f), 0u, true, vec3(0.0f));
 }
 
 float indirect_normal_factor(FragData frag, vec3 hit_pos) {
@@ -28,10 +27,6 @@ float indirect_normal_factor(FragData frag, vec3 hit_pos) {
 
 void indirect_sample_set_color(inout IndirectSample smple, vec3 color) {
     smple.color = color;
-}
-
-void indirect_sample_set_rnd_state(inout IndirectSample smple, uint rnd_state) {
-    smple.rnd_state = rnd_state;
 }
 
 vec3 indirect_sample_get_hit_normal(IndirectSample smple) {
@@ -50,10 +45,10 @@ void indirect_sample_set_hit_point(
         inout IndirectSample smple,
         vec3 hit_position,
         vec3 visible_point,
-        vec3 visible_normal
+        vec3 visible_normal,
+        uint rnd_state
 ) {
     if (isinf(hit_position.x)) {
-        uint rnd_state = smple.rnd_state;
         vec3 direction = ph_rand_direction(rnd_state, visible_normal);
 
         smple.hit_point = visible_point + (direction * indirect_sky_distance);

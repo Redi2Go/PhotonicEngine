@@ -123,7 +123,7 @@ vec3 indirect_reservoir_get_final_color(inout IndirectReservoir reservoir) {
     return reservoir.smple.color * reservoir.weight;
 }
 
-void indirect_reservoir_encode(IndirectReservoir reservoir, out vec4 data0, out uvec4 data1) {
+void indirect_reservoir_encode(IndirectReservoir reservoir, out vec4 data0, out uvec3 data1) {
     data0.xyz = reservoir.smple.hit_point;
     data0.w = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
     if (reservoir.smple.hit_sky) data0.w = -data0.w;
@@ -131,10 +131,9 @@ void indirect_reservoir_encode(IndirectReservoir reservoir, out vec4 data0, out 
     data1.x = packHalf2x16(reservoir.smple.color.rg);
     data1.y = packHalf2x16(vec2(reservoir.smple.color.b, reservoir.total_samples));
     data1.z = reservoir.smple.packed_hit_normal;
-    data1.w = reservoir.smple.rnd_state;
 }
 
-void indirect_reservoir_decode(out IndirectReservoir reservoir, vec4 data0, uvec4 data1) {
+void indirect_reservoir_decode(out IndirectReservoir reservoir, vec4 data0, uvec3 data1) {
     reservoir.smple.hit_point = data0.xyz;
     if (data0.w < 0.0f) {
         reservoir.weight = -data0.w;
@@ -152,7 +151,6 @@ void indirect_reservoir_decode(out IndirectReservoir reservoir, vec4 data0, uvec
     reservoir.total_samples = unpacked_value.y;
 
     reservoir.smple.packed_hit_normal = data1.z;
-    reservoir.smple.rnd_state = data1.w;
 }
 
 bool indirect_reservoir_is_nan(IndirectReservoir reservoir) {
@@ -163,7 +161,7 @@ bool indirect_reservoir_load(out IndirectReservoir reservoir, ivec2 tex_coord) {
     indirect_reservoir_decode(
         reservoir,
         texelFetch(restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(restir_indirect_reservoirs1, tex_coord, 0)
+        texelFetch(restir_indirect_reservoirs1, tex_coord, 0).rgb
     );
 
     return !indirect_reservoir_is_nan(reservoir);
@@ -173,7 +171,7 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
     indirect_reservoir_decode(
         reservoir,
         texelFetch(prev_restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(prev_restir_indirect_reservoirs1, tex_coord, 0)
+        texelFetch(prev_restir_indirect_reservoirs1, tex_coord, 0).rgb
     );
 
     if (reprojected) {
