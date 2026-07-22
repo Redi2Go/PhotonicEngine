@@ -138,15 +138,18 @@ float sample_history_min_variance(float samples) {
 }
 #else
 float sample_history_min_variance(float samples) {
+    const float high_variance = 100.0f;
+
     if (samples > 4f) return 0.0001f;
     if (samples > 2f) return 0.01f;
+    if (frag_is_hand) return high_variance;
 
     const float padding = 0.13f;
     const vec2 min = vec2(0 + padding) * PH_RENDER_SCALE;
     const vec2 max = vec2(1.0 - padding) * PH_RENDER_SCALE;
 
     vec2 uv = gl_FragCoord.xy * (vec2(1.0f) / vec2(viewWidth, viewHeight));
-    return clamp(uv, min, max) != uv ? 100.0f : 0.01f;
+    return clamp(uv, min, max) != uv ? high_variance : 0.01f;
 }
 #endif
 
