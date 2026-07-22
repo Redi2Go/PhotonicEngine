@@ -23,7 +23,7 @@ void main() {
                         smple,
                         frag_rt_pos,
                         frag_geo_normal,
-                        frag_is_hand ? frag_geo_normal : frag_tex_normal
+                        frag_tex_normal
                 );
 
                 if (direct_reservoir_update(reservoir, smple, weight, 1.0f))
