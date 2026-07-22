@@ -27,8 +27,8 @@ void main() {
 
     uint rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 4532789);
 
-    NeighborReservoir reservoir = neighbor_reservoir_empty();
-    const float phi_depth = 0.5f;
+    NeighborReservoir reservoir;
+    neighbor_reservoir_init(reservoir);
 
     for (int i = 0; i < 30; i++) {
         // Values of 0 will be skipped by spatial reuse, but realistically
@@ -41,6 +41,7 @@ void main() {
         vec3  Ni = unpack_normal(sample_data.y);
 
         if (!isinf(Di)) {
+            const float phi_depth = 0.5f;
             float wP = svgf_depth_edge_stopping_weight(D0, Di, phi_depth);
             float wN = svgf_normal_edge_stopping_weight(N0, Ni);
 

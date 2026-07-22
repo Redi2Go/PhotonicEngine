@@ -1,6 +1,5 @@
 #include "/photonics/utility/random.glsl"
 
-#define NEIGHBOR_SAMPLES 4
 #define NEIGHBOR_DATA_OUT 0
 
 //ph_required: uniform sampler2D restir_neighbor_data;
@@ -9,19 +8,34 @@ struct NeighborReservoir {
     int size;
     int min_index;
 
-    vec4 weights;
-    vec4 samples;
+    float[PH_RESTIR_SPATIAL_REUSE_SAMPLES] weights;
+    float[PH_RESTIR_SPATIAL_REUSE_SAMPLES] samples;
 };
-
-NeighborReservoir neighbor_reservoir_empty() {
-    return NeighborReservoir(0, 0, vec4(0.0f), vec4(0.0f));
-}
 
 ivec2 neighbor_next_sample(inout uint rnd) {
     const float reuse_radius = PH_RESTIR_SPATIAL_REUSE_RADIUS * PH_RENDER_SCALE;
 
     vec2 offset = 2.0 * vec2(ph_rand_next_float(rnd), ph_rand_next_float(rnd)) - 1.0f;
     return ivec2(frag_tex_coord + offset * reuse_radius);
+}
+
+void neighbor_reservoir_init(out NeighborReservoir reservoir) {
+    reservoir.size = 0;
+    reservoir.min_index = 0;
+
+    // Dont like GLSL and internet wont tell me if this is possible any other way so
+#if PH_RESTIR_SPATIAL_REUSE_SAMPLES == 4
+    #define array_init float[](0.0f, 0.0f, 0.0f, 0.0f)
+#elif PH_RESTIR_SPATIAL_REUSE_SAMPLES == 3
+    #define array_init float[](0.0f, 0.0f, 0.0f)
+#elif PH_RESTIR_SPATIAL_REUSE_SAMPLES == 2
+    #define array_init float[](0.0f, 0.0f)
+#elif PH_RESTIR_SPATIAL_REUSE_SAMPLES == 1
+    #define array_init float[](0.0f)
+#endif
+
+    reservoir.weights = array_init;
+    reservoir.samples = array_init;
 }
 
 void neighbor_reservoir_feed_sample(
@@ -32,7 +46,7 @@ void neighbor_reservoir_feed_sample(
 ) {
     float key = pow(ph_rand_next_float(rnd_state), 1.0f / weight);
 
-    if (reservoir.size < NEIGHBOR_SAMPLES) {
+    if (reservoir.size < PH_RESTIR_SPATIAL_REUSE_SAMPLES) {
         reservoir.weights[reservoir.size] = key;
         reservoir.samples[reservoir.size++] = smple;
     } else {
@@ -45,12 +59,16 @@ void neighbor_reservoir_feed_sample(
     }
 
     reservoir.min_index = 0;
-    for (int i = 1; i < NEIGHBOR_SAMPLES; i++)
+    for (int i = 1; i < PH_RESTIR_SPATIAL_REUSE_SAMPLES; i++)
         reservoir.min_index = reservoir.weights[i] < reservoir.weights[reservoir.min_index] ? i : reservoir.min_index;
 }
 
 void neighbor_reservoir_encode_samples(NeighborReservoir reservoir, out vec4 result) {
-    result = reservoir.samples;
+    result = vec4(0.0f);
+
+    for (int i = 0; i < PH_RESTIR_SPATIAL_REUSE_SAMPLES; i++) {
+        result[i] = reservoir.samples[i];
+    }
 }
 
 void neighbor_load_samples(ivec2 texel, out uvec4 samples) {

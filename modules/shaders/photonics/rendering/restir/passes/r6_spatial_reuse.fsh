@@ -40,7 +40,7 @@ void main() {
     IndirectReservoir sample_indirect = indirect_reservoir_empty();
 #endif
 
-    for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
+    for (int i = 0; i < PH_RESTIR_SPATIAL_REUSE_SAMPLES; i++) {
         if (samples[i] != 0) {
             ivec2 sample_texel = neighbor_next_sample(samples[i]);
 
