@@ -70,7 +70,6 @@ void sample_indirect(
         out vec3 first_normal
 ) {
     vec4 running_tint_color = vec4(0.0f);
-    float running_light_transmittance = 1.0f;
     vec3 running_bounce_color = vec3(1.0f);
     bool is_tracing_to_sun = false;
 
@@ -94,8 +93,6 @@ void sample_indirect(
             albedo = voxel_data_albedo(ray_result_voxel_data(hit));
 
             if (should_apply_transparency(hit, albedo, rnd_state)) {
-                // Multiply alpha by 0.25 as it looks better with glass
-                running_light_transmittance *= 1.0f - (albedo.a * 0.25f);
                 ray_iter_apply_transparency(running_tint_color, albedo);
                 ray_iter_skip_block(ray);
 
@@ -163,9 +160,8 @@ void sample_indirect(
 
         #define gi_tint_color (running_tint_color != vec4(0.0) ? running_tint_color.rgb : vec3(1.0f))
         #define gi_bounce_color running_bounce_color
-        #define gi_intensity running_light_transmittance
 
-        indirect_color += radiance_color * gi_tint_color * gi_bounce_color * gi_intensity;
+        indirect_color += radiance_color * gi_tint_color * gi_bounce_color;
 
         if (!ray_result_is_hit(hit)) return;
 
