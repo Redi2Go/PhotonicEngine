@@ -11,8 +11,8 @@
 #include "/photonics/utility/projection.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
-#define RESTIR_LIGHTING_OUT 0
-#define RESTIR_LIGHTING_VARIANCE_OUT 1
+#define RESTIR_LIGHTING_OUT 1
+#define RESTIR_LIGHTING_VARIANCE_OUT 2
 
 //ph_required: uniform sampler2D restir_lighting;
 //ph_required: uniform sampler2D restir_lighting_variance;

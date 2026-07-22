@@ -42,27 +42,30 @@ void main() {
 #endif
 
     for (int i = 0; i < NEIGHBOR_SAMPLES; i++) {
-        ivec2 sample_texel = neighbor_next_sample(samples[i]);
+        if (samples[i] != 0) {
+            ivec2 sample_texel = neighbor_next_sample(samples[i]);
 
 #if defined PH_ENABLE_RESTIR_GI
-        FragData sample_frag;
-        frag_data_load(sample_frag, sample_texel);
+
+            FragData sample_frag;
+            frag_data_load(sample_frag, sample_texel);
 #endif
 
 #if defined PH_ENABLE_BLOCKLIGHT
-        if (direct_reservoir_load_previous(temp_direct, sample_texel, false)) {
-            direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
-        }
+            if (direct_reservoir_load_previous(temp_direct, sample_texel, false)) {
+                direct_reservoir_merge(direct_result, temp_direct, direct_sample_weight);
+            }
 #endif
 
 #if defined PH_ENABLE_RESTIR_GI
-        if (indirect_reservoir_load_previous(sample_indirect, sample_texel, false)) {
-            sample_indirect.total_samples = min(sample_indirect.total_samples, max_indirect_reservoir_samples);
-            float shift = indirect_sample_compute_shift(sample_indirect.smple, _frag_data, sample_frag);
+            if (indirect_reservoir_load_previous(sample_indirect, sample_texel, false)) {
+                sample_indirect.total_samples = min(sample_indirect.total_samples, max_indirect_reservoir_samples);
+                float shift = indirect_sample_compute_shift(sample_indirect.smple, _frag_data, sample_frag);
 
-            indirect_reservoir_merge(indirect_result, sample_indirect, shift, indirect_sample_weight);
-        }
+                indirect_reservoir_merge(indirect_result, sample_indirect, shift, indirect_sample_weight);
+            }
 #endif
+        }
     }
 
 #if defined PH_ENABLE_BLOCKLIGHT

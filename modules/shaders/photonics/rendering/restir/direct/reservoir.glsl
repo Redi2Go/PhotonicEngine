@@ -1,6 +1,6 @@
 #include "/photonics/rendering/restir/direct/sample.glsl"
 
-#define DIRECT_RESERVOIR_0 2
+#define DIRECT_RESERVOIR_0 3
 
 //ph_required: uniform sampler2D restir_direct_reservoirs0;
 //ph_required: uniform sampler2D prev_restir_direct_reservoirs0;
