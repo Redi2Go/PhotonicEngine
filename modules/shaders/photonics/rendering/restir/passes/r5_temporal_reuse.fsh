@@ -11,8 +11,7 @@ layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 
 #if defined PH_ENABLE_RESTIR_GI
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
-layout(location = INDIRECT_RESERVOIR_1) out vec4 gi_reservoir_1;
-layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
+layout(location = INDIRECT_RESERVOIR_1) out uvec4 gi_reservoir_1;
 #endif
 
 void main() {
@@ -82,6 +81,6 @@ void main() {
 
     // write resulting reservoir
     indirect_reservoir_finalize_weight(indirect_result, indirect_sample_weight);
-    indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
+    indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1);
 #endif
 }

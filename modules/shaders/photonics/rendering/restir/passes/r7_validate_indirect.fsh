@@ -4,8 +4,7 @@
 #include "/photonics/rendering/restir/restir.glsl"
 
 layout(location = INDIRECT_RESERVOIR_0) out vec4 gi_reservoir_0;
-layout(location = INDIRECT_RESERVOIR_1) out vec4 gi_reservoir_1;
-layout(location = INDIRECT_RESERVOIR_2) out vec4 gi_reservoir_2;
+layout(location = INDIRECT_RESERVOIR_1) out uvec4 gi_reservoir_1;
 
 void main() {
     setup_frag_data(31);
@@ -31,5 +30,5 @@ void main() {
     indirect_reservoir_clamp_samples(indirect_result);
 
     indirect_reservoir_finalize_weight(indirect_result, indirect_sample_weight);
-    indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1, gi_reservoir_2);
+    indirect_reservoir_encode(indirect_result, gi_reservoir_0, gi_reservoir_1);
 }

@@ -9,20 +9,16 @@
 #if defined PH_ENABLE_BLOCKLIGHT
 #define INDIRECT_RESERVOIR_0 4
 #define INDIRECT_RESERVOIR_1 5
-#define INDIRECT_RESERVOIR_2 6
 #else
 #define INDIRECT_RESERVOIR_0 3
 #define INDIRECT_RESERVOIR_1 4
-#define INDIRECT_RESERVOIR_2 5
 #endif
 
 //ph_required: uniform sampler2D restir_indirect_reservoirs0;
-//ph_required: uniform sampler2D restir_indirect_reservoirs1;
-//ph_required: uniform sampler2D restir_indirect_reservoirs2;
+//ph_required: uniform usampler2D restir_indirect_reservoirs1;
 
 //ph_required: uniform sampler2D prev_restir_indirect_reservoirs0;
-//ph_required: uniform sampler2D prev_restir_indirect_reservoirs1;
-//ph_required: uniform sampler2D prev_restir_indirect_reservoirs2;
+//ph_required: uniform usampler2D prev_restir_indirect_reservoirs1;
 
 const float max_indirect_temporal_samples = 20.0f;
 const float max_indirect_reservoir_samples = 20.0f;
@@ -86,7 +82,6 @@ void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
 
 void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos) {
     vec3 hit_point = indirect_sample_get_hit_point(reservoir.smple);
-    bool hit_sky = reservoir.smple.trace_distance == indirect_sky_distance;
 
     RayIterator ray;
     ray_iter_begin(ray, rt_pos, hit_point - rt_pos);
@@ -95,7 +90,7 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
         RayResult result = ray_iter_next(ray);
 
         if (!ray_result_is_hit(result)) {
-            if (!hit_sky)
+            if (reservoir.smple.hit_sky)
                 reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 
             return;
@@ -128,42 +123,36 @@ vec3 indirect_reservoir_get_final_color(inout IndirectReservoir reservoir) {
     return reservoir.smple.color * reservoir.weight;
 }
 
-void indirect_reservoir_encode(
-    IndirectReservoir reservoir,
-    out vec4 data0,
-    out vec4 data1,
-    out vec4 data2
-) {
-    data0.xyz = reservoir.smple.visible_point;
+void indirect_reservoir_encode(IndirectReservoir reservoir, out vec4 data0, out uvec4 data1) {
+    data0.xyz = reservoir.smple.hit_point;
     data0.w = max(reservoir.weight, MINIMUM_RESERVOIR_WEIGHT);
+    if (reservoir.smple.hit_sky) data0.w = -data0.w;
 
-    data1.rgb = reservoir.smple.color;
-    data1.a = reservoir.total_samples;
-
-    data2.x = uintBitsToFloat(reservoir.smple.packed_visible_normal);
-    data2.y = uintBitsToFloat(reservoir.smple.packed_hit_normal);
-
-    data2.z = reservoir.smple.trace_distance;
-    data2.w = uintBitsToFloat(reservoir.smple.rnd_state);
+    data1.x = packHalf2x16(reservoir.smple.color.rg);
+    data1.y = packHalf2x16(vec2(reservoir.smple.color.b, reservoir.total_samples));
+    data1.z = reservoir.smple.packed_hit_normal;
+    data1.w = reservoir.smple.rnd_state;
 }
 
-void indirect_reservoir_decode(
-    out IndirectReservoir reservoir,
-    vec4 data0,
-    vec4 data1,
-    vec4 data2
-) {
-    reservoir.smple.visible_point = data0.xyz;
-    reservoir.weight = data0.w;
+void indirect_reservoir_decode(out IndirectReservoir reservoir, vec4 data0, uvec4 data1) {
+    reservoir.smple.hit_point = data0.xyz;
+    if (data0.w < 0.0f) {
+        reservoir.weight = -data0.w;
+        reservoir.smple.hit_sky = true;
+    } else {
+        reservoir.weight = data0.w;
+        reservoir.smple.hit_sky = false;
+    }
 
-    reservoir.smple.color = data1.rgb;
-    reservoir.total_samples = data1.a;
+    vec2 unpacked_value = unpackHalf2x16(data1.x);
+    reservoir.smple.color.rg = unpacked_value;
 
-    reservoir.smple.packed_visible_normal = floatBitsToUint(data2.x);
-    reservoir.smple.packed_hit_normal = floatBitsToUint(data2.x);
+    unpacked_value = unpackHalf2x16(data1.y);
+    reservoir.smple.color.b = unpacked_value.x;
+    reservoir.total_samples = unpacked_value.y;
 
-    reservoir.smple.trace_distance = data2.z;
-    reservoir.smple.rnd_state = floatBitsToUint(data2.w);
+    reservoir.smple.packed_hit_normal = data1.z;
+    reservoir.smple.rnd_state = data1.w;
 }
 
 bool indirect_reservoir_is_nan(IndirectReservoir reservoir) {
@@ -174,8 +163,7 @@ bool indirect_reservoir_load(out IndirectReservoir reservoir, ivec2 tex_coord) {
     indirect_reservoir_decode(
         reservoir,
         texelFetch(restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(restir_indirect_reservoirs1, tex_coord, 0),
-        texelFetch(restir_indirect_reservoirs2, tex_coord, 0)
+        texelFetch(restir_indirect_reservoirs1, tex_coord, 0)
     );
 
     return !indirect_reservoir_is_nan(reservoir);
@@ -185,13 +173,12 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
     indirect_reservoir_decode(
         reservoir,
         texelFetch(prev_restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(prev_restir_indirect_reservoirs1, tex_coord, 0),
-        texelFetch(prev_restir_indirect_reservoirs2, tex_coord, 0)
+        texelFetch(prev_restir_indirect_reservoirs1, tex_coord, 0)
     );
 
     if (reprojected) {
         vec3 camera_offset = cameraPosition - previousCameraPosition;
-        reservoir.smple.visible_point -= camera_offset;
+        reservoir.smple.hit_point -= camera_offset;
     }
 
     return !indirect_reservoir_is_nan(reservoir);
