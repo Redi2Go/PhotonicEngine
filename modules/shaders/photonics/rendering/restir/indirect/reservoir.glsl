@@ -90,7 +90,7 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
         RayResult result = ray_iter_next(ray);
 
         if (!ray_result_is_hit(result)) {
-            if (reservoir.smple.hit_sky)
+            if (!reservoir.smple.hit_sky)
                 reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 
             return;
