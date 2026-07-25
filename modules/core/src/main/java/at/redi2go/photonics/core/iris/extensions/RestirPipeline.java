@@ -43,7 +43,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .build(this::registerComponent);
 
         var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("denoise_result", ITextureFormat.rgba16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
+                .addAttachment("denoise_result", ITextureFormat.rgba32ui(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
                 .build(this::registerComponent);
 
         var otherFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())

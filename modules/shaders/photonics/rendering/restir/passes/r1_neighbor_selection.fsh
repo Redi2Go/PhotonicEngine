@@ -19,7 +19,7 @@ void main() {
     if (isinf(center_data.x)) discard;
 
     float D0 = center_data.x;
-    vec3  N0 = unpack_normal(center_data.y);
+    vec3  N0 = ph_unpack_normal(floatBitsToUint(center_data.y));
 
     uint rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 4532789);
 
@@ -34,7 +34,7 @@ void main() {
         vec2  sample_data  = texelFetch(restir_neighbor_data, sample_texel, 0).xy;
 
         float Di = sample_data.x;
-        vec3  Ni = ph_unpack_normal(sample_data.y);
+        vec3  Ni = ph_unpack_normal(floatBitsToUint(sample_data.y));
 
         if (!isinf(Di)) {
             const float phi_depth = 0.5f;
