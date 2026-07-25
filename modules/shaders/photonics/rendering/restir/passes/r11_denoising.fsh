@@ -18,15 +18,11 @@ bool should_skip_pass(float variance) {
     return !frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES && variance < 0.1f;
 }
 
-bool should_use_geo_normals(float variance) {
-    return frag_is_hand || variance > 0.05f;
-}
-
-vec3 ph_get_normal_for_denoise(ivec2 texel, float variance) {
+vec3 ph_get_normal_for_denoise(ivec2 texel) {
     FragData frag;
     frag_data_load(frag, texel);
 
-    return should_use_geo_normals(variance) ? frag_data_geo_normal(frag) : frag_data_tex_normal(frag);
+    return frag_is_hand ? frag_data_geo_normal(frag) : frag_data_tex_normal(frag);
 }
 
 void main() {
@@ -46,7 +42,7 @@ void main() {
     #define V0 denoise_out.a
 
     float L0 = ph_luminance(C0);
-    vec3  N0 = should_use_geo_normals(denoise_out.a) ? frag_geo_normal : frag_tex_normal;
+    vec3  N0 = frag_is_hand ? frag_geo_normal : frag_tex_normal;
     float D0 = svgf_linearize_depth(depth);
 
 
@@ -62,16 +58,18 @@ void main() {
         ivec2 p = frag_tex_coord + step_width * offset[i];
 
         vec4 sample_data = texelFetch(prev_denoise_result, p, 0);
+        sample_data = any(isnan(sample_data)) ? vec4(0.0f) : sample_data;
+
         #define Ci sample_data.rgb
         #define Vi sample_data.a
 
         float Li = ph_luminance(Ci);
-        vec3  Ni = ph_get_normal_for_denoise(p, denoise_out.a);
+        vec3  Ni = ph_get_normal_for_denoise(p);
         float Di = svgf_linearize_depth(texelFetch(depthtex0, SVGF_DEPTH_MODIFIER(p), 0).x);
         const float k = kernel[i];
 
         // Color (luminance) weight
-        float wC = svgf_luma_edge_stopping_weight(L0, Li, phi_luminance);
+        float wC = frag_is_hand ? 1.0f : svgf_luma_edge_stopping_weight(L0, Li, phi_luminance);
 
         // Normal weight
         float wN = svgf_normal_edge_stopping_weight(N0, Ni);
@@ -79,7 +77,7 @@ void main() {
         // Position weight
         float wP = svgf_depth_edge_stopping_weight(D0, Di, phi_depth);
 
-        float w = any(isnan(Ci)) ? 0.0f : wC * wN * wP * k;
+        float w = wC * wN * wP * k;
         W_sum += w;
         C_sum += Ci.xyz * w;
         V_sum += Vi * w * w;
