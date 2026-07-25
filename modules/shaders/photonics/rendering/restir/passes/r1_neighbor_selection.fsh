@@ -14,10 +14,6 @@
 // Store the samples in lighting as this value hasn't been initialized yet
 layout(location = 2) out vec4 neighbor_samples;
 
-vec3 unpack_normal(float value) {
-    return ph_decode_normal(unpackSnorm2x16(floatBitsToUint(value)));
-}
-
 void main() {
     vec2 center_data = texelFetch(restir_neighbor_data, frag_tex_coord, 0).xy;
     if (isinf(center_data.x)) discard;
@@ -38,7 +34,7 @@ void main() {
         vec2  sample_data  = texelFetch(restir_neighbor_data, sample_texel, 0).xy;
 
         float Di = sample_data.x;
-        vec3  Ni = unpack_normal(sample_data.y);
+        vec3  Ni = ph_unpack_normal(sample_data.y);
 
         if (!isinf(Di)) {
             const float phi_depth = 0.5f;

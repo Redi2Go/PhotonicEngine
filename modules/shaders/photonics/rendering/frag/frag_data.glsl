@@ -43,18 +43,18 @@ vec3 frag_data_player_pos(FragData frag) {
 }
 
 vec3 frag_data_rt_pos(FragData frag) {
-    vec3 dir = ph_decode_normal(unpackSnorm2x16(frag.data1.x));
+    vec3 dir = ph_unpack_normal(frag.data1.x);
     float mag = frag.data0.w;
 
     return (frag.data0.xyz + rt_camera_position) + (dir * mag);
 }
 
 vec3 frag_data_geo_normal(FragData frag) {
-    return ph_decode_normal(unpackSnorm2x16(frag.data1.y));
+    return ph_unpack_normal(frag.data1.y);
 }
 
 vec3 frag_data_tex_normal(FragData frag) {
-    return ph_decode_normal(unpackSnorm2x16(frag.data1.z));
+    return ph_unpack_normal(frag.data1.z);
 }
 
 bool frag_data_is_in_world(FragData frag) {

@@ -61,13 +61,13 @@ void ph_encode_frag(out vec4 data0, out uvec4 data1) {
     dist_sq *= dist_inv;
 
     data0.w = dist_sq;
-    data1.x = packSnorm2x16(ph_encode_normal(to_rt));
+    data1.x = ph_pack_normal(to_rt);
 
 
     // Normal encoding
 
-    data1.y = packSnorm2x16(ph_encode_normal(frag_geo_normal));
-    data1.z = packSnorm2x16(ph_encode_normal(frag_tex_normal));
+    data1.y = ph_pack_normal(frag_geo_normal);
+    data1.z = ph_pack_normal(frag_tex_normal);
 
     data1.w |= frag_is_in_world_bit;
     data1.w |= frag_is_bad_angle ? frag_bad_angle_bit : 0;
