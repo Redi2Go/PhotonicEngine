@@ -47,7 +47,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .build(this::registerComponent);
 
         var otherFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("other_handheld", ITextureFormat.rgb16f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
+                .addAttachment("other_handheld", ITextureFormat.rgb32f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
                 .build(this::registerComponent);
 
         Pipelines.fragData(this, irisFactory, properties.getRenderScale());
@@ -79,11 +79,14 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                         b1.thenFlip(denoiseFramebuffer);
                         b1.deferredPass("atrous iteration", "/photonics/rendering/restir/passes/r11_denoising.fsh", null);
                     });
+                    b0.deferredPass("undo exposure", "/photonics/rendering/restir/passes/r12_undo_exposure.fsh", null);
                 })
                 .debugGroup("other")
                 .withFramebuffer(otherFramebuffer)
-                .deferredPass("handheld", "/photonics/rendering/restir/passes/r12_handheld.fsh", null, this::isHandheldLightingEnabled)
+                .deferredPass("handheld", "/photonics/rendering/restir/passes/r13_handheld.fsh", null, this::isHandheldLightingEnabled)
                 .build(this::registerRenderer);
+
+        Pipelines.exposureHistory(this, irisFactory);
     }
 
     @Override

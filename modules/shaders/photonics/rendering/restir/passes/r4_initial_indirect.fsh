@@ -28,6 +28,7 @@ void main() {
             hit_normal
     );
 
+    indirect_result *= get_exposure();
     indirect_result *= indirect_normal_factor(_frag_data, hit_position);
 
     IndirectReservoir reservoir = indirect_reservoir_empty();

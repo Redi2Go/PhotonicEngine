@@ -10,12 +10,7 @@
 
 vec3 sample_photonics_direct(vec2 tex_coord) {
 #if PH_RESTIR_DENOISER_PASSES != 0
-    uvec2 smple = texture(denoise_result, tex_coord).xy;
-
-    return vec3(
-        unpackHalf2x16(smple.x),
-        unpackHalf2x16(smple.y).x
-    );
+    return uintBitsToFloat(texture(denoise_result, tex_coord).rgb);
 #else
     vec4 lighting = texture(restir_lighting, tex_coord);
     return (lighting.rgb / max(lighting.a, 1.0f));

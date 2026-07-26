@@ -177,6 +177,7 @@ bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex
     if (reprojected) {
         vec3 camera_offset = cameraPosition - previousCameraPosition;
         reservoir.smple.hit_point -= camera_offset;
+        reservoir.smple.color *= get_exposure() / get_previous_exposure();
     }
 
     return !indirect_reservoir_is_nan(reservoir);

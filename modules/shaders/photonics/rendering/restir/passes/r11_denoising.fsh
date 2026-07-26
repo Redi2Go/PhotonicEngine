@@ -8,7 +8,6 @@
 #include "/photonics/rendering/restir/svgf.glsl"
 
 #include "/photonics/utility/color.glsl"
-#include "/photonics/modifiers/restir_denoiser_exposure_modifier.glsl"
 
 layout(location = 0) out uvec4 denoise_out;
 
