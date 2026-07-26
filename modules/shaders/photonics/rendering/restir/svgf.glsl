@@ -33,7 +33,7 @@ struct SvgfSample {
 };
 
 SvgfSample svgf_sample_empty() {
-    return SvgfSample(vec3(0.0f), 0.0f, 0.0f, 0.0f, 0u);
+    return SvgfSample(vec3(0.0f), 0.0f, 1.0f, 0.0f, 0u);
 }
 
 vec3 svgf_sample_get_normal(SvgfSample smple) {

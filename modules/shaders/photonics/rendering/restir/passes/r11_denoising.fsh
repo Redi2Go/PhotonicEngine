@@ -19,14 +19,13 @@ float get_pass_weight(SvgfSample smple) {
 }
 
 void main() {
-    setup_frag_data(0);
-    if (!frag_is_in_world) {
+    SvgfSample center_sample = svgf_sample_empty();
+    svgf_sample_load(center_sample, frag_tex_coord);
+
+    if (center_sample.depth == 1.0f) {
         denoise_out = uvec4(0u);
         return;
     }
-
-    SvgfSample center_sample = svgf_sample_empty();
-    svgf_sample_load(center_sample, frag_tex_coord);
 
     float pass_weight = get_pass_weight(center_sample);
     if (pass_weight > 0.0f) {
