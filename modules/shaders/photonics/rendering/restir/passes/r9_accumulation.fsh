@@ -19,9 +19,15 @@ void main() {
     SampleHistory smple;
     sample_history_load(smple);
 
-    SampleHistory accumulator;
+#if PH_RESTIR_DENOISER_PASSES == 0
+    smple.lighting.rgb /= get_exposure();
+#endif
 
+    SampleHistory accumulator;
     sample_history_reproject(accumulator);
+
+    accumulator.lighting.rgb *= get_exposure() / get_previous_exposure();
+
     sample_history_combine_lighting(accumulator, smple);
 
 #if PH_RESTIR_DENOISER_PASSES != 0

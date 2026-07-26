@@ -58,3 +58,15 @@ void setup_frag_data(int rnd_seed) {
     frag_tex_normal = frag_data_tex_normal(_frag_data);
 #endif
 }
+
+//ph_required: uniform sampler2D ph_prev_exposure;
+
+#if !defined PH_EXPOSURE_ADJUSTMENT
+float get_exposure() {
+    return 1.0f;
+}
+#endif
+
+float get_previous_exposure() {
+    return frameCounter == 0 ? 1.0f : texelFetch(ph_prev_exposure, ivec2(0), 0).r;
+}

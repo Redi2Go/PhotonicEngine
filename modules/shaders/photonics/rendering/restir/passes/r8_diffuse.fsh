@@ -53,7 +53,7 @@ void main() {
         frag_rt_pos,
         frag_geo_normal,
         frag_tex_normal
-    );
+    ) * get_exposure();
 
     direct_reservoir_encode(direct_reservoir, di_reservoir_0);
 #endif

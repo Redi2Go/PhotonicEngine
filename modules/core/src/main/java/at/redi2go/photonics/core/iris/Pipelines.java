@@ -25,4 +25,17 @@ public class Pipelines {
                 .deferredPass("frag data", "/photonics/rendering/frag/f0_load_frag.fsh", null)
                 .build(ext::registerRenderer);
     }
+
+    public static void exposureHistory(AbstractPhotonicsExtension ext, IrisFactory irisFactory) {
+        var framebuffer = irisFactory.newFramebuffer(1, 1)
+                .addAttachment("ph_prev_exposure", ITextureFormat.r32f(), CREATE_SAMPLER)
+                .build(ext::registerComponent);
+
+        irisFactory.newPipeline()
+                .debugGroup("exposure")
+                .withFramebuffer(framebuffer)
+                .thenFlip(framebuffer)
+                .deferredPass("record exposure", "/photonics/rendering/frag/e0_record_exposure.fsh", null)
+                .build(ext::registerRenderer);
+    }
 }
