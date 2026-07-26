@@ -16,15 +16,6 @@ IndirectSample indirect_sample_empty() {
     return IndirectSample(vec3(0.0f), 0u, true, vec3(0.0f));
 }
 
-float indirect_normal_factor(FragData frag, vec3 hit_pos) {
-    vec3 dir = normalize(hit_pos - frag_data_rt_pos(frag));
-
-    float geo_normal_occlusion = clamp(dot(frag_data_geo_normal(frag), dir), 0.01f, 1.0f);
-    float tex_normal_occlusion = clamp(dot(frag_data_tex_normal(frag), dir), 0.01f, 1.0f);
-
-    return tex_normal_occlusion / geo_normal_occlusion;
-}
-
 void indirect_sample_set_color(inout IndirectSample smple, vec3 color) {
     smple.color = color;
 }
@@ -78,13 +69,6 @@ float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 
     return isinf(jacobian) || isnan(jacobian) ? 0.0f : clamp(jacobian, 0.0f, 3.0f);
 }
 
-float indirect_sample_compute_shift(IndirectSample smple, FragData dst_frag, FragData src_frag) {
-    vec3 hit_point = indirect_sample_get_hit_point(smple);
-    float occlusion_old = indirect_normal_factor(src_frag, hit_point);
-    float occlusion_new = indirect_normal_factor(dst_frag, hit_point);
-
-    float occlusion_factor = occlusion_new / occlusion_old;
-    float jacobian_factor = indirect_sample_compute_jacobian(smple, frag_data_rt_pos(dst_frag), frag_data_rt_pos(src_frag));
-
-    return jacobian_factor * occlusion_factor;
+float indirect_sample_compute_shift(IndirectSample smple, vec3 dst_pos, vec3 src_pos) {
+    return indirect_sample_compute_jacobian(smple, dst_pos, src_pos);
 }

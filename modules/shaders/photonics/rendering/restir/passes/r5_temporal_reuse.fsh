@@ -64,16 +64,14 @@ void main() {
     // load temporal sampled reservoir
     if (indirect_reservoir_load_previous(temp_indirect, prev_texel, true)) {
         temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_temporal_samples);
-        float shift = indirect_sample_compute_shift(temp_indirect.smple, _frag_data, prev_frag);
+        float shift = indirect_sample_compute_shift(temp_indirect.smple, frag_rt_pos, frag_data_rt_pos(prev_frag));
 
-        if (shift < 1.2f) {
-            indirect_reservoir_merge(
-                    indirect_result,
-                    temp_indirect,
-                    shift,
-                    indirect_sample_weight
-            );
-        }
+        indirect_reservoir_merge(
+                indirect_result,
+                temp_indirect,
+                shift,
+                indirect_sample_weight
+        );
     }
 
     indirect_reservoir_load(temp_indirect, frag_tex_coord);

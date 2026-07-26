@@ -29,7 +29,6 @@ void main() {
     );
 
     indirect_result *= get_exposure();
-    indirect_result *= indirect_normal_factor(_frag_data, hit_position);
 
     IndirectReservoir reservoir = indirect_reservoir_empty();
     indirect_sample_set_color(reservoir.smple, indirect_result);

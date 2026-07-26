@@ -59,9 +59,14 @@ void main() {
 #if defined PH_ENABLE_RESTIR_GI
             if (indirect_reservoir_load_previous(sample_indirect, sample_texel, false)) {
                 sample_indirect.total_samples = min(sample_indirect.total_samples, max_indirect_reservoir_samples);
-                float shift = indirect_sample_compute_shift(sample_indirect.smple, _frag_data, sample_frag);
+                float shift = indirect_sample_compute_shift(sample_indirect.smple, frag_rt_pos, frag_data_rt_pos(sample_frag));
 
-                indirect_reservoir_merge(indirect_result, sample_indirect, shift, indirect_sample_weight);
+                indirect_reservoir_merge(
+                        indirect_result,
+                        sample_indirect,
+                        shift,
+                        indirect_sample_weight
+                );
             }
 #endif
         }
