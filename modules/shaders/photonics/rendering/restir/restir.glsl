@@ -138,7 +138,7 @@ float sample_history_min_variance(float samples) {
 }
 #else
 float sample_history_min_variance(float samples) {
-    const float high_variance = 1.0f;
+    const float high_variance = 10.0f;
 
     if (samples > 4f) return 0.0001f;
     if (samples > 2f) return 0.01f;

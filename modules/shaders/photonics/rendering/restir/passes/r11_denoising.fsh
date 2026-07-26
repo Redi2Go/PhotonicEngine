@@ -11,8 +11,11 @@
 
 layout(location = 0) out uvec4 denoise_out;
 
-bool should_skip_pass(SvgfSample smple) {
-    return !frag_is_hand && atrous_iteration >= PH_RESTIR_DENOISER_PASSES;// && !smple.low_sample_count;
+float get_pass_weight(SvgfSample smple) {
+    const float frame_cutoff = PH_RESTIR_ACCUMULATION_FRAMES * 0.33f;
+    if (frag_is_hand || atrous_iteration < PH_RESTIR_DENOISER_PASSES) return 1.0f;
+
+    return 1.0f - (smple.age / frame_cutoff);
 }
 
 void main() {
@@ -25,7 +28,8 @@ void main() {
     SvgfSample center_sample = svgf_sample_empty();
     svgf_sample_load(center_sample, frag_tex_coord);
 
-    if (!should_skip_pass(center_sample)) {
+    float pass_weight = get_pass_weight(center_sample);
+    if (pass_weight > 0.0f) {
         #define C0 center_sample.color
         #define V0 center_sample.variance
 
@@ -73,7 +77,7 @@ void main() {
         W_sum = max(0.0001f, W_sum);
         V_sum = max(0.0001f, V_sum);
 
-        center_sample.color = C_sum / W_sum;
+        center_sample.color = mix(center_sample.color, C_sum / W_sum, pass_weight);
         center_sample.variance = max(V_sum / (W_sum * W_sum), 0.0f);
     }
 
