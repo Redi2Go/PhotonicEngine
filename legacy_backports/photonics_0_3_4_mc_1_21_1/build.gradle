@@ -1,0 +1,727 @@
+plugins {
+    id 'fabric-loom' version '1.17.3'
+    id 'java'
+}
+
+import groovy.json.JsonSlurper
+import org.objectweb.asm.AnnotationVisitor
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldInsnNode
+import org.objectweb.asm.tree.JumpInsnNode
+import org.objectweb.asm.tree.MethodInsnNode
+
+version = '0.3.4+1.21.1'
+group = 'at.redi2go.photonics'
+repositories {
+    mavenCentral()
+    maven { url = "https://maven.fabricmc.net/" }
+    maven { url = "https://api.modrinth.com/maven" }
+    maven { url = "https://maven.terraformersmc.com/" }
+}
+dependencies {
+    minecraft "com.mojang:minecraft:1.21.1"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:0.18.4"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.116.13+1.21.1"
+    
+    modImplementation "com.terraformersmc:modmenu:11.0.2"
+    
+    modImplementation "maven.modrinth:sodium:mc1.21.1-0.8.12-beta.2-fabric"
+    modImplementation "maven.modrinth:iris:1.8.14-beta.1+1.21.1-fabric"
+    implementation "org.antlr:antlr4-runtime:4.13.1"
+    implementation "io.github.douira:glsl-transformer:3.0.0-pre3"
+    implementation "org.anarres:jcpp:1.4.14"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register('runReflection', JavaExec) {
+    mainClass = 'at.redi2go.photonics.ReflectionTest'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register('validateMixinRegistrations') {
+    def mixinConfig = layout.projectDirectory.file('src/main/resources/photonics.mixins.json')
+    def mixinSources = layout.projectDirectory.dir('src/main/java')
+
+    inputs.file(mixinConfig)
+    inputs.dir(mixinSources)
+
+    doLast {
+        def config = new JsonSlurper().parse(mixinConfig.asFile)
+        def packagePath = config.package.replace('.', '/')
+        def registrations = [config.mixins, config.client, config.server]
+                .findAll { it != null }
+                .flatten()
+                .unique()
+        def missing = registrations.findAll { registration ->
+            !mixinSources.file("${packagePath}/${registration.replace('.', '/')}.java").asFile.isFile()
+        }
+
+        if (!missing.isEmpty()) {
+            throw new GradleException("Missing registered mixin sources: ${missing.join(', ')}")
+        }
+    }
+}
+
+tasks.register('validateShaderPatchResources') {
+    def entityPatch = layout.projectDirectory.file('src/main/resources/assets/photonics/patches/BSL_v10.1/gbuffers_entities.glsl')
+    def deferredPatch = layout.projectDirectory.file('src/main/resources/assets/photonics/patches/BSL_v10.1/deferred1.glsl')
+    def settingsPatch = layout.projectDirectory.file('src/main/resources/assets/photonics/patches/BSL_v10.1/settings.glsl')
+    def propertiesPatch = layout.projectDirectory.file('src/main/resources/assets/photonics/patches/BSL_v10.1/shaders.properties')
+    def languagePatch = layout.projectDirectory.file('src/main/resources/assets/photonics/patches/BSL_v10.1/en_US.lang')
+
+    inputs.files(entityPatch, deferredPatch, settingsPatch, propertiesPatch, languagePatch)
+
+    doLast {
+        def entitySource = entityPatch.asFile.getText('UTF-8')
+        [
+                '/* DRAWBUFFERS:018367 */',
+                '/* RENDERTARGETS:0,1,8,3,6,7,10,11 */',
+                'gl_FragData[6] = vec4(oldAlbedo, 1.0f);',
+                'gl_FragData[7] = vec4(0.5f * normal + 0.5f, 1.0f);',
+                '/* DRAWBUFFERS:01367 */',
+                '/* RENDERTARGETS:0,1,3,6,7,10,11 */',
+                'gl_FragData[5] = vec4(oldAlbedo, 1.0f);',
+                'gl_FragData[6] = vec4(0.5f * normal + 0.5f, 1.0f);'
+        ].each { expected ->
+            if (!entitySource.contains(expected)) {
+                throw new GradleException("BSL entity patch is missing required layout fragment: ${expected}")
+            }
+        }
+
+        def settingsSource = settingsPatch.asFile.getText('UTF-8')
+        if (!settingsSource.contains('#define PHOTONICS_DEBUG_VIEW 0 // [0 1 2 3 4 5 6 7 8 9]')) {
+            throw new GradleException('BSL settings patch must default PHOTONICS_DEBUG_VIEW to Combined (0)')
+        }
+
+        def deferredSource = deferredPatch.asFile.getText('UTF-8')
+        if (!deferredSource.contains('uniform sampler2D colortex11;')) {
+            throw new GradleException('BSL Geometric Normal diagnostic must declare colortex11')
+        }
+        [
+                'uniform int ph_light_count;',
+                'uniform bool main_hand_has_light;',
+                'uniform vec4 ph_main_hand_light1;',
+                'texture2D(radiosity_reservoirs, texCoord)',
+                'texture2D(radiosity_normal, texCoord)',
+                'texture2D(radiosity_lighting, texCoord)'
+        ].each { expected ->
+            if (!deferredSource.contains(expected)) {
+                throw new GradleException("BSL GPU diagnostic is missing required fragment: ${expected}")
+            }
+        }
+        (1..9).each { mode ->
+            if (!deferredSource.contains("PHOTONICS_DEBUG_VIEW == ${mode}")) {
+                throw new GradleException("BSL deferred patch is missing diagnostic view ${mode}")
+            }
+        }
+
+        if (!propertiesPatch.asFile.getText('UTF-8').contains('PHOTONICS_DEBUG_VIEW')) {
+            throw new GradleException('BSL shader screen must expose PHOTONICS_DEBUG_VIEW')
+        }
+        if (!languagePatch.asFile.getText('UTF-8').contains('value.PHOTONICS_DEBUG_VIEW.9 = Direct Raw')) {
+            throw new GradleException('BSL language patch must label all diagnostic views')
+        }
+        if (project.version.toString().contains('1.21.11')) {
+            throw new GradleException('Artifact version must target Minecraft 1.21.1, not 1.21.11')
+        }
+    }
+}
+
+tasks.register('validateRestirPassGraph') {
+    def renderer = layout.projectDirectory.file('src/main/java/at/redi2go/photonics/client/rendering/opengl/rendering/renderers/RestirRenderer.java')
+    def raytracer = layout.projectDirectory.file('src/main/java/at/redi2go/photonics/client/Raytracer.java')
+    def shaderPackMixin = layout.projectDirectory.file('src/main/java/at/redi2go/photonics/client/mixin/ShaderPackMixin.java')
+    def lightRegistry = layout.projectDirectory.file('src/main/java/at/redi2go/photonics/client/rendering/world/LightRegistry.java')
+    def samplingShader = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/restir/sampling.fsh')
+    def spatialShader = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/restir/spatial_reuse.glsl')
+    def lightingShader = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/restir/lighting.fsh')
+    def accumulationShader = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/restir/accumulation.fsh')
+    def restirInclude = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/restir/restir.glsl')
+    def handheldInclude = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/common/handheld_lighting.glsl')
+
+    inputs.files(
+            renderer,
+            raytracer,
+            shaderPackMixin,
+            lightRegistry,
+            samplingShader,
+            spatialShader,
+            lightingShader,
+            accumulationShader,
+            restirInclude,
+            handheldInclude
+    )
+
+    doLast {
+        def rendererSource = renderer.asFile.getText('UTF-8')
+        [
+                'this.geometryBuffer)',
+                'this.reuseSamplesBuffer)',
+                'this.spatialReuseBuffers[0])',
+                'this.spatialReuseBuffers[1])',
+                'this.spatialReuseBuffers[2])',
+                'this.lightingBuffer)',
+                'this.historyBuffer)',
+                '"radiosity_lighting_raw"',
+                '"ph_scene_changed"',
+                'currentBuildTime != this.lastRenderedBuildTime',
+                'this.denoiserPasses = requestedDenoiserPasses;'
+        ].each { expected ->
+            if (!rendererSource.contains(expected)) {
+                throw new GradleException("ReSTIR renderer is missing pass-graph invariant: ${expected}")
+            }
+        }
+
+        def spatialSource = spatialShader.asFile.getText('UTF-8')
+        if (!spatialSource.contains('layout(location = 0) out vec4 reservoir_frag_out;') ||
+                !spatialSource.contains('PH_RESTIR_RESERVOIR_INPUT') ||
+                spatialSource.contains('texelFetch(radiosity_reservoirs, tex_coord, 0)')) {
+            throw new GradleException('ReSTIR spatial reuse must read a prior-stage reservoir and write a distinct location-0 attachment')
+        }
+
+        def lightingSource = lightingShader.asFile.getText('UTF-8')
+        if (!lightingSource.contains('texelFetch(radiosity_reservoirs_spatial_2, tex_coord, 0)') ||
+                !lightingSource.contains('layout(location = 1) out vec4 lighting_frag_out;')) {
+            throw new GradleException('ReSTIR lighting must consume the final spatial reservoir and write a distinct raw-lighting attachment')
+        }
+
+        def accumulationSource = accumulationShader.asFile.getText('UTF-8')
+        def restirSource = restirInclude.asFile.getText('UTF-8')
+        if (!accumulationSource.contains('layout(location = 0) out vec4 lighting_frag_out;') ||
+                !accumulationSource.contains('ph_scene_changed == 0') ||
+                !restirSource.contains('texelFetch(radiosity_lighting_raw, tex_coord, 0)')) {
+            throw new GradleException('ReSTIR accumulation must read raw lighting, write separate history, and reject stale history after scene changes')
+        }
+
+        if (!samplingShader.asFile.getText('UTF-8').contains('ph_scene_changed == 0 && reservoir_reproject') ||
+                !restirSource.contains('candidate_count = clamp(light_registry_array[light_offset], 0, PH_MAX_SAMPLES);') ||
+                !restirSource.contains('index >= ph_light_count')) {
+            throw new GradleException('ReSTIR sampling must invalidate changed-scene history, use local candidates, and reject upper-bound light indexes')
+        }
+
+        if (!raytracer.asFile.getText('UTF-8').contains('getLightingMode() != LightingMode.OFF') ||
+                !shaderPackMixin.asFile.getText('UTF-8').contains('getLightingMode() != LightingMode.OFF') ||
+                !lightRegistry.asFile.getText('UTF-8').contains('Math.ceil(lightRadius / this.nodeSize)')) {
+            throw new GradleException('ReSTIR local-light binning must be enabled consistently and dirty bins in node-size units')
+        }
+
+        def handheldSource = handheldInclude.asFile.getText('UTF-8')
+        if (!handheldSource.contains('ray_target = ivec3(rt_pos);') ||
+                !handheldSource.contains('ivec3(floor(ray.result_position)) != ivec3(floor(rt_pos))')) {
+            throw new GradleException('Handheld visibility must target and verify the shaded fragment voxel')
+        }
+    }
+}
+
+tasks.register('validateMixinIsolation') {
+    dependsOn tasks.named('compileJava')
+
+    def raytracerClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/Raytracer.class')
+    def chunkMixinClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/mixin/ChunkBuilderMeshingTaskMixin.class')
+
+    inputs.files(raytracerClass, chunkMixinClass)
+
+    doLast {
+        def raytracerNode = new ClassNode(Opcodes.ASM9)
+        new ClassReader(raytracerClass.get().asFile.bytes).accept(raytracerNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+        def illegalMixinReferences = raytracerNode.methods.collectMany { method ->
+            method.instructions.findAll { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == 'at/redi2go/photonics/client/mixin/ChunkBuilderMeshingTaskMixin'
+            }
+        }
+        if (!illegalMixinReferences.isEmpty()) {
+            throw new GradleException('Runtime classes must not directly invoke ChunkBuilderMeshingTaskMixin')
+        }
+
+        def mixinNode = new ClassNode(Opcodes.ASM9)
+        new ClassReader(chunkMixinClass.get().asFile.bytes).accept(mixinNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+        def exposedStaticMethods = mixinNode.methods.findAll { method ->
+            method.name != '<clinit>' &&
+                    (method.access & Opcodes.ACC_STATIC) != 0 &&
+                    (method.access & Opcodes.ACC_PRIVATE) == 0
+        }
+        if (!exposedStaticMethods.isEmpty()) {
+            throw new GradleException(
+                    "ChunkBuilderMeshingTaskMixin contains non-private static methods rejected by Mixin: ${exposedStaticMethods*.name.join(', ')}"
+            )
+        }
+    }
+}
+
+tasks.register('validateCriticalMixinDescriptors') {
+    dependsOn tasks.named('compileJava')
+
+    def expectedConstructor = '(Lorg/joml/Vector3f;Lorg/joml/Vector3f;Ljava/util/Map;Lnet/minecraft/client/renderer/block/model/BlockElementRotation;Z)V'
+    def targetClass = 'net/minecraft/client/renderer/block/model/BlockElement.class'
+    def mixinClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/mixin/ModelElementMixin.class')
+    def expectedShaderPropertiesMethod = 'lambda$new$58(Ljava/lang/Object;Ljava/lang/Object;)V'
+    def shaderPropertiesClass = 'net/irisshaders/iris/shaderpack/properties/ShaderProperties.class'
+    def shaderPropertiesMixinClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/mixin/ShaderPropertiesMixin.class')
+    def directiveOwner = 'net/irisshaders/iris/shaderpack/properties/ShaderProperties'
+    def directiveName = 'handleIntDirective'
+    def directiveDescriptor = '(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/function/Consumer;)Z'
+    def shaderPropertiesConstructor = '<init>(Ljava/lang/String;Lnet/irisshaders/iris/shaderpack/option/ShaderPackOptions;Ljava/lang/Iterable;)V'
+    def propertiesPreprocessorOwner = 'net/irisshaders/iris/shaderpack/preprocessor/PropertiesPreprocessor'
+    def propertiesPreprocessorInvocation = 'preprocessSource(Ljava/lang/String;Lnet/irisshaders/iris/shaderpack/option/ShaderPackOptions;Ljava/lang/Iterable;)Ljava/lang/String;'
+    def optionValuesClass = 'net/irisshaders/iris/shaderpack/option/values/OptionValues.class'
+    def optionSetClass = 'net/irisshaders/iris/shaderpack/option/OptionSet.class'
+    def expectedCompositeMethod = 'renderAll()V'
+    def compositeRendererClass = 'net/irisshaders/iris/pipeline/CompositeRenderer.class'
+    def compositeRendererMixinClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/mixin/CompositeRendererPassMixin.class')
+    def framebufferOwner = 'net/irisshaders/iris/gl/framebuffer/GlFramebuffer'
+    def framebufferInvocation = 'bind()V'
+    def compositeProgramOwner = 'net/irisshaders/iris/gl/program/Program'
+    def compositeProgramInvocation = 'use()V'
+    def quadRendererOwner = 'net/irisshaders/iris/pathways/FullScreenQuadRenderer'
+    def quadRendererInvocation = 'renderQuad()V'
+    def screenVertexShader = layout.projectDirectory.file('src/main/resources/assets/photonics/shaders/common/screen.vsh')
+    def sodiumShaderClass = 'net/irisshaders/iris/pipeline/programs/SodiumShader.class'
+    def sodiumShaderMixinClass = layout.buildDirectory.file('classes/java/main/at/redi2go/photonics/client/mixin/SodiumShaderMixin.class')
+    def sodiumConstructor = '<init>(Lnet/irisshaders/iris/pipeline/IrisRenderingPipeline;Lnet/irisshaders/iris/pipeline/programs/SodiumPrograms$Pass;Lnet/caffeinemc/mods/sodium/client/render/chunk/shader/ShaderBindingContext;ILnet/irisshaders/iris/gl/blending/BlendModeOverride;Ljava/util/List;Lnet/irisshaders/iris/uniforms/custom/CustomUniforms;Ljava/util/function/Supplier;FZ)V'
+    def sodiumInvocationDescriptors = [
+            buildSamplers: '(Lnet/irisshaders/iris/pipeline/IrisRenderingPipeline;Lnet/irisshaders/iris/pipeline/programs/SodiumPrograms$Pass;IZLjava/util/function/Supplier;)Lnet/irisshaders/iris/gl/program/ProgramSamplers;',
+            buildImages: '(Lnet/irisshaders/iris/pipeline/IrisRenderingPipeline;Lnet/irisshaders/iris/pipeline/programs/SodiumPrograms$Pass;IZLjava/util/function/Supplier;)Lnet/irisshaders/iris/gl/program/ProgramImages;'
+    ]
+
+    inputs.files(sourceSets.main.compileClasspath)
+    inputs.file(mixinClass)
+    inputs.file(shaderPropertiesMixinClass)
+    inputs.file(compositeRendererMixinClass)
+    inputs.file(sodiumShaderMixinClass)
+    inputs.file(screenVertexShader)
+
+    doLast {
+        def classpathUrls = sourceSets.main.compileClasspath.files.collect { it.toURI().toURL() } as URL[]
+        def loader = new URLClassLoader(classpathUrls, (ClassLoader) null)
+
+        try {
+            def targetBytes = loader.getResourceAsStream(targetClass)
+            if (targetBytes == null) {
+                throw new GradleException("Could not locate mapped target class: ${targetClass}")
+            }
+
+            def constructors = []
+            new ClassReader(targetBytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    if (name == '<init>') {
+                        constructors.add(descriptor)
+                    }
+                    return null
+                }
+            }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+
+            if (!constructors.contains(expectedConstructor)) {
+                throw new GradleException("BlockElement constructor mismatch. Expected ${expectedConstructor}; found ${constructors.join(', ')}")
+            }
+
+            def injectionTargets = []
+            new ClassReader(mixinClass.get().asFile.bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+                            if (annotationDescriptor == 'Lorg/spongepowered/asm/mixin/injection/Inject;') {
+                                return new AnnotationVisitor(Opcodes.ASM9) {
+                                    @Override
+                                    void visit(String annotationName, Object value) {
+                                        if (annotationName == 'method') {
+                                            injectionTargets.add(value)
+                                        }
+                                    }
+
+                                    @Override
+                                    AnnotationVisitor visitArray(String annotationName) {
+                                        if (annotationName == 'method') {
+                                            return new AnnotationVisitor(Opcodes.ASM9) {
+                                                @Override
+                                                void visit(String ignored, Object value) {
+                                                    injectionTargets.add(value)
+                                                }
+                                            }
+                                        }
+                                        return super.visitArray(annotationName)
+                                    }
+                                }
+                            }
+                            return null
+                        }
+                    }
+                }
+            }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+
+            def expectedInjection = "<init>${expectedConstructor}".toString()
+            if (!injectionTargets.contains(expectedInjection)) {
+                throw new GradleException("ModelElementMixin injection mismatch. Expected ${expectedInjection}; found ${injectionTargets.join(', ')}")
+            }
+
+            def shaderPropertiesBytes = loader.getResourceAsStream(shaderPropertiesClass)
+            if (shaderPropertiesBytes == null) {
+                throw new GradleException("Could not locate Iris target class: ${shaderPropertiesClass}")
+            }
+
+            def foundShaderPropertiesMethod = false
+            def foundDirectiveInvocation = false
+            new ClassReader(shaderPropertiesBytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    if ("${name}${descriptor}".toString() != expectedShaderPropertiesMethod) {
+                        return null
+                    }
+
+                    foundShaderPropertiesMethod = true
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        void visitMethodInsn(int opcode, String owner, String invokedName, String invokedDescriptor, boolean isInterface) {
+                            if (owner == directiveOwner && invokedName == directiveName && invokedDescriptor == directiveDescriptor) {
+                                foundDirectiveInvocation = true
+                            }
+                        }
+                    }
+                }
+            }, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+
+            if (!foundShaderPropertiesMethod) {
+                throw new GradleException("Iris ShaderProperties method mismatch. Expected ${expectedShaderPropertiesMethod}")
+            }
+            if (!foundDirectiveInvocation) {
+                throw new GradleException("Iris ${expectedShaderPropertiesMethod} no longer invokes ${directiveName}${directiveDescriptor}")
+            }
+
+            def shaderPropertiesNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(loader.getResourceAsStream(shaderPropertiesClass)).accept(shaderPropertiesNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def shaderPropertiesConstructorNode = shaderPropertiesNode.methods.find { method ->
+                "${method.name}${method.desc}".toString() == shaderPropertiesConstructor
+            }
+            if (shaderPropertiesConstructorNode == null) {
+                throw new GradleException("Iris ShaderProperties constructor mismatch. Expected ${shaderPropertiesConstructor}")
+            }
+            def foundPropertiesPreprocessor = shaderPropertiesConstructorNode.instructions.any { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == propertiesPreprocessorOwner &&
+                        "${instruction.name}${instruction.desc}".toString() == propertiesPreprocessorInvocation
+            }
+            if (!foundPropertiesPreprocessor) {
+                throw new GradleException("Iris ${shaderPropertiesConstructor} no longer invokes ${propertiesPreprocessorOwner}.${propertiesPreprocessorInvocation}")
+            }
+
+            def requiredOptionMethods = [
+                    (optionValuesClass): [
+                            'getOptionSet()Lnet/irisshaders/iris/shaderpack/option/OptionSet;',
+                            'getStringValueOrDefault(Ljava/lang/String;)Ljava/lang/String;',
+                            'getBooleanValueOrDefault(Ljava/lang/String;)Z'
+                    ],
+                    (optionSetClass): [
+                            'getStringOptions()Lcom/google/common/collect/ImmutableMap;',
+                            'isBooleanOption(Ljava/lang/String;)Z'
+                    ]
+            ]
+            requiredOptionMethods.each { classResource, expectedMethods ->
+                def classBytes = loader.getResourceAsStream(classResource)
+                if (classBytes == null) {
+                    throw new GradleException("Could not locate Iris option class: ${classResource}")
+                }
+                def classNode = new ClassNode(Opcodes.ASM9)
+                new ClassReader(classBytes).accept(classNode, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+                def actualMethods = classNode.methods.collect { method -> "${method.name}${method.desc}".toString() }
+                def missingMethods = expectedMethods.findAll { !actualMethods.contains(it) }
+                if (!missingMethods.isEmpty()) {
+                    throw new GradleException("Iris option API mismatch in ${classResource}: missing ${missingMethods.join(', ')}")
+                }
+            }
+
+            def shaderInjectionTargets = []
+            new ClassReader(shaderPropertiesMixinClass.get().asFile.bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                    if (name != 'initFromProperties') {
+                        return null
+                    }
+
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        AnnotationVisitor visitAnnotation(String annotationDescriptor, boolean visible) {
+                            if (annotationDescriptor != 'Lorg/spongepowered/asm/mixin/injection/Inject;') {
+                                return null
+                            }
+
+                            return new AnnotationVisitor(Opcodes.ASM9) {
+                                @Override
+                                void visit(String annotationName, Object value) {
+                                    if (annotationName == 'method') {
+                                        shaderInjectionTargets.add(value)
+                                    }
+                                }
+
+                                @Override
+                                AnnotationVisitor visitArray(String annotationName) {
+                                    if (annotationName == 'method') {
+                                        return new AnnotationVisitor(Opcodes.ASM9) {
+                                            @Override
+                                            void visit(String ignored, Object value) {
+                                                shaderInjectionTargets.add(value)
+                                            }
+                                        }
+                                    }
+                                    return super.visitArray(annotationName)
+                                }
+                            }
+                        }
+                    }
+                }
+            }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+
+            if (!shaderInjectionTargets.contains(expectedShaderPropertiesMethod)) {
+                throw new GradleException("ShaderPropertiesMixin injection mismatch. Expected ${expectedShaderPropertiesMethod}; found ${shaderInjectionTargets.join(', ')}")
+            }
+
+            def compositeRendererBytes = loader.getResourceAsStream(compositeRendererClass)
+            if (compositeRendererBytes == null) {
+                throw new GradleException("Could not locate Iris target class: ${compositeRendererClass}")
+            }
+
+            def compositeNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(compositeRendererBytes).accept(compositeNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def compositeMethod = compositeNode.methods.find { method ->
+                "${method.name}${method.desc}".toString() == expectedCompositeMethod
+            }
+            if (compositeMethod == null) {
+                throw new GradleException("Iris CompositeRenderer method mismatch. Expected ${expectedCompositeMethod}")
+            }
+            def requiredCompositeInvocations = [
+                    [owner: framebufferOwner, invocation: framebufferInvocation],
+                    [owner: compositeProgramOwner, invocation: compositeProgramInvocation],
+                    [owner: quadRendererOwner, invocation: quadRendererInvocation]
+            ]
+            def compositeInvocationIndices = []
+            int compositeInstructionIndex = 0
+            for (def instruction = compositeMethod.instructions.first; instruction != null; instruction = instruction.next) {
+                if (instruction instanceof MethodInsnNode) {
+                    requiredCompositeInvocations.eachWithIndex { expected, expectedIndex ->
+                        if (instruction.owner == expected.owner &&
+                                "${instruction.name}${instruction.desc}".toString() == expected.invocation &&
+                                compositeInvocationIndices.size() == expectedIndex) {
+                            compositeInvocationIndices.add(compositeInstructionIndex)
+                        }
+                    }
+                }
+                compositeInstructionIndex++
+            }
+            if (compositeInvocationIndices.size() != requiredCompositeInvocations.size()) {
+                throw new GradleException("Iris ${expectedCompositeMethod} no longer invokes framebuffer bind, program use, and quad render in the required order")
+            }
+
+            def annotationValues = { AnnotationNode annotation ->
+                def values = [:]
+                for (int i = 0; annotation?.values != null && i < annotation.values.size(); i += 2) {
+                    values[annotation.values[i]] = annotation.values[i + 1]
+                }
+                values
+            }
+            def annotationTargets = { atValue ->
+                def atAnnotations = atValue instanceof List ? atValue : [atValue]
+                atAnnotations.findAll { it instanceof AnnotationNode }.collect { annotationValues(it as AnnotationNode).target }
+            }
+            def shaderMixinNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(shaderPropertiesMixinClass.get().asFile.bytes).accept(shaderMixinNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def optionsField = shaderMixinNode.fields.find { field -> field.name == 'photonics$shaderPackOptions' }
+            def optionsFieldAnnotations = (optionsField?.visibleAnnotations ?: []) + (optionsField?.invisibleAnnotations ?: [])
+            if (optionsField == null || !optionsFieldAnnotations.any { it.desc == 'Lorg/spongepowered/asm/mixin/Unique;' }) {
+                throw new GradleException('ShaderPropertiesMixin ShaderPackOptions field must exist and be @Unique')
+            }
+            def captureMethod = shaderMixinNode.methods.find { method -> method.name == 'defaultInit2' }
+            def captureAnnotations = (captureMethod?.visibleAnnotations ?: []) + (captureMethod?.invisibleAnnotations ?: [])
+            def captureInject = captureAnnotations.find { it.desc == 'Lorg/spongepowered/asm/mixin/injection/Inject;' }
+            def captureValues = annotationValues(captureInject)
+            def captureMethods = captureValues.method instanceof List ? captureValues.method : [captureValues.method]
+            def captureAtValues = (captureValues.at instanceof List ? captureValues.at : [captureValues.at])
+                    .findAll { it instanceof AnnotationNode }
+                    .collect { annotationValues(it as AnnotationNode).value }
+            def capturesOptionsField = captureMethod?.instructions?.any { instruction ->
+                instruction instanceof FieldInsnNode &&
+                        instruction.opcode == Opcodes.PUTFIELD &&
+                        instruction.name == 'photonics$shaderPackOptions' &&
+                        instruction.desc == 'Lnet/irisshaders/iris/shaderpack/option/ShaderPackOptions;'
+            }
+            if (!captureMethods.contains(shaderPropertiesConstructor) || !captureAtValues.contains('CTOR_HEAD') || !capturesOptionsField) {
+                throw new GradleException("ShaderPropertiesMixin must capture ShaderPackOptions at CTOR_HEAD of ${shaderPropertiesConstructor}")
+            }
+            def resolverMethod = shaderMixinNode.methods.find { method ->
+                "${method.name}${method.desc}".toString() == 'resolveOptionValue(Lnet/irisshaders/iris/shaderpack/option/ShaderPackOptions;Ljava/lang/String;)Ljava/lang/String;'
+            }
+            def resolverInvocations = resolverMethod?.instructions?.findAll { it instanceof MethodInsnNode }?.collect {
+                "${it.owner}.${it.name}${it.desc}".toString()
+            } ?: []
+            def expectedResolverInvocations = [
+                    'net/irisshaders/iris/shaderpack/option/ShaderPackOptions.getOptionValues()Lnet/irisshaders/iris/shaderpack/option/values/OptionValues;',
+                    'net/irisshaders/iris/shaderpack/option/values/OptionValues.getStringValueOrDefault(Ljava/lang/String;)Ljava/lang/String;',
+                    'net/irisshaders/iris/shaderpack/option/values/OptionValues.getBooleanValueOrDefault(Ljava/lang/String;)Z'
+            ]
+            def missingResolverInvocations = expectedResolverInvocations.findAll { !resolverInvocations.contains(it) }
+            if (resolverMethod == null || !missingResolverInvocations.isEmpty()) {
+                throw new GradleException("ShaderPropertiesMixin option resolver mismatch. Missing ${missingResolverInvocations.join(', ')}")
+            }
+            def mixinNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(compositeRendererMixinClass.get().asFile.bytes).accept(mixinNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def classAnnotations = (mixinNode.visibleAnnotations ?: []) + (mixinNode.invisibleAnnotations ?: [])
+            def mixinAnnotation = classAnnotations.find { annotation ->
+                annotation.desc == 'Lorg/spongepowered/asm/mixin/Mixin;'
+            }
+            def mixinTargets = annotationValues(mixinAnnotation).targets ?: []
+            if (!mixinTargets.contains('net/irisshaders/iris/pipeline/CompositeRenderer')) {
+                throw new GradleException("CompositeRendererPassMixin target mismatch. Found ${mixinTargets.join(', ')}")
+            }
+
+            def expectedCompositeHooks = [
+                    bindFramebuffer: "L${framebufferOwner};${framebufferInvocation}".toString(),
+                    useProgram: "L${compositeProgramOwner};${compositeProgramInvocation}".toString(),
+                    renderQuad: "L${quadRendererOwner};${quadRendererInvocation}".toString()
+            ]
+            expectedCompositeHooks.each { handlerName, expectedTarget ->
+                def handlerMethod = mixinNode.methods.find { method -> method.name == handlerName }
+                def handlerAnnotations = (handlerMethod?.visibleAnnotations ?: []) + (handlerMethod?.invisibleAnnotations ?: [])
+                def wrapAnnotation = handlerAnnotations.find { annotation ->
+                    annotation.desc == 'Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;'
+                }
+                def wrapValues = annotationValues(wrapAnnotation)
+                def wrapMethods = wrapValues.method instanceof List ? wrapValues.method : [wrapValues.method]
+                def wrapTargets = annotationTargets(wrapValues.at)
+                if (!wrapMethods.contains(expectedCompositeMethod) || !wrapTargets.contains(expectedTarget)) {
+                    throw new GradleException("CompositeRendererPassMixin ${handlerName} hook mismatch. Expected ${expectedCompositeMethod} at ${expectedTarget}")
+                }
+            }
+            def bindHandler = mixinNode.methods.find { method -> method.name == 'bindFramebuffer' }
+            def bindsPhotonicsFramebuffer = bindHandler?.instructions?.any { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == 'at/redi2go/photonics/client/rendering/opengl/rendering/PhotonicsShader' &&
+                        "${instruction.name}${instruction.desc}".toString() == 'bindFramebuffer()V'
+            }
+            def bindInstructions = bindHandler?.instructions?.toArray()?.toList() ?: []
+            def colorFramebufferBindIndex = bindInstructions.findIndexOf { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == 'at/redi2go/photonics/client/rendering/opengl/rendering/ColorFramebuffer' &&
+                        "${instruction.name}${instruction.desc}".toString() == 'bind()V'
+            }
+            def guardsNullableFramebuffer = colorFramebufferBindIndex > 0 && bindInstructions.subList(0, colorFramebufferBindIndex).any { instruction ->
+                instruction instanceof JumpInsnNode && instruction.opcode == Opcodes.IFNULL
+            }
+            def retainsIrisFramebufferFallback = bindInstructions.any { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == 'com/llamalad7/mixinextras/injector/wrapoperation/Operation' &&
+                        "${instruction.name}${instruction.desc}".toString() == 'call([Ljava/lang/Object;)Ljava/lang/Object;'
+            }
+            def programHandler = mixinNode.methods.find { method -> method.name == 'useProgram' }
+            def bindsPhotonicsBuffers = programHandler?.instructions?.any { instruction ->
+                instruction instanceof MethodInsnNode &&
+                        instruction.owner == 'at/redi2go/photonics/client/Raytracer' &&
+                        "${instruction.name}${instruction.desc}".toString() == 'bindBuffers(I)V'
+            }
+            if (!bindsPhotonicsFramebuffer || !guardsNullableFramebuffer || !retainsIrisFramebufferFallback || !bindsPhotonicsBuffers) {
+                throw new GradleException('CompositeRendererPassMixin must null-check and bind the selected Photonics framebuffer, retain the Iris framebuffer fallback, and bind SSBOs')
+            }
+
+            def screenVertexSource = screenVertexShader.asFile.getText('UTF-8')
+            ['sunVecWorld', 'sunVec', 'upVec'].each { outputName ->
+                if (!(screenVertexSource =~ /flat\s+out\s+vec3\s+${outputName}\s*;/).find() ||
+                        !(screenVertexSource =~ /(?m)^\s*${outputName}\s*=\s*.+;/).find()) {
+                    throw new GradleException("Shared Photonics vertex shader must declare and assign ${outputName}")
+                }
+            }
+
+            def sodiumShaderBytes = loader.getResourceAsStream(sodiumShaderClass)
+            if (sodiumShaderBytes == null) {
+                throw new GradleException("Could not locate Iris target class: ${sodiumShaderClass}")
+            }
+            def sodiumNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(sodiumShaderBytes).accept(sodiumNode, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def sodiumConstructorNode = sodiumNode.methods.find { method ->
+                "${method.name}${method.desc}".toString() == sodiumConstructor
+            }
+            if (sodiumConstructorNode == null) {
+                throw new GradleException("Iris SodiumShader constructor mismatch. Expected ${sodiumConstructor}")
+            }
+            sodiumInvocationDescriptors.each { invocationName, invocationDescriptor ->
+                def foundInvocation = sodiumConstructorNode.instructions.any { instruction ->
+                    instruction instanceof MethodInsnNode &&
+                            instruction.owner == 'net/irisshaders/iris/pipeline/programs/SodiumShader' &&
+                            instruction.name == invocationName &&
+                            instruction.desc == invocationDescriptor
+                }
+                if (!foundInvocation) {
+                    throw new GradleException("Iris ${sodiumConstructor} no longer invokes ${invocationName}${invocationDescriptor}")
+                }
+            }
+
+            def sodiumMixinNode = new ClassNode(Opcodes.ASM9)
+            new ClassReader(sodiumShaderMixinClass.get().asFile.bytes).accept(sodiumMixinNode, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES)
+            def shadowFields = sodiumMixinNode.fields.findAll { field ->
+                ((field.visibleAnnotations ?: []) + (field.invisibleAnnotations ?: [])).any { annotation ->
+                    annotation.desc == 'Lorg/spongepowered/asm/mixin/Shadow;'
+                }
+            }
+            if (!shadowFields.isEmpty()) {
+                throw new GradleException("SodiumShaderMixin must not shadow locked-Iris fields: ${shadowFields*.name.join(', ')}")
+            }
+            def shadowVoxelField = sodiumMixinNode.fields.find { field -> field.name == 'photonics$isShadowVoxelPass' }
+            def shadowVoxelAnnotations = (shadowVoxelField?.visibleAnnotations ?: []) + (shadowVoxelField?.invisibleAnnotations ?: [])
+            if (shadowVoxelField == null || !shadowVoxelAnnotations.any { it.desc == 'Lorg/spongepowered/asm/mixin/Unique;' }) {
+                throw new GradleException('SodiumShaderMixin shadow-voxel flag must exist and be @Unique')
+            }
+
+            def expectedModifyTargets = sodiumInvocationDescriptors.collectEntries { invocationName, invocationDescriptor ->
+                [("Lnet/irisshaders/iris/pipeline/programs/SodiumShader;${invocationName}${invocationDescriptor}".toString()): false]
+            }
+            def foundCapture = false
+            sodiumMixinNode.methods.each { method ->
+                def annotations = (method.visibleAnnotations ?: []) + (method.invisibleAnnotations ?: [])
+                annotations.each { annotation ->
+                    def values = annotationValues(annotation)
+                    def methods = values.method instanceof List ? values.method : [values.method]
+                    if (annotation.desc == 'Lorg/spongepowered/asm/mixin/injection/Inject;' &&
+                            methods.contains(sodiumConstructor) &&
+                            annotationTargets(values.at).any { it?.contains('buildUniforms') }) {
+                        foundCapture = true
+                    }
+                    if (annotation.desc == 'Lorg/spongepowered/asm/mixin/injection/ModifyArg;' &&
+                            methods.contains(sodiumConstructor) && values.index == 3) {
+                        annotationTargets(values.at).each { target ->
+                            if (expectedModifyTargets.containsKey(target)) {
+                                expectedModifyTargets[target] = true
+                            }
+                        }
+                    }
+                }
+            }
+            if (!foundCapture) {
+                throw new GradleException("SodiumShaderMixin must initialize its flag in ${sodiumConstructor} before buildUniforms")
+            }
+            def missingModifyTargets = expectedModifyTargets.findAll { target, found -> !found }.keySet()
+            if (!missingModifyTargets.isEmpty()) {
+                throw new GradleException("SodiumShaderMixin missing locked-Iris @ModifyArg targets: ${missingModifyTargets.join(', ')}")
+            }
+        } finally {
+            loader.close()
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('validateMixinRegistrations')
+    dependsOn tasks.named('validateMixinIsolation')
+    dependsOn tasks.named('validateShaderPatchResources')
+    dependsOn tasks.named('validateRestirPassGraph')
+    dependsOn tasks.named('validateCriticalMixinDescriptors')
+}

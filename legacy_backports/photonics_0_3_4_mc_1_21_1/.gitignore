@@ -1,0 +1,22 @@
+# Build artifacts (regenerable — do not track)
+.gradle/
+build/
+bin/
+out/
+run/
+*.class
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local code-intelligence indexes
+.codegraph/
+graphify-out/
+graph.json

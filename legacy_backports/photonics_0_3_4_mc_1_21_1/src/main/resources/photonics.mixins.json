@@ -1,0 +1,48 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "at.redi2go.photonics.client.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "BlockElementFaceMixin",
+    "BlockOcclusionCacheMixin",
+    "BlockRendererMixin",
+    "ChunkBuilderMeshingTaskMixin",
+    "CommonUniformsMixin",
+    "CompositeRendererMixin",
+    "CompositeRendererPassMixin",
+    "DefaultTerrainRenderPassesMixin",
+    "FabricModelAccessMixin",
+    "FinalRenderPassMixin",
+    "GlProgramMixin",
+    "IncludeGraphMixin",
+    "InventoryAccessor",
+    "IrisImagesMixin",
+    "IrisRenderingPipelineMixin",
+    "IrisSamplersMixin",
+    "JcppProcessorMixin",
+    "LanguageMapMixin",
+    "ProgramBuilderMixin",
+    "ProgramIdMixin",
+    "ReloadableResourceManagerAccessor",
+    "ShaderPackAccessor",
+    "ShaderPackMixin",
+    "ShaderPackSourceNamesMixin",
+    "ShaderPropertiesMixin",
+    "ShadowCompositeRendererMixin",
+    "SodiumProgramsMixin",
+    "SodiumProgramsPassMixin",
+    "SodiumShaderMixin",
+    "SodiumWorldRendererMixin"
+  ],
+  "client": [
+    "BakedQuadMixin",
+    "DebugScreenOverlayAccessor",
+    "FaceBakeryMixin",
+    "ModelElementMixin",
+    "WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
