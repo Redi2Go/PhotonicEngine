@@ -67,6 +67,10 @@ public class HandheldLightComponent implements RenderingComponent {
         );
     }
 
+    public boolean hasItem() {
+        return !mainHand.isEmpty() || !offHand.isEmpty();
+    }
+
     @Override
     public void onFrameBegin() {
         mainHand.update();

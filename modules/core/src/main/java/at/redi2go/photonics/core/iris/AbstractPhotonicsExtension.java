@@ -35,7 +35,6 @@ public abstract class AbstractPhotonicsExtension extends AbstractRenderingCompon
     public AbstractPhotonicsExtension(
             PhotonicsProperties properties,
             AtlasDownloader atlasDownloader,
-            HandheldItemSupplier handheldItemSupplier,
             @Nullable RenderingComponent... components
     ) {
         super(components);
@@ -71,14 +70,6 @@ public abstract class AbstractPhotonicsExtension extends AbstractRenderingCompon
                         worldCompiler::origin
                 )
         );
-
-        if (properties.getLightingMode() != LightingMode.OFF && properties.isHandheldLightEnabled())
-            registerComponent(
-                    new HandheldLightComponent(
-                            handheldItemSupplier,
-                            properties
-                    )
-            );
     }
 
     public <T extends IrisPipeline> T registerRenderer(T component) {

@@ -11,5 +11,4 @@ public @interface AttachmentUsage {
     int FLIP = 1 << 1;
 
     int CREATE_SAMPLER = 1 << 2;
-    int CREATE_PREV_SAMPLER = 1 << 3;
 }

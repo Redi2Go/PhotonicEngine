@@ -109,7 +109,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
             for (int i = 0; i < passes.size(); i++) {
                 var pass = passes.get(i);
                 compositeSources[i] = new ProgramSource(
-                        pass.name(),
+                        pass.hasFragmentShader() ? cleanUpFragmentName(pass.fragmentShader()) : pass.name(),
                         readSource(pass.vertexShader()),
                         null,
                         null,
@@ -181,6 +181,14 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
 
         AbsolutePackPath path = AbsolutePackPath.fromAbsolutePath(fileName.startsWith("/") ? fileName : "/" + fileName);
         return ((ShaderPackAccessor) shaderPack).getSourceProvider().apply(path);
+    }
+
+    @Unique
+    private static String cleanUpFragmentName(String fragment) {
+        fragment = fragment.substring(fragment.lastIndexOf("/") + 1);
+        fragment = fragment.substring(0, fragment.lastIndexOf("."));
+
+        return fragment;
     }
 
 }

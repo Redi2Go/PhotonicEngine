@@ -26,7 +26,6 @@
     "iris.pipeline.passes.composite.CompositeRendererMixin",
     "iris.pipeline.passes.composite.CompositeRendererAccessor",
     "iris.pipeline.passes.composite.CompositePassMixin",
-    "iris.pipeline.passes.composite.CompositeComputePassMixin",
     "iris.pipeline.passes.FinalPassRendererMixin",
     "iris.pipeline.passes.GlProgramMixin",
     "iris.pipeline.passes.ShadowCompositeRendererMixin",

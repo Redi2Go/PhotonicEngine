@@ -70,7 +70,7 @@ public class PhotonicsRenderer extends CompositeRenderer {
 
         this.name = name;
         for (CompositeRendererPassExt pass : getPasses())
-            pass.setFramebuffer(passes.get(pass.index()).framebuffer());
+            pass.setFramebuffer(passes.get(pass.getIndex()).framebuffer());
     }
 
     public String getName() {

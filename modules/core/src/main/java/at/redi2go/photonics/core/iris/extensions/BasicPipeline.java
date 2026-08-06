@@ -13,7 +13,7 @@ public class BasicPipeline extends AbstractPhotonicsExtension {
             HandheldItemSupplier handheldItemSupplier,
             IrisFactory pipeline
     ) {
-        super(properties, atlasDownloader, handheldItemSupplier);
+        super(properties, atlasDownloader);
     }
 
     @Override

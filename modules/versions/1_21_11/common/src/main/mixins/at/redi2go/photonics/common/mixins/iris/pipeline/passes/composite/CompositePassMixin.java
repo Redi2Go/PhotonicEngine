@@ -3,6 +3,7 @@ package at.redi2go.photonics.common.mixins.iris.pipeline.passes.composite;
 import at.redi2go.photonics.common.iris.pipeline.CompositeRendererPassExt;
 import at.redi2go.photonics.common.iris.pipeline.framebuffer.InternalIrisFramebuffer;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
+import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.irisshaders.iris.gl.framebuffer.GlFramebuffer;
@@ -13,6 +14,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Mixin(targets = "net.irisshaders.iris.pipeline.CompositeRenderer$Pass")
@@ -25,18 +28,11 @@ public abstract class CompositePassMixin implements CompositeRendererPassExt {
 
     @Shadow ViewportData viewportScale;
 
+    @Shadow private String name;
+    @Unique private String debugName = null;
     @Unique private int index = 0;
+    @Unique private ImmutableList<Runnable> actions = ImmutableList.of();
     @Unique private InternalIrisFramebuffer phFramebuffer = null;
-
-    @Override
-    public int index() {
-        return index;
-    }
-
-    @Override
-    public void setIndex(int index) {
-        this.index = index;
-    }
 
     @WrapOperation(
             method = "setupState",
@@ -50,6 +46,37 @@ public abstract class CompositePassMixin implements CompositeRendererPassExt {
             phFramebuffer.bind();
         else
             original.call(instance);
+    }
+
+    @Override
+    public String getDebugName() {
+        return Optional.ofNullable(debugName)
+                .orElse(name);
+    }
+
+    @Override
+    public void setDebugName(String debugName) {
+        this.debugName = debugName;
+    }
+
+    @Override
+    public int getIndex() {
+        return index;
+    }
+
+    @Override
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    @Override
+    public ImmutableList<Runnable> getActions() {
+        return actions;
+    }
+
+    @Override
+    public void setActions(List<Runnable> actions) {
+        this.actions = ImmutableList.copyOf(actions);
     }
 
     @Override

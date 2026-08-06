@@ -2,7 +2,6 @@ package at.redi2go.photonics.common.iris.pipeline.builder;
 
 import at.redi2go.photonics.common.iris.pipeline.IrisFactoryImpl;
 import at.redi2go.photonics.common.iris.pipeline.builder.actions.FlipAction;
-import at.redi2go.photonics.common.iris.pipeline.builder.actions.RepeatAction;
 import at.redi2go.photonics.common.iris.pipeline.builder.actions.RunAction;
 import at.redi2go.photonics.common.iris.pipeline.impl.PipelineAction;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
@@ -70,20 +69,6 @@ public abstract class AbstractActionBuilderConsumer implements PipelineActionBui
         }
 
         return true;
-    }
-
-    @Override
-    public boolean addBeginRepeating(int n) {
-        if (shouldCreateAction(e -> e.addBeginRepeating(n))) {
-            actions.add(new RepeatAction.Builder(factory, n, currentDebugGroup));
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean addEndRepeating() {
-        return !shouldCreateAction(PipelineActionBuilder::addEndRepeating);
     }
 
     protected final List<PipelineAction> buildActions() {

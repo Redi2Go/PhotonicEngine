@@ -1,6 +1,8 @@
 package at.redi2go.photonics.core.iris.pipeline.rendering;
 
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
+import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BooleanSupplier;
@@ -11,6 +13,10 @@ public interface IrisPipeline {
     void renderAll();
 
     interface Builder {
+        Builder withFragmentPrefix(@NonNls String prefix);
+
+        Builder withVertexPrefix(@NonNls String prefix);
+
         Builder debugGroup(String name);
 
         default Builder debugGroup(String name, BooleanSupplier condition) {
@@ -36,8 +42,8 @@ public interface IrisPipeline {
 
         Builder thenFlip(IrisFramebuffer... framebuffers);
 
-        default Builder thenFlip(BooleanSupplier condition, IrisFramebuffer... framebuffers) {
-            return condition.getAsBoolean() ? thenFlip(framebuffers) : this;
+        default Builder thenFlip(IrisFramebuffer framebuffer, BooleanSupplier condition) {
+            return condition.getAsBoolean() ? thenFlip(framebuffer) : this;
         }
 
         Builder thenRun(Runnable action);
@@ -46,9 +52,9 @@ public interface IrisPipeline {
             return condition.getAsBoolean() ? thenRun(action) : this;
         }
 
-        Builder repeat(int n, Consumer<IrisPipeline.Builder> builderAction);
+        Builder repeat(int n, IntObjectBiConsumer<IrisPipeline.Builder> builderAction);
 
-        default Builder repeat(int n, BooleanSupplier condition, Consumer<IrisPipeline.Builder> builderAction) {
+        default Builder repeat(int n, BooleanSupplier condition, IntObjectBiConsumer<IrisPipeline.Builder> builderAction) {
             return condition.getAsBoolean() ? repeat(n, builderAction) : this;
         }
 

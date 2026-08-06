@@ -58,11 +58,11 @@ vec3 ph_decode_normal(vec2 f) {
 // end of thanks null
 
 uint ph_pack_normal(vec3 normal) {
-    return packSnorm2x16(ph_encode_normal(normal));
+    return packUnorm2x16(ph_encode_normal(normal));
 }
 
 vec3 ph_unpack_normal(uint packed_normal) {
-    return ph_decode_normal(unpackSnorm2x16(packed_normal));
+    return ph_decode_normal(unpackUnorm2x16(packed_normal));
 }
 
 #endif

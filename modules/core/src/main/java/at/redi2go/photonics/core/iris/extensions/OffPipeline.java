@@ -11,7 +11,7 @@ public class OffPipeline extends AbstractPhotonicsExtension {
             AtlasDownloader atlasDownloader,
             HandheldItemSupplier handheldItemSupplier
     ) {
-        super(properties, atlasDownloader, handheldItemSupplier);
+        super(properties, atlasDownloader);
     }
 
     @Override

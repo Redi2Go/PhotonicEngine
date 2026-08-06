@@ -43,7 +43,11 @@ public class DeferredIrisRenderer implements IrisRenderer, PipelineAction {
             String name,
             @Nullable String fragmentShader,
             @Nullable String vertexShader,
-            @Nullable IrisFramebuffer framebuffer
+            @Nullable IrisFramebuffer framebuffer,
+            List<Runnable> actions
     ) {
+        public boolean hasFragmentShader() {
+            return fragmentShader != null;
+        }
     }
 }

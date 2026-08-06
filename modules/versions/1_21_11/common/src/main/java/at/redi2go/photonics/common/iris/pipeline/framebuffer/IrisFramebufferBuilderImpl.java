@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.function.Function;
 
 public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
-    private static final int FLIP_PREV_MASK = AttachmentUsage.FLIP | AttachmentUsage.CREATE_PREV_SAMPLER;
-
     private final FramebufferSize sizeSupplier;
     private final Vector2ic initialSize;
 
@@ -30,12 +28,9 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
 
     @Override
     public IrisFramebuffer.Builder addAttachment(String name, ITextureFormat format, @AttachmentUsage int usage) {
-        if ((usage & AttachmentUsage.CREATE_PREV_SAMPLER) != 0 && (usage & FLIP_PREV_MASK) != FLIP_PREV_MASK)
-            throw new IllegalArgumentException("cannot create prev sampler without flipping");
-
         final var writeAttachment = IRenderSystem.getDevice()
                 .ph$createTexture2D(
-                        () -> name + " #1",
+                        () -> name + " main",
                         TextureUsage.RENDER_ATTACHMENT,
                         format,
                         initialSize.x(), initialSize.y(),
@@ -47,7 +42,7 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
         if ((usage & AttachmentUsage.FLIP) != 0) {
             readAttachment = IRenderSystem.getDevice()
                     .ph$createTexture2D(
-                            () -> name + " #2",
+                            () -> name + " alt",
                             TextureUsage.RENDER_ATTACHMENT,
                             format,
                             initialSize.x(), initialSize.y(),
@@ -62,7 +57,7 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
                         name,
                         writeAttachment,
                         (usage & AttachmentUsage.CREATE_SAMPLER) != 0,
-                        (usage & AttachmentUsage.CREATE_PREV_SAMPLER) != 0
+                        (usage & AttachmentUsage.FLIP) != 0
                 )
         );
 
@@ -71,7 +66,7 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
                         name,
                         readAttachment,
                         (usage & AttachmentUsage.CREATE_SAMPLER) != 0,
-                        (usage & AttachmentUsage.CREATE_PREV_SAMPLER) != 0
+                        (usage & AttachmentUsage.FLIP) != 0
                 )
         );
 
