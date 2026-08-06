@@ -14,6 +14,7 @@ void main() {
     if (frag_is_in_world) {
         smple.depth = load_depth();
         smple.packed_normal = frag_is_hand ? _frag_data.data1.y : _frag_data.data1.z;
+        smple.is_hand = frag_is_hand;
 
         vec4 center = vec4(0.0f);
         vec3 maxNeighbour = vec3(0.0f);
