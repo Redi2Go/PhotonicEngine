@@ -113,6 +113,11 @@ void indirect_reservoir_finalize_weight(
     inout IndirectReservoir reservoir,
     float sample_weight
 ) {
+    if (sample_weight <= 0.0f) {
+        reservoir.weight = 0.0f;
+        return;
+    }
+
     reservoir.weight = (1.0f / sample_weight) * (reservoir.weight / reservoir.total_samples);
 }
 
