@@ -9,6 +9,10 @@
 
 #define VoxelData uvec4
 
+VoxelData voxel_data_empty() {
+    return uvec4(0);
+}
+
 void voxel_data_apply_tint(inout VoxelData voxel_data, uvec4 tint) {
      voxel_data.y = ph_pack_int_color(
         ph_apply_int_tint(
