@@ -28,9 +28,10 @@ public abstract class CompositePassMixin implements CompositeRendererPassExt {
 
     @Shadow ViewportData viewportScale;
 
+    @Unique private int index = 0;
+
     @Shadow private String name;
     @Unique private String debugName = null;
-    @Unique private int index = 0;
     @Unique private ImmutableList<Runnable> actions = ImmutableList.of();
     @Unique private InternalIrisFramebuffer phFramebuffer = null;
 
@@ -49,6 +50,16 @@ public abstract class CompositePassMixin implements CompositeRendererPassExt {
     }
 
     @Override
+    public int getIndex() {
+        return index;
+    }
+
+    @Override
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    @Override
     public String getDebugName() {
         return Optional.ofNullable(debugName)
                 .orElse(name);
@@ -57,16 +68,6 @@ public abstract class CompositePassMixin implements CompositeRendererPassExt {
     @Override
     public void setDebugName(String debugName) {
         this.debugName = debugName;
-    }
-
-    @Override
-    public int getIndex() {
-        return index;
-    }
-
-    @Override
-    public void setIndex(int index) {
-        this.index = index;
     }
 
     @Override

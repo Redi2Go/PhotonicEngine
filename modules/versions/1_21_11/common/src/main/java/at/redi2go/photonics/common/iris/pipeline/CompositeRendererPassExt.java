@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CompositeRendererPassExt {
-    String getDebugName();
-
-    void setDebugName(@Nullable String name);
-
     int getIndex();
 
     void setIndex(int index);
+
+    String getDebugName();
+
+    void setDebugName(@Nullable String name);
 
     /** Run after the pass is completed */
     ImmutableList<Runnable> getActions();
