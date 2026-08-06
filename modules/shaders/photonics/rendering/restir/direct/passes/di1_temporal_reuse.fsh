@@ -8,7 +8,7 @@
 layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 
 void main() {
-    setup_frag_data(0);
+    setup_frag_data(1);
     if (!frag_is_in_world) discard;
 
     // REPROJECTION

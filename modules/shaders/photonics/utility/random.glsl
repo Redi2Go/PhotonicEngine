@@ -5,8 +5,8 @@ uint ph_new_rand_state(vec2 frag, int frame, int seed) {
     return uint(
         uint(frag.x) * uint(1973) +
         uint(frag.y) * uint(9277) +
-        uint(frame + 31 *  seed) *
-        uint(26699)
+        uint(seed)   * uint(26699) +
+        uint(frame)  * uint(69193)
     ) | uint(1);
 }
 
