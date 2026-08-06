@@ -1,9 +1,9 @@
 #include "/photonics/utility/random.glsl"
 
-#define NEIGHBOR_DATA_OUT 0
 #define NEIGHBOR_RESERVOIR_OUT 0
 
-//ph_required: uniform sampler2D restir_neighbor_data;
+uniform sampler2D neighbor_data;
+uniform sampler2D neighbor_reservoir;
 
 struct NeighborReservoir {
     int size;
@@ -73,5 +73,5 @@ void neighbor_reservoir_encode_samples(NeighborReservoir reservoir, out vec4 res
 }
 
 void neighbor_load_samples(ivec2 texel, out uvec4 samples) {
-    samples = floatBitsToUint(texelFetch(prev_restir_lighting_variance, texel, 0));
+    samples = floatBitsToUint(texelFetch(neighbor_reservoir, texel, 0));
 }

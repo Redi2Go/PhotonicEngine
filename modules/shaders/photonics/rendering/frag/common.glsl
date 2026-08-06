@@ -59,8 +59,9 @@ void setup_frag_data(int rnd_seed) {
 #endif
 }
 
-//ph_required: uniform sampler2D ph_prev_exposure;
+//ph_required: uniform sampler2D prev_exposure;
 
+// Deprecated: Remove for 0.4 release
 #if !defined PH_EXPOSURE_ADJUSTMENT
 float get_exposure() {
     return 1.0f;
@@ -68,5 +69,5 @@ float get_exposure() {
 #endif
 
 float get_previous_exposure() {
-    return frameCounter == 0 ? 1.0f : texelFetch(ph_prev_exposure, ivec2(0), 0).r;
+    return frameCounter == 0 ? 1.0f : texelFetch(prev_exposure, ivec2(0), 0).r;
 }

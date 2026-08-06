@@ -4,7 +4,7 @@
 #define FRAG_USE_GEO_NORMAL
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/common.glsl"
 
 layout(location = RESTIR_LIGHTING_OUT) out vec4 lighting_frag_out;
 layout(location = RESTIR_LIGHTING_VARIANCE_OUT) out vec4 lighting_variance_frag_out;
@@ -19,9 +19,9 @@ void main() {
     SampleHistory smple;
     sample_history_load(smple);
 
-#if PH_RESTIR_DENOISER_PASSES == 0
+    #if PH_RESTIR_DENOISER_PASSES == 0
     smple.lighting.rgb /= get_exposure();
-#endif
+    #endif
 
     SampleHistory accumulator;
     sample_history_reproject(accumulator);
@@ -30,10 +30,10 @@ void main() {
 
     sample_history_combine_lighting(accumulator, smple);
 
-#if PH_RESTIR_DENOISER_PASSES != 0
+    #if PH_RESTIR_DENOISER_PASSES != 0
     sample_history_combine_moment(accumulator, smple);
     sample_history_compute_variance(accumulator, smple);
-#endif
+    #endif
 
     lighting_frag_out = accumulator.lighting;
     lighting_variance_frag_out = accumulator.variance;

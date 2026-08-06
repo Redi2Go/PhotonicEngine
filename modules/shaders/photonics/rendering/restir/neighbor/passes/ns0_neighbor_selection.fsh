@@ -2,24 +2,24 @@
 
 #define frag_tex_coord ivec2(gl_FragCoord.xy)
 
-//ph_required: uniform sampler2D depthtex0;
-//ph_required: uniform sampler2D prev_restir_lighting_variance;
 //ph_required: uniform int frameCounter;
-//ph_required: uniform float near, far;
 
-#include "/photonics/rendering/restir/neighbor/reservoir.glsl"
-#include "/photonics/rendering/restir/svgf.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
+
+#include "/photonics/rendering/frag/fast_data.glsl"
+#include "/photonics/rendering/restir/neighbor/reservoir.glsl"
+#include "/photonics/rendering/restir/svgf/common.glsl"
+
 
 // Store the samples in lighting as this value hasn't been initialized yet
 layout(location = NEIGHBOR_RESERVOIR_OUT) out vec4 neighbor_samples;
 
 void main() {
-    vec2 center_data = texelFetch(restir_neighbor_data, frag_tex_coord, 0).xy;
-    if (isinf(center_data.x)) discard;
+    FragData center_data = fast_frag_fetch(frag_tex_coord);
+    if (!fast_frag_in_world(center_data)) discard;
 
-    float D0 = center_data.x;
-    vec3  N0 = ph_unpack_normal(floatBitsToUint(center_data.y));
+    float D0 = center_data.depth;
+    vec3  N0 = fast_frag_geo_normal(center_data);
 
     uint rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 4532789);
 
@@ -31,10 +31,10 @@ void main() {
         // its so rare its not worth thinking about
         float smple = uintBitsToFloat(rnd_state);
         ivec2 sample_texel = neighbor_next_sample(rnd_state);
-        vec2  sample_data  = texelFetch(restir_neighbor_data, sample_texel, 0).xy;
+        FastFrag sample_data  = fast_frag_fetch(sample_texel);
 
-        float Di = sample_data.x;
-        vec3  Ni = ph_unpack_normal(floatBitsToUint(sample_data.y));
+        float Di = sample_data.depth;
+        vec3  Ni = fast_frag_geo_normal(sample_data);
 
         if (!isinf(Di)) {
             const float phi_depth = 0.5f;

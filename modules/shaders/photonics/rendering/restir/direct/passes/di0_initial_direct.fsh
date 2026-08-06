@@ -5,7 +5,7 @@
 #define FRAG_USE_TEX_NORMAL
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/common.glsl"
+#include "/photonics/rendering/restir/direct/reservoir.glsl"
 
 layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 
@@ -33,5 +33,6 @@ void main() {
     }
 
     direct_reservoir_finalize_weight(reservoir, sample_weight);
+    direct_reservoir_validate_visiblity(reservoir, frag_rt_pos);
     direct_reservoir_encode(reservoir, di_reservoir_0);
 }

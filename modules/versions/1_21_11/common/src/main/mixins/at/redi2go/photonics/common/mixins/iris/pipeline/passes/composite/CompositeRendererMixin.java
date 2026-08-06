@@ -18,12 +18,19 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CompositeRenderer.class)
 public abstract class CompositeRendererMixin {
     @Shadow
     @Final
     private WorldRenderingPipeline pipeline;
+
+    @Shadow
+    @Final
+    private ImmutableList<RenderPass> passes;
 
     @WrapOperation(
             method = "<init>",
@@ -53,6 +60,20 @@ public abstract class CompositeRendererMixin {
     )
     private String replaceName(CompositePass instance, Operation<String> original) {
         return (Object) this instanceof PhotonicsRenderer renderer ? renderer.getName() : original.call(instance);
+    }
+
+    @ModifyArg(
+            method = "renderAll",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/gl/GLDebug;pushGroup(ILjava/lang/String;)V",
+                    ordinal = 1
+            ),
+            index = 1
+    )
+    private String replaceDebugPassName(String name, @Local(name = "i") int i) {
+        CompositeRendererPassExt pass = (CompositeRendererPassExt) passes.get(i);
+        return pass.getDebugName();
     }
 
     @WrapOperation(
@@ -98,5 +119,31 @@ public abstract class CompositeRendererMixin {
         ((CompositeRendererPassExt) instance.iris$getCustomPass())
                 .getFramebuffer()
                 .ifPresent(e -> ((InternalIrisFramebuffer) e).unbind());
+    }
+
+    @Inject(
+            method = "renderAll",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/gl/GLDebug;popGroup()V",
+                    ordinal = 0
+            )
+    )
+    private void invokePassActions0(CallbackInfo ci, @Local(name = "i") int i) {
+        CompositeRendererPassExt pass = (CompositeRendererPassExt) passes.get(i);
+        pass.getActions().forEach(Runnable::run);
+    }
+
+    @Inject(
+            method = "renderAll",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/irisshaders/iris/gl/GLDebug;popGroup()V",
+                    ordinal = 1
+            )
+    )
+    private void invokePassActions1(CallbackInfo ci, @Local(name = "i") int i) {
+        CompositeRendererPassExt pass = (CompositeRendererPassExt) passes.get(i);
+        pass.getActions().forEach(Runnable::run);
     }
 }

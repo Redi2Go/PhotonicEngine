@@ -6,19 +6,15 @@
 #define PH_ENABLE_RESTIR_GI
 #endif
 
-#if defined PH_ENABLE_BLOCKLIGHT
-#define INDIRECT_RESERVOIR_0 4
-#define INDIRECT_RESERVOIR_1 5
-#else
-#define INDIRECT_RESERVOIR_0 3
-#define INDIRECT_RESERVOIR_1 4
-#endif
+#define INDIRECT_RESERVOIR_0 0
+#define INDIRECT_RESERVOIR_1 1
+#define INDIRECT_OUT 2
 
-//ph_required: uniform sampler2D restir_indirect_reservoirs0;
-//ph_required: uniform usampler2D restir_indirect_reservoirs1;
+uniform sampler2D gi_reservoirs0;
+uniform usampler2D gi_reservoirs1;
 
-//ph_required: uniform sampler2D prev_restir_indirect_reservoirs0;
-//ph_required: uniform usampler2D prev_restir_indirect_reservoirs1;
+uniform sampler2D prev_gi_reservoirs0;
+uniform usampler2D prev_gi_reservoirs1;
 
 const float max_indirect_temporal_samples = 20.0f;
 const float max_indirect_reservoir_samples = 20.0f;
@@ -160,8 +156,8 @@ bool indirect_reservoir_is_nan(IndirectReservoir reservoir) {
 bool indirect_reservoir_load(out IndirectReservoir reservoir, ivec2 tex_coord) {
     indirect_reservoir_decode(
         reservoir,
-        texelFetch(restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(restir_indirect_reservoirs1, tex_coord, 0).rgb
+        texelFetch(gi_reservoirs0, tex_coord, 0),
+        texelFetch(gi_reservoirs1, tex_coord, 0).rgb
     );
 
     return !indirect_reservoir_is_nan(reservoir);
@@ -170,8 +166,8 @@ bool indirect_reservoir_load(out IndirectReservoir reservoir, ivec2 tex_coord) {
 bool indirect_reservoir_load_previous(out IndirectReservoir reservoir, ivec2 tex_coord, bool reprojected) {
     indirect_reservoir_decode(
         reservoir,
-        texelFetch(prev_restir_indirect_reservoirs0, tex_coord, 0),
-        texelFetch(prev_restir_indirect_reservoirs1, tex_coord, 0).rgb
+        texelFetch(prev_gi_reservoirs0, tex_coord, 0),
+        texelFetch(prev_gi_reservoirs1, tex_coord, 0).rgb
     );
 
     if (reprojected) {

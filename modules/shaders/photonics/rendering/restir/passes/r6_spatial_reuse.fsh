@@ -4,7 +4,7 @@
 #define USE_FRAG_GEO_NORMAL
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/neighbor/reservoir.glsl"
 
 #if defined PH_ENABLE_BLOCKLIGHT

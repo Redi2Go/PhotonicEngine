@@ -1,13 +1,7 @@
-#include "/photonics/modifiers/restir_denoiser_depth_fetch_modifier.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
+#define SVGF_DENOISE_OUT 1
 //ph_required: uniform usampler2D prev_denoise_result;
-
-#ifdef PH_RESTIR_DENOISER_DEPTH_FETCH_MODIFIER_DISABLED
-#define SVGF_DEPTH_MODIFIER(p) p
-#else
-#define SVGF_DEPTH_MODIFIER(p) modify_denoiser_depth_fetch(p)
-#endif
 
 // 3×3 Gaussian Kernel & Offsets
 const float kernel[9] = float[](
@@ -82,9 +76,4 @@ float svgf_depth_edge_stopping_weight(float center_depth, float sample_depth, fl
 float svgf_luma_edge_stopping_weight(float center_luma, float sample_luma, float phi)
 {
     return exp(-abs(center_luma - sample_luma) / phi);
-}
-
-float svgf_linearize_depth(float d)
-{
-    return near * far / (far + d * (near - far));
 }

@@ -10,7 +10,6 @@ import at.redi2go.photonics.core.rendering.UniformUpdater;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 
-import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CREATE_PREV_SAMPLER;
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CREATE_SAMPLER;
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FLIP;
 
@@ -26,67 +25,111 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
             HandheldItemSupplier handheldItemSupplier,
             IrisFactory irisFactory
     ) {
-        super(properties, atlasDownloader, handheldItemSupplier);
+        super(properties, atlasDownloader);
 
         // The hand always needs at least 7 denoiser passes.
         int requestedDenoiserPasses = properties.getRestirDenoiserPasses();
-        this.denoiserPasses = requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0;
 
-        var restirFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                // Always enabled as dealing with output indices would be too much of a hassle for what is basically a debug feature
-                .addAttachment("restir_neighbor_data", ITextureFormat.rg32f(), CREATE_SAMPLER, this::isRestirEnabled)
-                .addAttachment("restir_lighting", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
-                .addAttachment("restir_lighting_variance", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirEnabled)
-                .addAttachment("restir_direct_reservoirs0", ITextureFormat.rgb16f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isBlockLightEnabled)
-                .addAttachment("restir_indirect_reservoirs0", ITextureFormat.rgba32f(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
-                .addAttachment("restir_indirect_reservoirs1", ITextureFormat.rgb32ui(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isRestirGiEnabled)
-                .build(this::registerComponent);
+        // Subtract one as denoising is done in reverse order (largest radius -> smallest radius)
+        this.denoiserPasses = (requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0) - 1;
 
-        var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("denoise_result", ITextureFormat.rgba32ui(), FLIP | CREATE_SAMPLER | CREATE_PREV_SAMPLER, this::isDenoisingEnabled)
-                .build(this::registerComponent);
+        Pipelines.fragData(this, properties, irisFactory);
+        //Pipelines.handheldLighting(this, handheldItemSupplier, properties, irisFactory);
 
-        var otherFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("other_handheld", ITextureFormat.rgb32f(), CREATE_SAMPLER, this::isHandheldLightingEnabled)
-                .build(this::registerComponent);
-
-        Pipelines.fragData(this, irisFactory, properties.getRenderScale());
-
-        irisFactory.newPipeline()
-                .debugGroup("restir")
-                .withFramebuffer(restirFramebuffer)
-                .thenFlip(restirFramebuffer)
-                .deferredPass("load neighbor data", "/photonics/rendering/restir/passes/r0_load_neighbor_data.fsh", null, this::isSpatialReuseEnabled)
-                .deferredPass("neighbor selection", "/photonics/rendering/restir/passes/r1_neighbor_selection.fsh", null, this::isSpatialReuseEnabled)
-                .deferredPass("initial direct", "/photonics/rendering/restir/passes/r2_initial_direct.fsh", null, this::isBlockLightEnabled)
-                .deferredPass("validate initial direct", "/photonics/rendering/restir/passes/r3_validate_initial_direct.fsh", null, this::isBlockLightEnabled)
-                .deferredPass("initial indirect", "/photonics/rendering/restir/passes/r4_initial_indirect.fsh", null, this::isRestirGiEnabled)
-                .deferredPass("temporal reuse", "/photonics/rendering/restir/passes/r5_temporal_reuse.fsh", null, this::isRestirEnabled)
-                .thenFlip(this::isSpatialReuseEnabled, restirFramebuffer)
-                .deferredPass("spatial reuse", "/photonics/rendering/restir/passes/r6_spatial_reuse.fsh", null, this::isSpatialReuseEnabled)
-                .thenFlip(this::isSpatialReuseEnabled, restirFramebuffer)
-                .deferredPass("validate indirect", "/photonics/rendering/restir/passes/r7_validate_indirect.fsh", null, this::isRestirGiEnabled)
-                .deferredPass("diffuse", "/photonics/rendering/restir/passes/r8_diffuse.fsh", null, this::isRestirEnabled)
-                .deferredPass("accumulation", "/photonics/rendering/restir/passes/r9_accumulation.fsh", null, this::isRestirEnabled)
-                .when(this::isDenoisingEnabled, b0 -> {
-                    b0.withFramebuffer(denoiseFramebuffer);
-                    b0.debugGroup("svgf");
-                    b0.thenRun(() -> atrousIteration = denoiserPasses);
-                    b0.deferredPass("variance prefilter", "/photonics/rendering/restir/passes/r10_variance_prefilter.fsh", null);
-                    b0.repeat(denoiserPasses, b1 -> {
-                        b1.thenRun(() -> atrousIteration--);
-                        b1.thenRun(atrousUpdater::updateNow);
-                        b1.thenFlip(denoiseFramebuffer);
-                        b1.deferredPass("atrous iteration", "/photonics/rendering/restir/passes/r11_denoising.fsh", null);
-                    });
-                    b0.deferredPass("undo exposure", "/photonics/rendering/restir/passes/r12_undo_exposure.fsh", null);
-                })
-                .debugGroup("other")
-                .withFramebuffer(otherFramebuffer)
-                .deferredPass("handheld", "/photonics/rendering/restir/passes/r13_handheld.fsh", null, this::isHandheldLightingEnabled)
-                .build(this::registerRenderer);
+//        neighborSelectionPipeline(irisFactory);
+        restirDiPipeline(irisFactory);
+//        restirGiPipeline(irisFactory);
+//        svgfPipeline(irisFactory);
 
         Pipelines.exposureHistory(this, irisFactory);
+    }
+
+    private void neighborSelectionPipeline(IrisFactory irisFactory) {
+        if (!isAnySpatialReuseEnabled()) return;
+
+        var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("neighbor_reservoir", ITextureFormat.rgba32f(), CREATE_SAMPLER)
+                .build(this::registerComponent);
+
+        irisFactory.newPipeline()
+                .debugGroup("neighbor selection")
+                .withFragmentPrefix("/photonics/rendering/restir/neighbor/passes/")
+                .withFramebuffer(framebuffer)
+                .deferredPass("neighbor selection", "ns0_neighbor_selection.fsh", null)
+                .build(this::registerRenderer);
+    }
+
+    private void restirDiPipeline(IrisFactory irisFactory) {
+        if (!isBlockLightEnabled()) return;
+
+        var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("di_reservoirs0", ITextureFormat.rgb32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("di_output", ITextureFormat.rgb16f(), CREATE_SAMPLER)
+                .build(this::registerComponent);
+
+        irisFactory.newPipeline()
+                .debugGroup("restir di")
+                .withFragmentPrefix("/photonics/rendering/restir/direct/passes/")
+                .thenFlip(framebuffer)
+                .deferredPass("initial direct", "di0_initial_direct.fsh", null)
+                .deferredPass("temporal reuse", "di1_temporal_reuse.fsh", null)
+
+//                .when(this::isDiSpatialReuseEnabled, b0 -> {
+//                    b0.thenFlip(framebuffer);
+//                    b0.deferredPass("spatial reuse", "di2_temporal_reuse.fsh", null);
+//                    b0.thenFlip(framebuffer);
+//                })
+                .deferredPass("validate visibility", "di3_validate_visibility.fsh", null)
+                .build(this::registerRenderer);
+    }
+
+    private void restirGiPipeline(IrisFactory irisFactory) {
+        if (!isRestirGiEnabled()) return;
+
+        var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("gi_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("gi_reservoirs1", ITextureFormat.rgb32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("gi_output", ITextureFormat.rgb16f(), CREATE_SAMPLER)
+                .build(this::registerComponent);
+
+        irisFactory.newPipeline()
+                .debugGroup("restir gi")
+                .withFragmentPrefix("/photonics/rendering/restir/indirect/passes/")
+                .thenFlip(framebuffer)
+                .deferredPass("initial indirect", "gi0_initial_direct.fsh", null)
+                .deferredPass("temporal reuse", "gi1_temporal_reuse.fsh", null)
+                .when(this::isGiSpatialReuseEnabled, b0 -> {
+                    b0.thenFlip(framebuffer);
+                    b0.deferredPass("spatial reuse", "gi2_temporal_reuse.fsh", null);
+                    b0.thenFlip(framebuffer);
+                })
+                .deferredPass("validate visibility", "gi3_validate_visibility.fsh", null)
+                .build(this::registerRenderer);
+    }
+
+    private void svgfPipeline(IrisFactory irisFactory) {
+        if (!isRestirEnabled()) return;
+
+        var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
+                .addAttachment("diffuse_history", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("denoise_result", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP, this::isDenoisingEnabled)
+                .build(this::registerComponent);
+
+        irisFactory.newPipeline()
+                .debugGroup("svgf")
+                .withFragmentPrefix("/photonics/rendering/restir/svgf/passes/")
+                .deferredPass("accumulation", "sv0_accumulation.fsh", null)
+                .deferredPass("variance prefilter", "sv1_variance_prefilter.fsh", null, this::isDenoisingEnabled)
+                .repeat(denoiserPasses, (i, b0) -> {
+                    int index = denoiserPasses - i;
+
+                    b0.thenRun(() -> atrousIteration = index);
+                    b0.thenRun(atrousUpdater::updateNow);
+                    b0.thenFlip(framebuffer);
+                    b0.deferredPass("atrous iteration #" + index, "sv2_atrous.fsh", null, this::isDenoisingEnabled);
+                })
+                .deferredPass("undo exposure", "sv3_undo_exposure.fsh", null, this::isDenoisingEnabled)
+                .build(this::registerRenderer);
     }
 
     @Override
@@ -104,6 +147,10 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         return properties.isBlockLightEnabled();
     }
 
+    public boolean isHandheldLightingEnabled() {
+        return properties.isHandheldLightEnabled();
+    }
+
     public boolean isRestirGiEnabled() {
         return properties.isGiEnabled() && properties.useRestirCombinedGi();
     }
@@ -112,19 +159,19 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         return isBlockLightEnabled() || isRestirGiEnabled();
     }
 
-    public boolean isSpatialReuseEnabled() {
-        return properties.getRestirSpatialReuseSamples() > 0;
+    public boolean isDiSpatialReuseEnabled() {
+        return isBlockLightEnabled() && properties.getRestirSpatialReuseSamples() > 0;
     }
 
-    public boolean isHandheldLightingEnabled() {
-        return properties.isHandheldLightEnabled();
+    public boolean isGiSpatialReuseEnabled() {
+        return isRestirGiEnabled() && properties.getRestirSpatialReuseSamples() > 0;
+    }
+
+    public boolean isAnySpatialReuseEnabled() {
+        return isDiSpatialReuseEnabled() || isGiSpatialReuseEnabled();
     }
 
     public boolean isDenoisingEnabled() {
-        return isRestirEnabled() && denoiserPasses > 0;
-    }
-
-    private String spatialReusePass(String file) {
-        return "/photonics/rendering/restir/passes/spatial_reuse/" + file;
+        return isRestirEnabled() && denoiserPasses >= 0;
     }
 }

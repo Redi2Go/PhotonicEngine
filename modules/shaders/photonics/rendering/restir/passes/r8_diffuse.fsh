@@ -5,7 +5,7 @@
 #define FRAG_USE_TEX_NORMAL
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/common.glsl"
 
 #include "/photonics/modifiers/restir_gi_modifier.glsl"
 

@@ -1,7 +1,7 @@
 #version 430
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/common.glsl"
 
 layout(location = DIRECT_RESERVOIR_0) out vec3 di_reservoir_0;
 

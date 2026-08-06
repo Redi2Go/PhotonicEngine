@@ -1,7 +1,7 @@
 #version 430
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
+#include "/photonics/rendering/restir/common.glsl"
 
 #include "/photonics/rendering/indirect_lighting.glsl"
 

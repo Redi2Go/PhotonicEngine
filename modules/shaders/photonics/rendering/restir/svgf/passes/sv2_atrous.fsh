@@ -4,8 +4,8 @@
 //ph_Required: uniform float near, far;
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
-#include "/photonics/rendering/restir/svgf.glsl"
+#include "/photonics/rendering/restir/common.glsl"
+#include "/photonics/rendering/restir/svgf/common.glsl"
 
 #include "/photonics/utility/color.glsl"
 

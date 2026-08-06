@@ -1,9 +1,11 @@
+#include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/direct/sample.glsl"
 
-#define DIRECT_RESERVOIR_0 3
+#define DIRECT_RESERVOIR_0 0
+#define DIRECT_OUT 1
 
-//ph_required: uniform sampler2D restir_direct_reservoirs0;
-//ph_required: uniform sampler2D prev_restir_direct_reservoirs0;
+uniform sampler2D di_reservoirs0;
+uniform sampler2D prev_di_reservoirs0;
 
 const float max_direct_temporal_samples = 20.0f * PH_RESTIR_INITIAL_SAMPLES;
 const float max_direct_reservoir_samples = 128.0f;
@@ -152,7 +154,7 @@ bool direct_reservoir_is_nan(DirectReservoir reservoir) {
 bool direct_reservoir_load(out DirectReservoir reservoir, ivec2 tex_coord) {
     direct_reservoir_decode(
         reservoir,
-        texelFetch(restir_direct_reservoirs0, tex_coord, 0).rgb
+        texelFetch(di_reservoirs0, tex_coord, 0).rgb
     );
 
     return !direct_reservoir_is_nan(reservoir);
@@ -161,7 +163,7 @@ bool direct_reservoir_load(out DirectReservoir reservoir, ivec2 tex_coord) {
 bool direct_reservoir_load_previous(out DirectReservoir reservoir, ivec2 tex_coord, bool reprojected) {
     direct_reservoir_decode(
         reservoir,
-        texelFetch(prev_restir_direct_reservoirs0, tex_coord, 0).rgb
+        texelFetch(prev_di_reservoirs0, tex_coord, 0).rgb
     );
 
     if (direct_reservoir_is_nan(reservoir))

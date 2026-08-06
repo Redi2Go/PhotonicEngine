@@ -4,8 +4,8 @@
 //ph_required: uniform float near, far;
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/restir/restir.glsl"
-#include "/photonics/rendering/restir/svgf.glsl"
+#include "/photonics/rendering/restir/common.glsl"
+#include "/photonics/rendering/restir/svgf/common.glsl"
 
 layout(location = 0) out uvec4 denoise_out;
 
