@@ -15,7 +15,7 @@
 layout(location = NEIGHBOR_RESERVOIR_OUT) out vec4 neighbor_samples;
 
 void main() {
-    FragData center_data = fast_frag_fetch(frag_tex_coord);
+    FastFrag center_data = fast_frag_fetch(frag_tex_coord);
     if (!fast_frag_in_world(center_data)) discard;
 
     float D0 = center_data.depth;

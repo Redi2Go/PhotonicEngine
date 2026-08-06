@@ -36,7 +36,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         Pipelines.fragData(this, properties, irisFactory);
         //Pipelines.handheldLighting(this, handheldItemSupplier, properties, irisFactory);
 
-//        neighborSelectionPipeline(irisFactory);
+        neighborSelectionPipeline(irisFactory);
         restirDiPipeline(irisFactory);
 //        restirGiPipeline(irisFactory);
 //        svgfPipeline(irisFactory);
@@ -74,12 +74,11 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .thenFlip(framebuffer)
                 .deferredPass("initial direct", "di0_initial_direct.fsh", null)
                 .deferredPass("temporal reuse", "di1_temporal_reuse.fsh", null)
-
-//                .when(this::isDiSpatialReuseEnabled, b0 -> {
-//                    b0.thenFlip(framebuffer);
-//                    b0.deferredPass("spatial reuse", "di2_temporal_reuse.fsh", null);
-//                    b0.thenFlip(framebuffer);
-//                })
+                .when(this::isDiSpatialReuseEnabled, b0 -> {
+                    b0.thenFlip(framebuffer);
+                    b0.deferredPass("spatial reuse", "di2_spatial_reuse.fsh", null);
+                    b0.thenFlip(framebuffer);
+                })
                 .deferredPass("validate visibility", "di3_validate_visibility.fsh", null)
                 .build(this::registerRenderer);
     }

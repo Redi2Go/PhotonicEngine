@@ -2,7 +2,6 @@
 
 #define NEIGHBOR_RESERVOIR_OUT 0
 
-uniform sampler2D neighbor_data;
 uniform sampler2D neighbor_reservoir;
 
 struct NeighborReservoir {
