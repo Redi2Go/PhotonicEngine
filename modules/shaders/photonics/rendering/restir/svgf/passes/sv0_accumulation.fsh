@@ -22,17 +22,23 @@ void main() {
     setup_frag_data(0);
     if (!frag_is_in_world) return;
 
+#if defined PH_ENABLE_BLOCKLIGHT
     vec3 di_output = texelFetch(di_output, frag_tex_coord, 0).rgb;
+#else
+    const vec3 di_output = vec3(0.0f);
+#endif
+
+#if defined PH_ENABLE_RESTIR_GI
     vec3 gi_output = texelFetch(gi_output, frag_tex_coord, 0).rgb;
+#else
+    const vec3 gi_output = vec3(0.0f);
+#endif
 
     SampleHistory temporal_history = sample_history_empty();
     sample_history_reproject(temporal_history);
 
 #if PH_RESTIR_DENOISER_PASSES > 0
     temporal_history.lighting.rgb *= get_exposure() / get_previous_exposure();
-#else
-    di_output /= get_exposure();
-    gi_output /= get_exposure();
 #endif
 
     sample_history_add_sample(temporal_history, di_output + gi_output);

@@ -117,6 +117,10 @@ float sample_history_min_variance(float samples) {
 #endif
 
 void sample_history_add_sample(inout SampleHistory history, vec3 smple) {
+#if PH_RESTIR_DENOISER_PASSES <= 0
+    smple /= get_exposure();
+#endif
+
     history.lighting.w = min(history.lighting.w, PH_RESTIR_ACCUMULATION_FRAMES);
     float mix_factor = 1f / (++history.lighting.w);
 

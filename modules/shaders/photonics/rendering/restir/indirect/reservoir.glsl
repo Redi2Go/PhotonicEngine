@@ -2,11 +2,6 @@
 #include "/photonics/rendering/restir/indirect/sample.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 
-//TODO Rename restir combined gi
-#if defined PH_ENABLE_GI && defined PH_RESTIR_COMBINED_GI
-#define PH_ENABLE_RESTIR_GI
-#endif
-
 #define INDIRECT_RESERVOIR_0 0
 #define INDIRECT_RESERVOIR_1 1
 #define INDIRECT_OUT 2
