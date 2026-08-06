@@ -34,7 +34,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         this.denoiserPasses = (requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0) - 1;
 
         Pipelines.fragData(this, properties, irisFactory);
-        //Pipelines.handheldLighting(this, handheldItemSupplier, properties, irisFactory);
+        Pipelines.handheldLighting(this, handheldItemSupplier, properties, irisFactory);
 
         neighborSelectionPipeline(irisFactory);
         restirDiPipeline(irisFactory);
