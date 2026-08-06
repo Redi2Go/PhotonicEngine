@@ -1,7 +1,9 @@
 #define SVGF_HISTORY_OUT 0
+#define SVGF_FAST_HISTORY_OUT 1
 
 uniform usampler2D diffuse_history;
 uniform usampler2D prev_diffuse_history;
+uniform sampler2D prev_fast_diffuse_history;
 
 struct SampleHistory {
     vec4 lighting;
@@ -51,9 +53,10 @@ void sample_history_load(out SampleHistory history, ivec2 texel) {
 }
 
 #if defined REPROJECT_PASS
-void sample_history_reproject(out SampleHistory smple) {
-    smple.lighting = vec4(0.0f);
-    smple.variance = vec4(0.0f);
+void sample_history_reproject(out SampleHistory temporal_history, out vec4 fast_history) {
+    temporal_history.lighting = vec4(0.0f);
+    temporal_history.variance = vec4(0.0f);
+    fast_history = vec4(0.0f);
 
     vec3 center = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter());
     center.xy *= PH_VIEW_SIZE;
@@ -72,7 +75,9 @@ void sample_history_reproject(out SampleHistory smple) {
     for (int i = 0; i < weights.length(); i++) {
         ivec2 p = texel + offsets[i];
 
-        uvec4 temporalSample = texelFetch(prev_diffuse_history, p, 0);
+        uvec4 temporal_sample = texelFetch(prev_diffuse_history, p, 0);
+        vec4 fast_sample = texelFetch(prev_fast_diffuse_history, p, 0);
+
         FastFrag prevFrag = fast_frag_fetch_previous(p);
 
         vec2 mixWeights = abs(weights[i] - mixFactors);
@@ -81,18 +86,20 @@ void sample_history_reproject(out SampleHistory smple) {
         weight *= svgf_depth_edge_stopping_weight(center.z, prevFrag.depth, phi_depth);
 
         SampleHistory result;
-        sample_history_decode(result, temporalSample);
+        sample_history_decode(result, temporal_sample);
 
-        smple.lighting += result.lighting * weight;
-        smple.variance += result.variance * weight;
+        temporal_history.lighting += result.lighting * weight;
+        temporal_history.variance += result.variance * weight;
+        fast_history += fast_sample * weight;
 
         weight_sum += weight;
     }
 
     weight_sum = 1.0f / max(0.0001f, weight_sum);
 
-    smple.lighting *= weight_sum;
-    smple.variance *= weight_sum;
+    temporal_history.lighting *= weight_sum;
+    temporal_history.variance *= weight_sum;
+    fast_history *= weight_sum;
 }
 
 #if PH_RESTIR_ACCUMULATION_FRAMES > 4
@@ -116,7 +123,7 @@ float sample_history_min_variance(float samples) {
 }
 #endif
 
-void sample_history_add_sample(inout SampleHistory history, vec3 smple) {
+void sample_history_add_sample(inout SampleHistory history, inout vec4 fast_history, vec3 smple) {
 #if PH_RESTIR_DENOISER_PASSES <= 0
     smple /= get_exposure();
 #endif
@@ -140,6 +147,22 @@ void sample_history_add_sample(inout SampleHistory history, vec3 smple) {
             // With few samples, variance estimate is unreliable — use a high floor
             sample_history_min_variance(history.lighting.a)
     ) * mix_factor;
+#endif
+
+#if PH_RESTIR_ACCUMULATION_FRAMES >= 12
+    const float fast_history_samples = min(floor(PH_RESTIR_ACCUMULATION_FRAMES * 0.25f), 8);
+    const float fast_history_cutoff = fast_history_samples * 2.0f;
+
+    const float fast_history_weight = 1.7f;
+    const float rcp_fast_history_weight = 1.0f / fast_history_weight;
+
+    fast_history.w = min(fast_history.w, fast_history_samples);
+    fast_history.rgb = mix(fast_history.rgb, smple, 1f / (++fast_history.w));
+
+    if (history.lighting.a > fast_history_cutoff) {
+        history.lighting.rgb = min(history.lighting.rgb, fast_history.rgb * fast_history_weight);
+        history.lighting.rgb = max(history.lighting.rgb, fast_history.rgb * rcp_fast_history_weight);
+    }
 #endif
 }
 #endif

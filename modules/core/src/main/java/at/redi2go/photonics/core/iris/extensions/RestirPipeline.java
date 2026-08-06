@@ -113,6 +113,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
         var temporalFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("diffuse_history", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("fast_diffuse_history", isDenoisingEnabled() ? ITextureFormat.rgba16f() : ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
                 .build(this::registerComponent);
 
         var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())

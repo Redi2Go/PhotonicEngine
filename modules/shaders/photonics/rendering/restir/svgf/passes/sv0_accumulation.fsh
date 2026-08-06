@@ -15,6 +15,7 @@ uniform sampler2D di_output;
 uniform sampler2D gi_output;
 
 layout(location = SVGF_HISTORY_OUT) out uvec4 svgf_history;
+layout(location = SVGF_FAST_HISTORY_OUT) out vec4 svgf_fast_history;
 
 void main() {
     svgf_history = uvec4(0u);
@@ -35,12 +36,12 @@ void main() {
 #endif
 
     SampleHistory temporal_history = sample_history_empty();
-    sample_history_reproject(temporal_history);
+    sample_history_reproject(temporal_history, svgf_fast_history);
 
 #if PH_RESTIR_DENOISER_PASSES > 0
     temporal_history.lighting.rgb *= get_exposure() / get_previous_exposure();
 #endif
 
-    sample_history_add_sample(temporal_history, di_output + gi_output);
+    sample_history_add_sample(temporal_history, svgf_fast_history, di_output + gi_output);
     sample_history_encode(temporal_history, svgf_history);
 }
