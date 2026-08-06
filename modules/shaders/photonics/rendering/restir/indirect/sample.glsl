@@ -66,9 +66,12 @@ float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 
     float jacobian = (dot(hit_normal, to_current * inversesqrt(to_current_sq)) / to_current_sq);
     jacobian /= (dot(hit_normal, to_source * inversesqrt(to_source_sq)) / to_source_sq);
 
-    return isinf(jacobian) || isnan(jacobian) ? 0.0f : clamp(jacobian, 0.0f, 3.0f);
+    return isinf(jacobian) || isnan(jacobian) ? 0.0f : jacobian;
 }
 
-float indirect_sample_compute_shift(IndirectSample smple, vec3 dst_pos, vec3 src_pos) {
-    return indirect_sample_compute_jacobian(smple, dst_pos, src_pos);
+float indirect_sample_compute_shift(IndirectSample smple, FragData dst_frag, FragData src_frag, float limit) {
+    float jacobian_factor = indirect_sample_compute_jacobian(smple, frag_data_rt_pos(dst_frag), frag_data_rt_pos(src_frag));
+    if (jacobian_factor > limit) return -1.0f;
+
+    return jacobian_factor;
 }

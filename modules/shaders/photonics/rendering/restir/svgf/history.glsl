@@ -153,7 +153,7 @@ void sample_history_add_sample(inout SampleHistory history, inout vec4 fast_hist
     const float fast_history_samples = min(floor(PH_RESTIR_ACCUMULATION_FRAMES * 0.25f), 8);
     const float fast_history_cutoff = fast_history_samples * 2.0f;
 
-    const float fast_history_weight = 1.7f;
+    const float fast_history_weight = 2.0f;
     const float rcp_fast_history_weight = 1.0f / fast_history_weight;
 
     fast_history.w = min(fast_history.w, fast_history_samples);
