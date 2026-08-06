@@ -1,4 +1,5 @@
 uniform sampler2D fast_frag_data;
+uniform sampler2D prev_fast_frag_data;
 
 struct FastFrag {
     float depth;
@@ -25,6 +26,13 @@ void fast_frag_decode(out FastFrag frag, vec2 data) {
 FastFrag fast_frag_fetch(ivec2 texel) {
     FastFrag result;
     fast_frag_decode(result, texelFetch(fast_frag_data, texel, 0).xy);
+
+    return result;
+}
+
+FastFrag fast_frag_fetch_previous(ivec2 texel) {
+    FastFrag result;
+    fast_frag_decode(result, texelFetch(prev_fast_frag_data, texel, 0).xy);
 
     return result;
 }

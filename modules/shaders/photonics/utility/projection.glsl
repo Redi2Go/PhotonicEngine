@@ -1,6 +1,12 @@
 #ifndef PH_PROJECTION_UTILITY_INCLUDE
 #define PH_PROJECTION_UTILITY_INCLUDE
 
+//ph_required: uniform float near, far;
+
+float ph_linearize_depth(float d) {
+    return near * far / (far + d * (near - far));
+}
+
 vec4 ph_project(mat4 m, vec3 pos) {
     return vec4(m[0].x, m[1].y, m[2].zw) * pos.xyzz + m[3];
 }

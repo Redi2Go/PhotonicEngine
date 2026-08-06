@@ -1,6 +1,7 @@
 #include "/photonics/rendering/frag/world_interface.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 #include "/photonics/rendering/frag/frag_data.glsl"
+#include "/photonics/rendering/frag/depth.glsl"
 #include "/photonics/utility/random.glsl"
 
 #define frag_tex_coord ivec2(gl_FragCoord.xy)

@@ -33,7 +33,7 @@ void main() {
 
         float L0 = ph_luminance(C0);
         vec3  N0 = svgf_sample_get_normal(center_sample);
-        float D0 = svgf_linearize_depth(center_sample.depth);
+        float D0 = ph_linearize_depth(center_sample.depth);
 
         vec3 C_sum = vec3(0.0f);
         float W_sum = 0.0f;
@@ -54,7 +54,7 @@ void main() {
 
             float Li = ph_luminance(Ci);
             vec3  Ni = svgf_sample_get_normal(sample_data);
-            float Di = svgf_linearize_depth(sample_data.depth);
+            float Di = ph_linearize_depth(sample_data.depth);
             const float k = kernel[i];
 
             // Color (luminance) weight

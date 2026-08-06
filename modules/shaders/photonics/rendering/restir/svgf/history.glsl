@@ -50,71 +50,49 @@ void sample_history_load(out SampleHistory history, ivec2 texel) {
     sample_history_decode(history, texelFetch(diffuse_history, texel, 0));
 }
 
-SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
-    bool s1_invalid = !sample_history_is_valid(s1);
-    bool s2_invalid = !sample_history_is_valid(s2);
+#if defined REPROJECT_PASS
+void sample_history_reproject(out SampleHistory smple) {
+    smple.lighting = vec4(0.0f);
+    smple.variance = vec4(0.0f);
 
-    if (s1_invalid && s2_invalid) return sample_history_invalid();
-    if (s1_invalid) return s2;
-    if (s2_invalid) return s1;
+    vec3 center = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter());
+    center.xy *= PH_VIEW_SIZE;
+    center.xy -= 0.5f;
+    center.z = ph_linearize_depth(center.z);
 
-    return SampleHistory(
-            mix(s1.lighting, s2.lighting, a),
-            mix(s1.variance, s2.variance, a)
-    );
-}
+    ivec2 texel = ivec2(center.xy);
+    vec2 mixFactors = fract(center.xy);
 
-SampleHistory sample_history_reproject_single(ivec2 texel, float distance_factor) {
-    FragData prev_frag;
-    frag_data_load_previous(prev_frag, texel);
+    const ivec2[4] offsets = ivec2[](ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1));
+    const vec2[4] weights = vec2[](vec2(1.0f, 1.0f), vec2(0.0f, 1.0f), vec2(1.0f, 0.0f), vec2(0.0f, 0.0f));
 
-    if (!frag_is_bad_angle) {
-        vec3 d = frag_data_player_pos(prev_frag) - frag_player_pos;
-        if (dot(d, d) > distance_factor) return sample_history_invalid();
+    float weight_sum = 0.0f;
+    const float phi_depth = frag_is_bad_angle ? 0.25f : 0.07f;
+
+    for (int i = 0; i < weights.length(); i++) {
+        ivec2 p = texel + offsets[i];
+
+        uvec4 temporalSample = texelFetch(prev_diffuse_history, p, 0);
+        FastFrag prevFrag = fast_frag_fetch_previous(p);
+
+        vec2 mixWeights = abs(weights[i] - mixFactors);
+        float weight = mixWeights.x * mixWeights.y;
+        weight *= svgf_normal_edge_stopping_weight(frag_tex_normal, fast_frag_tex_normal(prevFrag));
+        weight *= svgf_depth_edge_stopping_weight(center.z, prevFrag.depth, phi_depth);
+
+        SampleHistory result;
+        sample_history_decode(result, temporalSample);
+
+        smple.lighting += result.lighting * weight;
+        smple.variance += result.variance * weight;
+
+        weight_sum += weight;
     }
 
-    vec3 n = frag_data_tex_normal(prev_frag);
-    if (dot(n, frag_tex_normal) < 0.99f) return sample_history_invalid();
+    weight_sum = 1.0f / max(0.0001f, weight_sum);
 
-    SampleHistory result;
-    sample_history_decode(result, texelFetch(prev_diffuse_history, ivec2(texel), 0));
-
-    return sample_history_is_valid(result) ? result : sample_history_invalid();
-}
-
-SampleHistory sample_history_reproject_mixed(vec2 center, float distance_factor) {
-    ivec2 icenter = ivec2(center);
-
-    SampleHistory c_00 = sample_history_reproject_single(icenter + ivec2(0, 0), distance_factor);
-    SampleHistory c_10 = sample_history_reproject_single(icenter + ivec2(1, 0), distance_factor);
-    SampleHistory c_01 = sample_history_reproject_single(icenter + ivec2(0, 1), distance_factor);
-    SampleHistory c_11 = sample_history_reproject_single(icenter + ivec2(1, 1), distance_factor);
-
-    SampleHistory result = sample_history_mix(
-            sample_history_mix(c_00, c_10, fract(center.x)),
-            sample_history_mix(c_01, c_11, fract(center.x)),
-            fract(center.y)
-    );
-
-    if (!sample_history_is_valid(result))
-        return SampleHistory(vec4(0.0f), vec4(0.0f));
-
-    return result;
-}
-
-void sample_history_reproject(out SampleHistory smple) {
-    vec3 dist = frag_rt_pos - rt_camera_position;
-
-    const float block_divsor = 64.0f * PH_RENDER_SCALE;
-    float distance_factor = max(dot(dist, dist) / block_divsor, 0.1f);
-
-    vec2 center = ph_reproject_player_pos(
-            frag_player_pos,
-            frag_is_hand,
-            get_taa_jitter()
-    ).xy * PH_VIEW_SIZE;
-
-    smple = sample_history_reproject_mixed(center - 0.5f, distance_factor);
+    smple.lighting *= weight_sum;
+    smple.variance *= weight_sum;
 }
 
 #if PH_RESTIR_ACCUMULATION_FRAMES > 4
@@ -160,3 +138,4 @@ void sample_history_add_sample(inout SampleHistory history, vec3 smple) {
     ) * mix_factor;
 #endif
 }
+#endif

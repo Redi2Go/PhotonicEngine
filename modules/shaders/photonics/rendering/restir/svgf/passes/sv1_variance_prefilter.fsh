@@ -14,7 +14,7 @@ void main() {
 
     SvgfSample smple = svgf_sample_empty();
     if (frag_is_in_world) {
-        smple.depth = texelFetch(depthtex0, SVGF_DEPTH_MODIFIER(frag_tex_coord), 0).r;
+        smple.depth = load_depth();
         smple.packed_normal = frag_is_hand ? _frag_data.data1.y : _frag_data.data1.z;
 
         vec4 center = vec4(0.0f);

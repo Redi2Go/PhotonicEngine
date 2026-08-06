@@ -1,9 +1,8 @@
 #version 430
 
-//ph_Required: uniform float near, far;
-
 #include "/photonics/rendering/frag/world_interface.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
+#include "/photonics/utility/projection.glsl"
 #include "/photonics/rendering/frag/frag_data.glsl"
 #include "/photonics/rendering/frag/fast_data.glsl"
 
@@ -38,10 +37,6 @@ void load_frag_data(
 
     // Attempts to correct bias from depth
     frag_rt_pos += frag_geo_normal * (0.01f + (0.04f * resolution));
-}
-
-float ph_linearize_depth(float d) {
-    return near * far / (far + d * (near - far));
 }
 
 void main() {
