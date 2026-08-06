@@ -70,6 +70,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         irisFactory.newPipeline()
                 .debugGroup("restir di")
                 .withFragmentPrefix("/photonics/rendering/restir/direct/passes/")
+                .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
                 .deferredPass("initial direct", "di0_initial_direct.fsh", null)
                 .deferredPass("temporal reuse", "di1_temporal_reuse.fsh", null)
@@ -95,6 +96,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         irisFactory.newPipeline()
                 .debugGroup("restir gi")
                 .withFragmentPrefix("/photonics/rendering/restir/indirect/passes/")
+                .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
                 .deferredPass("initial indirect", "gi0_initial_direct.fsh", null)
                 .deferredPass("temporal reuse", "gi1_temporal_reuse.fsh", null)
@@ -118,6 +120,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         irisFactory.newPipeline()
                 .debugGroup("svgf")
                 .withFragmentPrefix("/photonics/rendering/restir/svgf/passes/")
+                .withFramebuffer(framebuffer)
                 .deferredPass("accumulation", "sv0_accumulation.fsh", null)
                 .deferredPass("variance prefilter", "sv1_variance_prefilter.fsh", null, this::isDenoisingEnabled)
                 .repeat(denoiserPasses, (i, b0) -> {
