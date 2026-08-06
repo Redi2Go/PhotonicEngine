@@ -12,7 +12,7 @@
 #include "/photonics/utility/normal_encoding.glsl"
 
 // Store the samples in lighting as this value hasn't been initialized yet
-layout(location = 2) out vec4 neighbor_samples;
+layout(location = NEIGHBOR_RESERVOIR_OUT) out vec4 neighbor_samples;
 
 void main() {
     vec2 center_data = texelFetch(restir_neighbor_data, frag_tex_coord, 0).xy;

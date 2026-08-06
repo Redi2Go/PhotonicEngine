@@ -1,6 +1,7 @@
 #include "/photonics/utility/random.glsl"
 
 #define NEIGHBOR_DATA_OUT 0
+#define NEIGHBOR_RESERVOIR_OUT 0
 
 //ph_required: uniform sampler2D restir_neighbor_data;
 
