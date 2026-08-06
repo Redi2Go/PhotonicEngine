@@ -39,7 +39,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         neighborSelectionPipeline(irisFactory);
         restirDiPipeline(irisFactory);
 //        restirGiPipeline(irisFactory);
-//        svgfPipeline(irisFactory);
+        svgfPipeline(irisFactory);
 
         Pipelines.exposureHistory(this, irisFactory);
     }
@@ -120,6 +120,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .debugGroup("svgf")
                 .withFragmentPrefix("/photonics/rendering/restir/svgf/passes/")
                 .withFramebuffer(framebuffer)
+                .thenFlip(framebuffer)
                 .deferredPass("accumulation", "sv0_accumulation.fsh", null)
                 .deferredPass("variance prefilter", "sv1_variance_prefilter.fsh", null, this::isDenoisingEnabled)
                 .repeat(denoiserPasses, (i, b0) -> {

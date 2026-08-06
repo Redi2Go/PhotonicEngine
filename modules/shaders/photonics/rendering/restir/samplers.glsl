@@ -9,21 +9,12 @@
 //ph_required: uniform sampler2D handheld_diffuse;
 #endif
 
-uniform sampler2D di_output;
-
 vec3 sample_photonics_direct(vec2 tex_coord) {
-    return texture(di_output, tex_coord).rgb;
-
-//#if PH_RESTIR_DENOISER_PASSES != 0
-//    return uintBitsToFloat(texture(denoise_result, tex_coord).rgb);
-//#else
-//    uvec2 packed = texture(restir_lighting, tex_coord).xy;
-//
-//    return vec4(
-//        unpackHalf2x16(packed.x),
-//        unpackHalf2x16(packed.y)
-//    ).rgb;
-//#endif
+#if PH_RESTIR_DENOISER_PASSES > 0
+    return uintBitsToFloat(texture(denoise_result, tex_coord).rgb);
+#else
+    return uintBitsToFloat(texture(diffuse_history, tex_coord).rgb);
+#endif
 }
 
 vec3 sample_photonics_handheld(vec2 tex_coord) {
