@@ -63,7 +63,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         if (!isBlockLightEnabled()) return;
 
         var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
-                .addAttachment("di_reservoirs0", ITextureFormat.rgb32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("di_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
                 .addAttachment("di_output", ITextureFormat.rgb16f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 

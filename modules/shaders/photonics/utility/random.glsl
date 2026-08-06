@@ -30,7 +30,7 @@ int ph_rand_next_int(inout uint rand_state, float min, float max) {
 
 const float ph_light_jitter_radius = 1.0f / 16.0f;
 
-void ph_rand_sample_position(inout uint rand_state, inout vec3 light_position, vec3 sample_pos) {
+vec3 ph_rand_sample_position(inout uint rand_state, vec3 light_position, vec3 sample_pos) {
     light_position = floor(light_position) + 0.5f;
 
     // Fetch a blue noise value for this frame.
@@ -47,7 +47,7 @@ void ph_rand_sample_position(inout uint rand_state, inout vec3 light_position, v
     float point_angle  = rnd_sample.y * 2.0f * 3.14159265f;
     vec2  disk_point   = vec2(point_radius * cos(point_angle), point_radius * sin(point_angle));
 
-    light_position = light_position + disk_point.x * sample_tangent + disk_point.y * sample_bitangent;
+    return disk_point.x * sample_tangent + disk_point.y * sample_bitangent;
 }
 
 // Thanks null!
