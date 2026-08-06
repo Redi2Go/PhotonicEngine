@@ -8,8 +8,8 @@
 uniform sampler2D di_reservoirs0;
 uniform sampler2D prev_di_reservoirs0;
 
-const float max_direct_temporal_samples = 256.0f;
-const float max_direct_reservoir_samples = 256.0f;
+const float max_direct_temporal_samples = 20.0f * PH_RESTIR_INITIAL_SAMPLES;
+const float max_direct_reservoir_samples = 128.0f;
 
 struct DirectReservoir {
     DirectSample smple;
