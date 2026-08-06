@@ -1,7 +1,6 @@
 #version 430
 
 //ph_required: uniform int atrous_iteration;
-//ph_Required: uniform float near, far;
 
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/common.glsl"
@@ -9,7 +8,7 @@
 
 #include "/photonics/utility/color.glsl"
 
-layout(location = 0) out uvec4 denoise_out;
+layout(location = SVGF_DENOISE_OUT) out uvec4 denoise_out;
 
 float get_pass_weight(SvgfSample smple) {
     const float frame_cutoff = PH_RESTIR_ACCUMULATION_FRAMES * 0.33f;

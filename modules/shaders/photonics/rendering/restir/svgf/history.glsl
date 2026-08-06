@@ -46,6 +46,10 @@ void sample_history_decode(out SampleHistory history, uvec4 value) {
 #endif
 }
 
+void sample_history_load(out SampleHistory history, ivec2 texel) {
+    sample_history_decode(history, texelFetch(diffuse_history, texel, 0));
+}
+
 SampleHistory sample_history_mix(SampleHistory s1, SampleHistory s2, float a) {
     bool s1_invalid = !sample_history_is_valid(s1);
     bool s2_invalid = !sample_history_is_valid(s2);

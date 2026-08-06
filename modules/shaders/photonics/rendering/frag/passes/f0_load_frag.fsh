@@ -64,7 +64,7 @@ void main() {
     bool frag_is_bad_angle;
 
     load_frag_data(frag_geo_normal, frag_tex_normal, frag_player_pos, frag_rt_pos, frag_is_hand, frag_is_bad_angle);
-    fast_frag_encode(ph_linearize_depth(depth), frag_geo_normal, frag_tex_normal, fast_data_out);
+    fast_frag_encode(ph_linearize_depth(depth), frag_geo_normal, frag_is_hand ? frag_geo_normal : frag_tex_normal, fast_data_out);
 
     // Position encoding
 

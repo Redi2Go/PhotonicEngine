@@ -4,7 +4,7 @@
 #include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/svgf/common.glsl"
 
-layout(location = 0) out uvec4 denoise_out;
+layout(location = SVGF_DENOISE_OUT) out uvec4 denoise_out;
 
 void main() {
     setup_frag_data(0);

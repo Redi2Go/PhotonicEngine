@@ -111,24 +111,28 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
     private void svgfPipeline(IrisFactory irisFactory) {
         if (!isRestirEnabled()) return;
 
-        var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
+        var temporalFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("diffuse_history", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
+                .build(this::registerComponent);
+
+        var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("denoise_result", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP, this::isDenoisingEnabled)
                 .build(this::registerComponent);
 
         irisFactory.newPipeline()
                 .debugGroup("svgf")
                 .withFragmentPrefix("/photonics/rendering/restir/svgf/passes/")
-                .withFramebuffer(framebuffer)
-                .thenFlip(framebuffer)
+                .withFramebuffer(temporalFramebuffer)
+                .thenFlip(temporalFramebuffer)
                 .deferredPass("accumulation", "sv0_accumulation.fsh", null)
+                .withFramebuffer(denoiseFramebuffer)
                 .deferredPass("variance prefilter", "sv1_variance_prefilter.fsh", null, this::isDenoisingEnabled)
                 .repeat(denoiserPasses, (i, b0) -> {
                     int index = denoiserPasses - i;
 
                     b0.thenRun(() -> atrousIteration = index);
                     b0.thenRun(atrousUpdater::updateNow);
-                    b0.thenFlip(framebuffer);
+                    b0.thenFlip(denoiseFramebuffer);
                     b0.deferredPass("atrous iteration #" + index, "sv2_atrous.fsh", null, this::isDenoisingEnabled);
                 })
                 .deferredPass("undo exposure", "sv3_undo_exposure.fsh", null, this::isDenoisingEnabled)
