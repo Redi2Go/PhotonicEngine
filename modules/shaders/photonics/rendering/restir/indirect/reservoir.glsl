@@ -1,3 +1,4 @@
+#include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/indirect/sample.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
 

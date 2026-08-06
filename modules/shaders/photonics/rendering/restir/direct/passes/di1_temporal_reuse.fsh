@@ -11,9 +11,7 @@ void main() {
     setup_frag_data(1);
     if (!frag_is_in_world) discard;
 
-    // REPROJECTION
     vec2 uv = ph_reproject_player_pos(frag_player_pos, frag_is_hand, get_taa_jitter()).xy;
-
     if (clamp(uv, 0, 1) != uv) discard;
 
     ivec2 prev_texel = ivec2(uv * PH_VIEW_SIZE);

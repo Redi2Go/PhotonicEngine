@@ -38,7 +38,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
         neighborSelectionPipeline(irisFactory);
         restirDiPipeline(irisFactory);
-//        restirGiPipeline(irisFactory);
+        restirGiPipeline(irisFactory);
         svgfPipeline(irisFactory);
 
         Pipelines.exposureHistory(this, irisFactory);
@@ -97,11 +97,11 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
                 .withFragmentPrefix("/photonics/rendering/restir/indirect/passes/")
                 .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
-                .deferredPass("initial indirect", "gi0_initial_direct.fsh", null)
+                .deferredPass("initial indirect", "gi0_initial_indirect.fsh", null)
                 .deferredPass("temporal reuse", "gi1_temporal_reuse.fsh", null)
                 .when(this::isGiSpatialReuseEnabled, b0 -> {
                     b0.thenFlip(framebuffer);
-                    b0.deferredPass("spatial reuse", "gi2_temporal_reuse.fsh", null);
+                    b0.deferredPass("spatial reuse", "gi2_spatial_reuse.fsh", null);
                     b0.thenFlip(framebuffer);
                 })
                 .deferredPass("validate visibility", "gi3_validate_visibility.fsh", null)

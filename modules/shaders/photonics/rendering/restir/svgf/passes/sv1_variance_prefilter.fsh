@@ -1,7 +1,5 @@
 #version 430
 
-//ph_required: uniform sampler2D depthtex0;
-
 #include "/photonics/rendering/frag/common.glsl"
 #include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/svgf/common.glsl"
