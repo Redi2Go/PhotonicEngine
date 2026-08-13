@@ -24,8 +24,6 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 public class IrisManager {
-    public static final IrisManager INSTANCE = new IrisManager();
-
     private static final PropertiesManager propertiesManager = new PropertiesManager();
 
     private static @Nullable ShaderPatcher activePatcher = null;
