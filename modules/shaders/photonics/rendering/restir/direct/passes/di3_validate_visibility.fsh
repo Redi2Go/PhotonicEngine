@@ -4,11 +4,12 @@
 #include "/photonics/rendering/restir/direct/reservoir.glsl"
 
 layout(location = DIRECT_RESERVOIR_0) out vec4 di_reservoir_0;
-layout(location = DIRECT_OUT) out vec3 di_output;
+layout(location = DIRECT_OUT) out vec4 di_output;
 
 void main() {
     setup_frag_data(3);
-    di_output = vec3(0.0f);
+    di_output.rgb = vec3(0.0f);
+    di_output.a = 1.0f;
 
     if (!frag_is_in_world) return;
 
@@ -28,8 +29,8 @@ void main() {
     direct_reservoir_clamp_samples(direct_result);
     direct_reservoir_finalize_weight(direct_result, direct_sample_weight);
 
-    di_output = direct_reservoir_get_final_color(direct_result, frag_rt_pos, frag_geo_normal, frag_tex_normal);
-    di_output *= get_exposure();
+    di_output.rgb = direct_reservoir_get_final_color(direct_result, frag_rt_pos, frag_geo_normal, frag_tex_normal, di_output.a);
+    di_output.rgb *= get_exposure();
 
     direct_reservoir_encode(direct_result, di_reservoir_0);
 }

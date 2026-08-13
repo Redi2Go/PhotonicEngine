@@ -64,7 +64,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
 
         var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("di_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("di_output", ITextureFormat.rgb16f(), CREATE_SAMPLER)
+                .addAttachment("di_output", ITextureFormat.rgba16f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 
         irisFactory.newPipeline()
@@ -89,7 +89,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         var framebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("gi_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
                 .addAttachment("gi_reservoirs1", ITextureFormat.rgb32ui(), CREATE_SAMPLER | FLIP)
-                .addAttachment("gi_output", ITextureFormat.rgb16f(), CREATE_SAMPLER)
+                .addAttachment("gi_output", ITextureFormat.rgba16f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 
         irisFactory.newPipeline()
@@ -114,6 +114,7 @@ public class RestirPipeline extends AbstractPhotonicsExtension {
         var temporalFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())
                 .addAttachment("diffuse_history", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
                 .addAttachment("fast_diffuse_history", isDenoisingEnabled() ? ITextureFormat.rgba16f() : ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("visibility_history", ITextureFormat.r16f(), CREATE_SAMPLER | FLIP)
                 .build(this::registerComponent);
 
         var denoiseFramebuffer = irisFactory.newFramebuffer(properties.getRenderScale())

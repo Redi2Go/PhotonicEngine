@@ -16,6 +16,7 @@ uniform sampler2D gi_output;
 
 layout(location = SVGF_HISTORY_OUT) out uvec4 svgf_history;
 layout(location = SVGF_FAST_HISTORY_OUT) out vec4 svgf_fast_history;
+layout(location = SVGF_VISIBILITY_HISTORY_OUT) out float svgf_visiblity_history;
 
 void main() {
     svgf_history = uvec4(0u);
@@ -24,15 +25,15 @@ void main() {
     if (!frag_is_in_world) return;
 
 #if defined PH_ENABLE_BLOCKLIGHT
-    vec3 di_output = texelFetch(di_output, frag_tex_coord, 0).rgb;
+    vec4 di_output = texelFetch(di_output, frag_tex_coord, 0);
 #else
-    const vec3 di_output = vec3(0.0f);
+    const vec4 di_output = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 #endif
 
 #if defined PH_ENABLE_RESTIR_GI
-    vec3 gi_output = texelFetch(gi_output, frag_tex_coord, 0).rgb;
+    vec4 gi_output = texelFetch(gi_output, frag_tex_coord, 0);
 #else
-    const vec3 gi_output = vec3(0.0f);
+    const vec4 gi_output = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 #endif
 
     SampleHistory temporal_history = sample_history_empty();
@@ -43,5 +44,5 @@ void main() {
 #endif
 
     sample_history_add_sample(temporal_history, svgf_fast_history, di_output + gi_output);
-    sample_history_encode(temporal_history, svgf_history);
+    sample_history_encode(temporal_history, svgf_history, svgf_visiblity_history);
 }

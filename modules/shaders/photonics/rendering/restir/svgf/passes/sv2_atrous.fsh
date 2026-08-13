@@ -35,9 +35,10 @@ void main() {
         #define C0 center_sample.color
         #define V0 center_sample.variance
 
-        float L0 = ph_luminance(C0);
-        vec3  N0 = svgf_sample_get_normal(center_sample);
-        float D0 = ph_linearize_depth(center_sample.depth);
+        float L0  = ph_luminance(C0);
+        vec3  N0  = svgf_sample_get_normal(center_sample);
+        float D0  = ph_linearize_depth(center_sample.depth);
+        float S0 = texelFetch(visibility_history, texel, 0).r;
 
         vec3 C_sum = vec3(0.0f);
         float W_sum = 0.0f;
@@ -47,6 +48,8 @@ void main() {
 
         const float phi_depth = 0.5f;
         float phi_luminance = 6.0f * sqrt(max(0.0f, V0)) + 1e-10;
+        const float phi_shadow = 0.1f;
+
         for (int i = 0; i < 9; ++i) {
             ivec2 p = texel + step_width * offset[i];
 
@@ -59,6 +62,8 @@ void main() {
             float Li = ph_luminance(Ci);
             vec3  Ni = svgf_sample_get_normal(sample_data);
             float Di = ph_linearize_depth(sample_data.depth);
+            float Si = texelFetch(visibility_history, p, 0).r;
+
             const float k = kernel[i];
 
             // Color (luminance) weight
@@ -70,7 +75,11 @@ void main() {
             // Position weight
             float wP = svgf_depth_edge_stopping_weight(D0, Di, phi_depth);
 
-            float w = wC * wN * wP * k;
+            // Shadow weight
+            float ws_mix_factor = (center_sample.age / PH_RESTIR_ACCUMULATION_FRAMES) * 3.0f;
+            float wS = mix(1.0f, svgf_shadow_stopping_weight(S0, Si, phi_shadow), min(ws_mix_factor, 1.0f));
+
+            float w = wC * wN * wP * wS * k;
             W_sum += w;
             C_sum += Ci.xyz * w;
             V_sum += Vi * w * w;

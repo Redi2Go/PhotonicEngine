@@ -105,8 +105,11 @@ vec3 direct_reservoir_get_final_color(
     inout DirectReservoir reservoir,
     vec3 sample_pos,
     vec3 geo_normal,
-    vec3 tex_normal
+    vec3 tex_normal,
+    out float visiblity
 ) {
+    visiblity = 1.0f;
+
     if (direct_sample_is_empty(reservoir.smple))
         return vec3(0.0f);
 
@@ -118,6 +121,8 @@ vec3 direct_reservoir_get_final_color(
 
     if (!trace_light_vis(sample_pos, to_light, light.position, 40, tint_color, light_transmittance)) {
         reservoir.weight = 0.0f;
+        visiblity = 0.0f;
+
         return vec3(0.0f);
     }
 

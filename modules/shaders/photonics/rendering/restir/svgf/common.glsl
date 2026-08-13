@@ -83,3 +83,8 @@ float svgf_luma_edge_stopping_weight(float center_luma, float sample_luma, float
 {
     return exp(-abs(center_luma - sample_luma) / phi);
 }
+
+float svgf_shadow_stopping_weight(float center_vis, float sample_vis, float phi)
+{
+    return exp(-abs(center_vis - sample_vis) / phi);
+}

@@ -72,7 +72,9 @@ void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
     reservoir.total_samples = max_indirect_reservoir_samples;
 }
 
-void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos) {
+void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, vec3 rt_pos, out float visiblity) {
+    visiblity = 1.0f;
+
     vec3 hit_point = indirect_sample_get_hit_point(reservoir.smple);
 
     RayIterator ray;
@@ -101,6 +103,7 @@ void indirect_reservoir_validate_visiblity(inout IndirectReservoir reservoir, ve
         break;
     }
 
+    visiblity = 0.0f;
     reservoir.weight = MINIMUM_RESERVOIR_WEIGHT;
 }
 
