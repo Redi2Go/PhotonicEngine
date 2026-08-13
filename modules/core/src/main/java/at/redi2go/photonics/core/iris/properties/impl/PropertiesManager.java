@@ -223,7 +223,7 @@ public class PropertiesManager implements InvocationHandler {
         for (var prefix : IGNORED_PREFIXES) {
             if (!name.regionMatches(true, 0, prefix, 0, prefix.length())) continue;
 
-            start = prefix.length() + 1;
+            start = prefix.length();
             break;
         }
 
