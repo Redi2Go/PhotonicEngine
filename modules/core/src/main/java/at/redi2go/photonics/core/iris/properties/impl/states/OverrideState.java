@@ -61,11 +61,15 @@ public class OverrideState {
         throw new IllegalStateException(propertyValue.getKey() + " was already overridden by " + overriddenBy.getSimpleName());
     }
 
-    private static Class<?> getReceiverType(Function<Object, Object> option) {
+    private Class<?> getReceiverType(Function<Object, Object> option) {
         try {
             option.apply(TEMP);
         } catch (ClassCastException e) {
-            Photonics.LOGGER.info(e.getMessage());
+            String className = e.getMessage().split(" ")[7];
+            for (var key : instanceLookup.keySet()) {
+                if (key.getName().equals(className))
+                    return key;
+            }
         }
 
         throw new IllegalStateException("Could not determine function receiver type");
