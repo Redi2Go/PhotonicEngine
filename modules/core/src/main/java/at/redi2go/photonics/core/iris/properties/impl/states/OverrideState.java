@@ -1,6 +1,5 @@
 package at.redi2go.photonics.core.iris.properties.impl.states;
 
-import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.properties.impl.PropertyValue;
 
 import java.lang.reflect.InvocationHandler;
@@ -44,7 +43,7 @@ public class OverrideState {
         lastProperty = null;
         Function<Object, Object> options = (Function<Object, Object>) optionRaw;
 
-        Class<?> receiverType = getReceiverType(options);
+        Class<?> receiverType = probeReceiverType(options);
         options.apply(Objects.requireNonNull(
                 instanceLookup.get(receiverType),
                 () -> receiverType.getSimpleName() + " is not a properties object"
@@ -61,7 +60,7 @@ public class OverrideState {
         throw new IllegalStateException(propertyValue.getKey() + " was already overridden by " + overriddenBy.getSimpleName());
     }
 
-    private Class<?> getReceiverType(Function<Object, Object> option) {
+    private Class<?> probeReceiverType(Function<Object, Object> option) {
         try {
             option.apply(TEMP);
         } catch (ClassCastException e) {
