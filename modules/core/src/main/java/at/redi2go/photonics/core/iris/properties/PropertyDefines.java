@@ -8,5 +8,7 @@ public interface PropertyDefines {
     @Magic default void floatDefine(String name, float value) {}
     @Magic default <T extends Enum<T>> void enumDefine(String name, T value) {}
 
-    void defineProperties(PhotonicsProperties properties);
+    default void defineProperties(PhotonicsProperties properties) {
+
+    }
 }
