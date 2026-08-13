@@ -96,22 +96,26 @@ public class PropertiesManager implements InvocationHandler {
             if (!visited.add(type)) continue;
 
             for (var method : type.getDeclaredMethods()) {
-                InvocationHandler body;
-                if (method.getDeclaredAnnotation(Magic.class) != null) {
-                    body = Objects.requireNonNull(
-                            magicMethods.get(method.getName()),
-                            () -> "Magic method '" + method.getName() + "' does not exist"
-                    );
-                } else if (method.isDefault()) {
-                    body = InvocationHandler::invokeDefault;
-                } else {
-                    body = signatureValueMapping.computeIfAbsent(
-                            new MethodSignature(method),
-                            s -> processMethod(prefix, s.method(), properties, logger)
-                    );
-                }
+                methodLookup.put(
+                        method,
+                        signatureValueMapping.computeIfAbsent(
+                                new MethodSignature(method),
+                                signature -> {
+                                    Method m = signature.method();
 
-                methodLookup.put(method, body);
+                                    if (m.getDeclaredAnnotation(Magic.class) != null) {
+                                        return Objects.requireNonNull(
+                                                magicMethods.get(m.getName()),
+                                                () -> "Magic method '" + m.getName() + "' does not exist"
+                                        );
+                                    } else if (m.isDefault()) {
+                                        return InvocationHandler::invokeDefault;
+                                    } else {
+                                        return processMethod(prefix, m, properties, logger);
+                                    }
+                                }
+                        )
+                );
             }
 
             for (var superclass : type.getInterfaces()) {
