@@ -2,11 +2,8 @@ package at.redi2go.photonics.core.rendering;
 
 import at.redi2go.photonics.core.iris.pipeline.uniform.IValueUpdateNotifier;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class UniformUpdater {
     private boolean needsUpdate = true;

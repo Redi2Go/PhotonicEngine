@@ -6,6 +6,11 @@
   "client": [
     "InventoryAccessor",
     "BlockRenderDispatcherMixin",
+
+    "iris.AbsolutePackPathMixin",
+    "iris.IPathPackImpl",
+    "iris.IShaderPackImpl",
+
     "iris.IncludeGraphMixin",
     "iris.ShaderPackMixin",
     "iris.ShaderPackAccessor",

@@ -1,8 +1,7 @@
 package at.redi2go.photonics.common.iris.pipeline.renderer;
 
 import at.redi2go.photonics.common.iris.pipeline.builder.PipelineActionBuilder;
-import at.redi2go.photonics.core.iris.PhotonicsExtension;
-import at.redi2go.photonics.core.iris.Pipelines;
+import at.redi2go.photonics.core.iris.rendering.Pipelines;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import org.jetbrains.annotations.Nullable;
 

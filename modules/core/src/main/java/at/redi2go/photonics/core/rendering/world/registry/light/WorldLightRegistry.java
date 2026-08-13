@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.rendering.world.registry.light;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.api.shaders.IShaderPack;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.config.PhConfig;
 import at.redi2go.photonics.core.config.lights.BlockLightInfo;
 import at.redi2go.photonics.core.rendering.world.allocator.WorldAllocator;
@@ -33,9 +33,9 @@ public class WorldLightRegistry extends ObjectRegistry<WorldLight> {
         var light = PhConfig.getLightRegistry().get(blockState);
         if (light == null) return null;
 
-        var shaderPack = IShaderPack.getCurrentPack().orElse(null);
+        var shaderPack = IrisPack.getCurrentPack().orElse(null);
         if (shaderPack == null) return null;
 
-        return allocate(light, shaderPack.getBlockId(blockState));
+        return allocate(light, shaderPack.ph$getBlockId(blockState));
     }
 }

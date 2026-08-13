@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Mixin(targets = "net.irisshaders.iris.pipeline.CompositeRenderer$Pass")

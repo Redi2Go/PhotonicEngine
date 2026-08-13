@@ -3,9 +3,9 @@ package at.redi2go.photonics.common.mixins.iris.pipeline;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
 import at.redi2go.photonics.common.iris.buffers.GlBufferHolder;
-import at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer;
 import at.redi2go.photonics.common.mixins.iris.ShaderPackAccessor;
-import at.redi2go.photonics.core.iris.PhotonicsExtension;
+import at.redi2go.photonics.core.iris.IrisManager;
+import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.sugar.Local;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
@@ -80,7 +80,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
     @Unique
     private GlBufferHolder bufferHolder;
     @Unique
-    private List<PhotonicsRenderer> phRenderers;
+    private List<at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer> phRenderers;
 
     @Inject(
             method = "<init>",
@@ -94,11 +94,10 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
         bufferHolder = new GlBufferHolder();
         phRenderers = List.of();
 
-        IrisUtil.getPhotonics()
-                .ifPresent(e -> e.registerBuffers(bufferHolder));
+        IrisManager.registerBuffers(bufferHolder);
 
         var renderers = IrisUtil.getPipelineManager().getRenderers();
-        var phRenderers = ImmutableList.<PhotonicsRenderer>builder();
+        var phRenderers = ImmutableList.<at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer>builder();
 
         for (var renderer : renderers) {
             var passes = renderer.getPasses();
@@ -125,7 +124,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
             }
 
             phRenderers.add(
-                    new PhotonicsRenderer(
+                    new at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer(
                             renderer.name(),
                             (IrisRenderingPipeline) (Object) this,
                             programSet.getPackDirectives(),
@@ -158,7 +157,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
             )
     )
     public void beginTranslucents(CallbackInfo ci) {
-        IrisUtil.getPhotonics().ifPresent(PhotonicsExtension::onRender);
+        IrisManager.onRender();
     }
 
     @Override

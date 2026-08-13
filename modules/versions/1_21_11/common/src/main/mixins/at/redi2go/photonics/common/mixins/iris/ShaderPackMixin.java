@@ -1,18 +1,11 @@
 package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
-import at.redi2go.photonics.api.shaders.IShaderPack;
-import at.redi2go.photonics.api.shaders.LightingMode;
-import at.redi2go.photonics.api.shaders.PhotonicsProperties;
+import at.redi2go.photonics.core.iris.IrisManager;
+import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.common.StringPairDefineHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
-import at.redi2go.photonics.common.iris.PatcherBridge;
-import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.common.iris.UniformPatcher;
-import at.redi2go.photonics.core.Photonics;
-import at.redi2go.photonics.core.iris.IrisDefines;
-import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
-import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -43,14 +36,8 @@ import java.util.Map;
 import java.util.Properties;
 
 @Mixin(ShaderPack.class)
-public abstract class ShaderPackMixin implements IShaderPack {
-    @Unique
-    private PhotonicsPropertiesImpl phProperties;
-    @Unique
-    private ShaderPatcher patcher;
-
-    @Unique
-    private boolean supportsPhotonics = false;
+public abstract class ShaderPackMixin implements IrisPack {
+    @Unique private boolean supportsPhotonics = false;
 
     @Inject(
             method = "<init>(Ljava/nio/file/Path;Ljava/util/Map;Lcom/google/common/collect/ImmutableList;Z)V",
@@ -66,41 +53,27 @@ public abstract class ShaderPackMixin implements IShaderPack {
             boolean isZip,
             CallbackInfo ci
     ) {
-        phProperties = new PhotonicsPropertiesImpl();
         var properties = loadShaderProperties(root);
 
-        supportsPhotonics = properties.containsKey(PhotonicsProperties.ENABLED_KEY);
-        patcher = new ShaderPatcher(this);
-        PatcherBridge.PATCHER = patcher;
-
-        if (!supportsPhotonics && patcher.hasPatch())
-            phProperties.enabled = Boolean.parseBoolean(
-                    changedConfigs.getOrDefault("PHOTONICS_ENABLED", "true")
-            );
-
-        ShaderPropertiesBridge.PROPERTIES = phProperties;
+        supportsPhotonics = properties.containsKey("photonics.enabled");
+        IrisManager.setupShaderPatcher(this, Boolean.parseBoolean(changedConfigs.getOrDefault("PHOTONICS_ENABLED", "true")));
     }
 
     @Override
-    public String name() {
+    public String ph$name() {
         return Iris.getIrisConfig()
                 .getShaderPackName()
                 .orElse("<unknown>");
     }
 
     @Override
-    public int getBlockId(IBlockState block) {
+    public int ph$getBlockId(IBlockState block) {
         return IrisUtil.getBlockId((BlockState) block);
     }
 
     @Override
-    public boolean supportsPhotonics() {
+    public boolean ph$supportsPhotonics() {
         return supportsPhotonics;
-    }
-
-    @Override
-    public PhotonicsProperties properties() {
-        return phProperties;
     }
 
     @WrapOperation(
@@ -141,8 +114,7 @@ public abstract class ShaderPackMixin implements IShaderPack {
             @Local(name = "envDefines1") ArrayList<StringPair> defines
     ) {
         // These are the defines used by the preprocessor for shaders.properties
-        var defineHolder = new StringPairDefineHolder(defines);
-        IrisDefines.registerVersionDefines(defineHolder);
+        IrisManager.registerVersionDefines(new StringPairDefineHolder(defines));
     }
 
     @Inject(
@@ -162,8 +134,7 @@ public abstract class ShaderPackMixin implements IShaderPack {
             @Local(name = "newEnvDefines") List<StringPair> newEnvDefines
     ) {
         // These are the defines used by the preprocessor for everything else
-        var defineHolder = new StringPairDefineHolder(newEnvDefines);
-        IrisDefines.registerDefines(defineHolder, phProperties);
+        IrisManager.registerDefines(new StringPairDefineHolder(newEnvDefines));
     }
 
     @Unique
