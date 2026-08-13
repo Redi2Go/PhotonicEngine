@@ -23,7 +23,7 @@ public interface RestirProperties {
     float getSpatialReuseRadius();
 
     @DefaultValue("32")
-    @IntRange(min = 0)
+    @IntRange(min = 1)
     @Defines("PH_RESTIR_ACCUMULATION_FRAMES")
     @Key(legacy = "photonics.restirAccumulationFrames")
     int getHistoryLength();
