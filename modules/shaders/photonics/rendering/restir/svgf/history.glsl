@@ -90,16 +90,21 @@ void sample_history_reproject(out SampleHistory temporal_history, out vec4 fast_
     for (int i = 0; i < weights.length(); i++) {
         ivec2 p = texel + offsets[i];
 
+        FragData prev_frag;
+        frag_data_load_previous(prev_frag, p);
+
+        vec3 n = frag_data_geo_normal(prev_frag);
+        if (dot(n, frag_geo_normal) < 0.99f) continue;
+
+        vec3 dist = frag_player_pos - frag_data_player_pos(prev_frag);
+        if (abs(dot(dist, frag_geo_normal)) > 0.25f) continue;
+
         uvec4 temporal_sample = texelFetch(prev_diffuse_history, p, 0);
         float visiblity_sample = texelFetch(prev_visibility_history, p, 0).r;
         vec4 fast_sample = texelFetch(prev_fast_diffuse_history, p, 0);
 
-        FastFrag prevFrag = fast_frag_fetch_previous(p);
-
         vec2 mixWeights = abs(weights[i] - mixFactors);
         float weight = mixWeights.x * mixWeights.y;
-        weight *= svgf_normal_edge_stopping_weight(frag_tex_normal, fast_frag_tex_normal(prevFrag));
-        weight *= svgf_depth_edge_stopping_weight(center.z, prevFrag.depth, phi_depth);
 
         SampleHistory result;
         sample_history_decode(result, temporal_sample, visiblity_sample);

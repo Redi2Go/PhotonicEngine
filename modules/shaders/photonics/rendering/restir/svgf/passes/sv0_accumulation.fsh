@@ -1,12 +1,11 @@
 #version 430
 
 #define FRAG_USE_RT_POS
-#define FRAG_USE_TEX_NORMAL
+#define FRAG_USE_GEO_NORMAL
 
 #define REPROJECT_PASS
 
 #include "/photonics/rendering/frag/common.glsl"
-#include "/photonics/rendering/frag/fast_data.glsl"
 #include "/photonics/rendering/restir/common.glsl"
 #include "/photonics/rendering/restir/svgf/common.glsl"
 #include "/photonics/rendering/restir/svgf/history.glsl"
