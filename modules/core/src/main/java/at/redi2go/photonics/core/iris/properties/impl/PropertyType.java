@@ -1,5 +1,6 @@
 package at.redi2go.photonics.core.iris.properties.impl;
 
+import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.iris.pipeline.DefineHolder;
 import at.redi2go.photonics.core.iris.properties.annotations.DefaultValue;
 import at.redi2go.photonics.core.iris.properties.annotations.Property;
@@ -33,12 +34,21 @@ public interface PropertyType<T> {
     void registerDefine(DefineHolder defineHolder, String key, T value);
 
     default T extractValue(String key, @Nullable String value, Method method, Logger logger) {
-        value = value != null ? value : getDefaultValue(method);
+        String defaultValue = getDefaultValue(method);
+        value = value != null ? value : defaultValue;
 
         if (value != null) {
             T parsedValue = parse(key, value, method, logger);
             if (validate(key, parsedValue, method, logger))
                 return parsedValue;
+        }
+
+        if (defaultValue != null) {
+            T parsedValue = parse(key, defaultValue, method, Photonics.LOGGER);
+            if (validate(key, parsedValue, method, Photonics.LOGGER))
+                return parsedValue;
+
+            throw new IllegalStateException("Failed to validate default value for " + key);
         }
 
         return defaultValue(method);
