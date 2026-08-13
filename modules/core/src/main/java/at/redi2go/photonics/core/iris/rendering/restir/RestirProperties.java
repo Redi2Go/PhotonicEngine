@@ -1,11 +1,15 @@
 package at.redi2go.photonics.core.iris.rendering.restir;
 
+import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
+import at.redi2go.photonics.core.iris.properties.PropertyDefines;
+import at.redi2go.photonics.core.iris.properties.PropertyOverrides;
 import at.redi2go.photonics.core.iris.properties.annotations.DefaultValue;
 import at.redi2go.photonics.core.iris.properties.annotations.Defines;
 import at.redi2go.photonics.core.iris.properties.annotations.IntRange;
 import at.redi2go.photonics.core.iris.properties.annotations.Key;
+import at.redi2go.photonics.core.iris.properties.components.LightListProperties;
 
-public interface RestirProperties {
+public interface RestirProperties extends PropertyOverrides, PropertyDefines {
     RestirDiProperties getDiProperties();
 
     RestirGiProperties getGiProperties();
@@ -33,4 +37,15 @@ public interface RestirProperties {
     @Defines("PH_RESTIR_DENOISER_PASSES")
     @Key(legacy = "photonics.restirDenoiserPasses")
     int getDenoiserPasses();
+
+    @Override
+    default void defineProperties(PhotonicsProperties properties) {
+        stringDefine("PH_RESTIR_ACTIVE", "");
+    }
+
+    @Override
+    default void overrideProperties(PhotonicsProperties properties) {
+        if (properties.getBlockLightProperties().isEnabled())
+            override(LightListProperties::isEnabled, true);
+    }
 }

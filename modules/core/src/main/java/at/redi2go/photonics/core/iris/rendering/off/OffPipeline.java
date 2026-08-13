@@ -17,9 +17,4 @@ public class OffPipeline extends PhotonicsPipeline {
     ) {
         super(phProperties, atlasDownloader, irisPipeline);
     }
-
-    @Override
-    public void onRender() {
-
-    }
 }
