@@ -1,5 +1,5 @@
 // TODO support without int64
-#extension GL_ARB_gpu_shader_int64 : require
+#extension GL_ARB_gpu_shader_int64 : enable
 
 uint ph_get_node_cell_index(vec3 pos, int scale) {
     uvec3 cell_pos = (floatBitsToUint(pos) >> scale) & 3u;
