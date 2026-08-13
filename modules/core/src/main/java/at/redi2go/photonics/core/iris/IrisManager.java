@@ -155,10 +155,8 @@ public class IrisManager {
         if (pipeline == null) return;
 
         activePatcher = destroyPatcher ? null : activePatcher;
-        activeProperties = null;
         activePipeline = null;
         pipeline.close();
-        propertiesManager.setProperties(null, Photonics.LOGGER);
     }
 
     private IrisManager() {
