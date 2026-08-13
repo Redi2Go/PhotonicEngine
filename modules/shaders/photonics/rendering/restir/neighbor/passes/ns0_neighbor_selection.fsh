@@ -19,7 +19,7 @@ void main() {
     if (!fast_frag_in_world(center_data)) discard;
 
     float D0 = center_data.depth;
-    vec3  N0 = fast_frag_geo_normal(center_data);
+    vec3  N0 = fast_frag_tex_normal(center_data);
 
     uint rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 4532789);
 
@@ -34,7 +34,7 @@ void main() {
         FastFrag sample_data  = fast_frag_fetch(sample_texel);
 
         float Di = sample_data.depth;
-        vec3  Ni = fast_frag_geo_normal(sample_data);
+        vec3  Ni = fast_frag_tex_normal(sample_data);
 
         if (!isinf(Di)) {
             const float phi_depth = 0.5f;

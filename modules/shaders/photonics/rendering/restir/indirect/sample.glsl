@@ -52,6 +52,14 @@ void indirect_sample_set_hit_point(
     smple.hit_point -= rt_camera_position;
 }
 
+float indirect_sample_normal_factor(FragData frag, vec3 hit_pos) {
+    const float c_pi = 3.14159265359f;
+    const float rcp_pi = 1.0f / c_pi;
+
+    vec3 hit_dir = normalize(hit_pos - frag_data_rt_pos(frag));
+    return clamp(dot(frag_data_tex_normal(frag), hit_dir), 0.0001f, 1.0f) * rcp_pi;
+}
+
 float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 src_pos) {
     vec3 hit_position = indirect_sample_get_hit_point(smple);
 
@@ -70,8 +78,15 @@ float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 
 }
 
 float indirect_sample_compute_shift(IndirectSample smple, FragData dst_frag, FragData src_frag, float limit) {
+    vec3 hit_point = indirect_sample_get_hit_point(smple);
+    float occlusion_old = indirect_sample_normal_factor(src_frag, hit_point);
+    float occlusion_new = indirect_sample_normal_factor(dst_frag, hit_point);
+
+    float occlusion_factor = occlusion_new / occlusion_old;
     float jacobian_factor = indirect_sample_compute_jacobian(smple, frag_data_rt_pos(dst_frag), frag_data_rt_pos(src_frag));
+
+    if (occlusion_factor > limit) return -1.0f;
     if (jacobian_factor > limit) return -1.0f;
 
-    return jacobian_factor;
+    return jacobian_factor * occlusion_factor;
 }
