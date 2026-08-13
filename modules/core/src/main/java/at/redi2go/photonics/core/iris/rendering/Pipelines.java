@@ -38,7 +38,7 @@ public class Pipelines {
             PhotonicsProperties properties,
             IrisPipeline irisPipeline
     ) {
-        if (!properties.isHandheldLightEnabled()) return;
+        if (!properties.getHandheldProperties().isEnabled()) return;
 
         var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
 

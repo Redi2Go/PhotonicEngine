@@ -22,7 +22,7 @@ public record StringPairDefineHolder(List<StringPair> defines) implements Define
     }
 
     @Override
-    public <T extends Enum<T>> void enumDefine(String name, T value) {
+    public void enumDefine(String name, Enum<?> value) {
         defines.add(new StringPair(name, Integer.toString(value.ordinal())));
     }
 }

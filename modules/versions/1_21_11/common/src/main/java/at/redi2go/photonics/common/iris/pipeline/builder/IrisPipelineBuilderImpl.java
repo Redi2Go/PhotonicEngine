@@ -3,8 +3,13 @@ package at.redi2go.photonics.common.iris.pipeline.builder;
 import at.redi2go.photonics.common.iris.pipeline.IrisPipelineImpl;
 import at.redi2go.photonics.common.iris.pipeline.IrisRendererImpl;
 import at.redi2go.photonics.common.iris.pipeline.impl.PipelineAction;
+import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.pipeline.IrisRenderer;
+import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
+import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +27,34 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
 
     public IrisPipelineBuilderImpl(IrisPipelineImpl factory) {
         super(factory, "Photonics");
+    }
+
+    @Override
+    public IrisRenderer.Builder withBuffer(Consumer<IBufferHolder> consumer) {
+        factory.withBuffer(consumer);
+
+        return this;
+    }
+
+    @Override
+    public IrisRenderer.Builder withSampler(Consumer<ISamplerHolder> consumer) {
+        factory.withSampler(consumer);
+
+        return this;
+    }
+
+    @Override
+    public IrisRenderer.Builder withDynamicUniform(Consumer<IDynamicUniformHolder> consumer) {
+        factory.withDynamicUniform(consumer);
+
+        return this;
+    }
+
+    @Override
+    public IrisRenderer.Builder withUniform(Consumer<IUniformHolder> consumer) {
+        factory.withUniform(consumer);
+
+        return this;
     }
 
     private void scope(Consumer<IrisRenderer.Builder> builderAction) {

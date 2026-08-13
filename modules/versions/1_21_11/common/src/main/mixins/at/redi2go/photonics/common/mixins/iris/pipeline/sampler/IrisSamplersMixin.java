@@ -1,6 +1,7 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline.sampler;
 
 import at.redi2go.photonics.common.iris.IrisUtil;
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;
@@ -22,7 +23,6 @@ public abstract class IrisSamplersMixin {
             Object2ObjectMap<String, TextureAccess> irisCustomTextures,
             CallbackInfo ci
     ) {
-        IrisUtil.getPhotonics()
-                .ifPresent((e) -> e.registerCustomTextures((ISamplerHolder) samplers));
+        IrisManager.registerCustomTextures((ISamplerHolder) samplers);
     }
 }

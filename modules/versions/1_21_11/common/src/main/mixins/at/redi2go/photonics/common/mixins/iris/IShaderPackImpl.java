@@ -1,4 +1,4 @@
-package at.redi2go.photonics.impl.mixins.shaders.iris;
+package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.core.iris.IrisPack;
 import net.irisshaders.iris.Iris;

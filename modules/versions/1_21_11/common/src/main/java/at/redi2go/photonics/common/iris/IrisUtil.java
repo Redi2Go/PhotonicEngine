@@ -26,10 +26,6 @@ public class IrisUtil {
         return (PipelineManagerExt) Iris.getPipelineManager();
     }
 
-    public static Optional<PhotonicsPipeline> getPhotonics() {
-        return getPipelineManager().photonics();
-    }
-
     public static int getBlockId(BlockState block) {
         var blockIds = WorldRenderingSettings.INSTANCE.getBlockStateIds();
         return blockIds == null ? -1 : blockIds.getOrDefault(block, -1);

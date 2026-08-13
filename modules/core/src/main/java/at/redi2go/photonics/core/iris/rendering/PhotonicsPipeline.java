@@ -30,10 +30,12 @@ public abstract class PhotonicsPipeline extends AbstractRenderingComponent {
     public PhotonicsPipeline(
             PhotonicsProperties properties,
             AtlasDownloader atlasDownloader,
+            IrisPipeline pipeline,
             @Nullable RenderingComponent... components
     ) {
         super(components);
         this.properties = properties;
+        registerComponent(pipeline);
 
         registerResource(atlasDownloader);
         var sectionManager = registerComponent(new SectionManager(Minecraft::getRenderDistance));

@@ -1,6 +1,7 @@
 package at.redi2go.photonics.core.iris.patching;
 
 import at.redi2go.photonics.api.ModLoader;
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPackPath;
 import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.Photonics;
@@ -131,7 +132,7 @@ public class ShaderPatcher {
 
                     return shaderSourceSupplier.apply(p);
                 },
-                pack.ph$properties().isEnabled()
+                IrisManager.getPropertiesOrThrow().isEnabled()
         );
 
         return source;
@@ -150,7 +151,7 @@ public class ShaderPatcher {
         return patch.applyPatches(
                 path,
                 shaderSourceSupplier,
-                pack.ph$properties().isEnabled()
+                IrisManager.getPropertiesOrThrow().isEnabled()
         );
     }
 

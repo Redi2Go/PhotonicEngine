@@ -1,16 +1,11 @@
 package at.redi2go.photonics.common.mixins.iris;
 
 import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPack;
-import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.common.StringPairDefineHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
-import at.redi2go.photonics.common.iris.PatcherBridge;
-import at.redi2go.photonics.common.iris.ShaderPropertiesBridge;
 import at.redi2go.photonics.common.iris.UniformPatcher;
-import at.redi2go.photonics.core.iris.pipeline.IrisDefines;
-import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
-import at.redi2go.photonics.common.PhotonicsPropertiesImpl;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -42,13 +37,7 @@ import java.util.Properties;
 
 @Mixin(ShaderPack.class)
 public abstract class ShaderPackMixin implements IrisPack {
-    @Unique
-    private PhotonicsPropertiesImpl phProperties;
-    @Unique
-    private ShaderPatcher patcher;
-
-    @Unique
-    private boolean supportsPhotonics = false;
+    @Unique private boolean supportsPhotonics = false;
 
     @Inject(
             method = "<init>(Ljava/nio/file/Path;Ljava/util/Map;Lcom/google/common/collect/ImmutableList;Z)V",
@@ -64,19 +53,10 @@ public abstract class ShaderPackMixin implements IrisPack {
             boolean isZip,
             CallbackInfo ci
     ) {
-        phProperties = new PhotonicsPropertiesImpl();
         var properties = loadShaderProperties(root);
 
-        supportsPhotonics = properties.containsKey(PhotonicsProperties.ENABLED_KEY);
-        patcher = new ShaderPatcher(this);
-        PatcherBridge.PATCHER = patcher;
-
-        if (!supportsPhotonics && patcher.hasPatch())
-            phProperties.enabled = Boolean.parseBoolean(
-                    changedConfigs.getOrDefault("PHOTONICS_ENABLED", "true")
-            );
-
-        ShaderPropertiesBridge.PROPERTIES = phProperties;
+        supportsPhotonics = properties.containsKey("photonics.enabled");
+        IrisManager.setupShaderPatcher(this, Boolean.parseBoolean(changedConfigs.getOrDefault("PHOTONICS_ENABLED", "true")));
     }
 
     @Override
@@ -94,11 +74,6 @@ public abstract class ShaderPackMixin implements IrisPack {
     @Override
     public boolean ph$supportsPhotonics() {
         return supportsPhotonics;
-    }
-
-    @Override
-    public PhotonicsProperties ph$properties() {
-        return phProperties;
     }
 
     @WrapOperation(
@@ -139,8 +114,7 @@ public abstract class ShaderPackMixin implements IrisPack {
             @Local(name = "envDefines1") ArrayList<StringPair> defines
     ) {
         // These are the defines used by the preprocessor for shaders.properties
-        var defineHolder = new StringPairDefineHolder(defines);
-        IrisDefines.registerVersionDefines(defineHolder);
+        IrisManager.registerVersionDefines(new StringPairDefineHolder(defines));
     }
 
     @Inject(
@@ -160,8 +134,7 @@ public abstract class ShaderPackMixin implements IrisPack {
             @Local(name = "newEnvDefines") List<StringPair> newEnvDefines
     ) {
         // These are the defines used by the preprocessor for everything else
-        var defineHolder = new StringPairDefineHolder(newEnvDefines);
-        IrisDefines.registerDefines(defineHolder, phProperties);
+        IrisManager.registerDefines(new StringPairDefineHolder(newEnvDefines));
     }
 
     @Unique

@@ -1,5 +1,6 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline;
 
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.common.AtlasDownloaderImpl;
 import at.redi2go.photonics.common.HandheldLightSupplierImpl;
@@ -40,8 +41,6 @@ import java.util.Optional;
 public abstract class PipelineManagerMixin implements PipelineManagerExt {
     @Shadow
     private WorldRenderingPipeline pipeline;
-    @Unique
-    private PhotonicsPipeline photonics;
 
     @Unique
     private @Nullable LightsProvider lightsProvider;
@@ -51,7 +50,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
 
     @Inject(method = "preparePipeline", at = @At("HEAD"))
     private void preparePipeline(NamespacedId currentDimension, CallbackInfoReturnable<WorldRenderingPipeline> cir) {
-        if (photonics != null) return;
+        if (IrisManager.hasPipeline()) return;
 
         //TODO Add to more sensible spot
         BlockMesher.REGISTRY.addDefault(new MinecraftBlockMesher());
@@ -63,9 +62,7 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
         if (lightsProvider != null)
             PhConfig.registerLightProvider(lightsProvider);
 
-        var properties = shaderPack.ph$properties();
-        photonics = PhotonicsPipeline.create(
-                properties,
+        IrisManager.setupPipeline(
                 AtlasDownloaderImpl::new,
                 HandheldLightSupplierImpl::new,
                 new IrisPipelineImpl(renderers)
@@ -100,11 +97,6 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
     }
 
     @Override
-    public Optional<PhotonicsPipeline> photonics() {
-        return Optional.ofNullable(photonics);
-    }
-
-    @Override
     public List<DeferredIrisRenderer> getRenderers() {
         return renderers;
     }
@@ -131,11 +123,8 @@ public abstract class PipelineManagerMixin implements PipelineManagerExt {
 
     @Inject(method = "destroyPipeline", at = @At("HEAD"))
     private void destroyEverything(CallbackInfo ci) {
-        if (photonics != null) {
-            photonics.close();
-            photonics = null;
-
-            clearRenderers();
+        if (IrisManager.hasPipeline()) {
+            IrisManager.destroyEverything();
             renderers.clear();
         }
 

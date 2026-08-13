@@ -1,6 +1,10 @@
 package at.redi2go.photonics.core.iris.pipeline;
 
+import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolderBuilder;
+import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolderBuilder;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolderBuilder;
+import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolderBuilder;
 import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +16,11 @@ import java.util.function.Function;
 public interface IrisRenderer {
     void renderAll();
 
-    interface Builder {
+    interface Builder extends
+            IBufferHolderBuilder<Builder>,
+            ISamplerHolderBuilder<Builder>,
+            IDynamicUniformHolderBuilder<Builder>,
+            IUniformHolderBuilder<Builder> {
         Builder withFragmentPrefix(@NonNls String prefix);
 
         Builder withVertexPrefix(@NonNls String prefix);

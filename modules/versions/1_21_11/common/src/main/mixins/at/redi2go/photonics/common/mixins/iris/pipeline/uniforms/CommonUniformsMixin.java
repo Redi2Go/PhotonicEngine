@@ -1,5 +1,6 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline.uniforms;
 
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
 import at.redi2go.photonics.common.iris.IrisUtil;
@@ -22,8 +23,7 @@ public abstract class CommonUniformsMixin {
             at = @At("TAIL")
     )
     private static void addNonDynamicUniforms(UniformHolder uniforms, IdMap idMap, PackDirectives directives, FrameUpdateNotifier updateNotifier, CallbackInfo ci) {
-        IrisUtil.getPhotonics()
-                .ifPresent(e -> e.registerUniforms((IUniformHolder) uniforms));
+        IrisManager.registerUniforms((IUniformHolder) uniforms);
     }
 
     @Inject(
@@ -31,7 +31,6 @@ public abstract class CommonUniformsMixin {
             at = @At("TAIL")
     )
     private static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode, CallbackInfo ci) {
-        IrisUtil.getPhotonics()
-                .ifPresent(e -> e.registerDynamicUniforms((IDynamicUniformHolder) uniforms));
+        IrisManager.registerDynamicUniforms((IDynamicUniformHolder) uniforms);
     }
 }

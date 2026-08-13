@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PipelineManagerExt {
-    Optional<PhotonicsPipeline> photonics();
-
     List<DeferredIrisRenderer> getRenderers();
 
     void setRenderers(@Nullable List<at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer> renderers);

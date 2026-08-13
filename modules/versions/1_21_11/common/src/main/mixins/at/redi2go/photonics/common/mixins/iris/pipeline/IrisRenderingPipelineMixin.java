@@ -4,6 +4,7 @@ import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
 import at.redi2go.photonics.common.iris.buffers.GlBufferHolder;
 import at.redi2go.photonics.common.mixins.iris.ShaderPackAccessor;
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -93,8 +94,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
         bufferHolder = new GlBufferHolder();
         phRenderers = List.of();
 
-        IrisUtil.getPhotonics()
-                .ifPresent(e -> e.registerBuffers(bufferHolder));
+        IrisManager.registerBuffers(bufferHolder);
 
         var renderers = IrisUtil.getPipelineManager().getRenderers();
         var phRenderers = ImmutableList.<at.redi2go.photonics.common.iris.pipeline.renderer.PhotonicsRenderer>builder();
@@ -157,7 +157,7 @@ public abstract class IrisRenderingPipelineMixin implements IrisRenderingPipelin
             )
     )
     public void beginTranslucents(CallbackInfo ci) {
-        IrisUtil.getPhotonics().ifPresent(PhotonicsPipeline::onRender);
+        IrisManager.onRender();
     }
 
     @Override

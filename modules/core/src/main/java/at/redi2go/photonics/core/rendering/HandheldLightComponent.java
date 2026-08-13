@@ -52,7 +52,7 @@ public class HandheldLightComponent implements RenderingComponent {
         this.offHandUpdater = new UniformUpdater();
         this.offHand = new HandheldLightCache(handheldItemSupplier::getOffHand, offHandUpdater);
 
-        var enchantmentGlintStrength = properties.getEnchantmentGlintStrength();
+        var enchantmentGlintStrength = properties.getHandheldProperties().getGlintStrength();
         var enchantmentGlintColor = ENCHANTMENT_GLINT_COLOR.mul(enchantmentGlintStrength, new Vector3f());
         var enchantmentGlintRadius = BlockLightInfo.getBlockRadius(enchantmentGlintColor, ENCHANTMENT_GLINT_ATTENUATION, ENCHANTMENT_GLINT_FALLOFF);
 

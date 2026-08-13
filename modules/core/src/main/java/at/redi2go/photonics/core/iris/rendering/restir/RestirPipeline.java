@@ -16,9 +16,6 @@ import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.FL
 public class RestirPipeline extends PhotonicsPipeline {
     private final int denoiserPasses;
 
-    private int atrousIteration = 0;
-    private final UniformUpdater atrousUpdater = new UniformUpdater();
-
     private final RestirProperties restirProperties;
 
     public RestirPipeline(
@@ -28,7 +25,7 @@ public class RestirPipeline extends PhotonicsPipeline {
             HandheldItemSupplier handheldItemSupplier,
             IrisPipeline irisPipeline
     ) {
-        super(phProperties, atlasDownloader);
+        super(phProperties, atlasDownloader, irisPipeline);
         this.restirProperties = restirProperties;
 
         // The hand always needs at least 7 denoiser passes.
@@ -125,8 +122,12 @@ public class RestirPipeline extends PhotonicsPipeline {
                 .addAttachment("denoise_result", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP, this::isDenoisingEnabled)
                 .build(this::registerComponent);
 
+        int[] atrousIteration = new int[] {0};
+        final UniformUpdater atrousUpdater = new UniformUpdater();
+
         irisPipeline.newRenderer()
                 .debugGroup("svgf")
+                .dynamicUniform1i("atrous_iteration", () -> atrousIteration[0], atrousUpdater.newNotifier())
                 .withFragmentPrefix("/photonics/rendering/restir/svgf/passes/")
                 .withFramebuffer(temporalFramebuffer)
                 .thenFlip(temporalFramebuffer)
@@ -136,24 +137,13 @@ public class RestirPipeline extends PhotonicsPipeline {
                 .repeat(denoiserPasses, (i, b0) -> {
                     int index = denoiserPasses - i;
 
-                    b0.thenRun(() -> atrousIteration = index);
+                    b0.thenRun(() -> atrousIteration[0] = index);
                     b0.thenRun(atrousUpdater::updateNow);
                     b0.thenFlip(denoiseFramebuffer);
                     b0.deferredPass("atrous iteration #" + index, "sv2_atrous.fsh", null, this::isDenoisingEnabled);
                 })
                 .deferredPass("undo exposure", "sv3_undo_exposure.fsh", null, this::isDenoisingEnabled)
                 .build(this::registerRenderer);
-    }
-
-    @Override
-    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
-        super.registerDynamicUniforms(dynamicUniforms);
-
-        dynamicUniforms.uniform1i(
-                "atrous_iteration",
-                () -> atrousIteration,
-                atrousUpdater.newNotifier()
-        );
     }
 
     public boolean isBlockLightEnabled() {

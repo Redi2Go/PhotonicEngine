@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.mixins.iris;
 
+import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPackPath;
-import at.redi2go.photonics.common.iris.PatcherBridge;
 import at.redi2go.photonics.core.iris.patching.ShaderPatcher;
 import com.google.common.collect.ImmutableList;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -44,10 +44,9 @@ public abstract class IncludeGraphMixin {
             @Local(argsOnly = true) LocalRef<ImmutableList<AbsolutePackPath>> startingPathsRef
     ) {
         this.root = root;
-        this.patcher = PatcherBridge.consumePatcher();
+        this.patcher = IrisManager.getShaderPatcherOrThrow();
 
         var newFiles = patcher.getCreatedFiles();
-
         startingPathsRef.set(
                 ImmutableList.<AbsolutePackPath>builderWithExpectedSize(startingRefs.size() + newFiles.size())
                         .addAll(startingRefs)

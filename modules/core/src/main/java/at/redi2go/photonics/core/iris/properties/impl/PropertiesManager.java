@@ -33,6 +33,7 @@ public class PropertiesManager implements InvocationHandler {
     private static final String[] IGNORED_PREFIXES = new String[]{"use", "is", "get"};
     private static final String[] IGNORED_SUFFIXES = new String[]{"properties"};
 
+    private boolean forceEnabled = false;
     private final Map<String, InvocationHandler> magicMethods = new HashMap<>();
 
     private final Set<String> keys = new HashSet<>();
@@ -46,6 +47,10 @@ public class PropertiesManager implements InvocationHandler {
         defineState.registerDefines(defineHolder);
     }
 
+    public void setForceEnabled(boolean forceEnabled) {
+        this.forceEnabled = forceEnabled;
+    }
+
     public void setProperties(@Nullable Properties properties, Logger logger) {
         keys.clear();
         methodLookup.clear();
@@ -55,6 +60,7 @@ public class PropertiesManager implements InvocationHandler {
         overrideState.clear();
 
         if (properties == null) return;
+        if (forceEnabled) properties.setProperty("photonics.enabled", "true");
 
         PhotonicsProperties phProperties = (PhotonicsProperties) loadPropertyObject("photonics", PhotonicsProperties.class, properties, logger);
         if (phProperties.isEnabled()) {
@@ -149,7 +155,7 @@ public class PropertiesManager implements InvocationHandler {
         PropertyValue value = new PropertyValue(prefix + "." + getBaseKey(method, requestedKey));
         value.setValueFrom(method, requestedKey, type, properties, logger);
 
-        if (keys.add(value.getKey()))
+        if (!keys.add(value.getKey()))
             throw new IllegalStateException("Duplicate property: " + value.getKey());
 
         Defines defines = method.getDeclaredAnnotation(Defines.class);
