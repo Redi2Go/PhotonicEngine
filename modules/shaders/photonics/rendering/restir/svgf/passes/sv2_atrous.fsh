@@ -1,6 +1,6 @@
 #version 430
 
-//ph_required: uniform int atrous_iteration;
+uniform int atrous_iteration;
 
 #include "/photonics/rendering/frag/world_interface.glsl"
 #include "/photonics/utility/normal_encoding.glsl"
@@ -12,11 +12,13 @@
 
 layout(location = SVGF_DENOISE_OUT) out uvec4 denoise_out;
 
+uniform sampler2D visibility_history;
+
 float get_pass_weight(SvgfSample smple) {
-    const float frame_cutoff = PH_RESTIR_ACCUMULATION_FRAMES * 0.33f;
+    const float pass_cutoff = PH_RESTIR_ACCUMULATION_FRAMES * 0.5f;
     if (smple.is_hand || atrous_iteration < PH_RESTIR_DENOISER_PASSES) return 1.0f;
 
-    return 1.0f - (smple.age / frame_cutoff);
+    return clamp(1.0f - (smple.age / pass_cutoff), 0.0f, 1.0f);
 }
 
 void main() {
@@ -47,7 +49,7 @@ void main() {
         int step_width = 1 << atrous_iteration;
 
         const float phi_depth = 0.5f;
-        float phi_luminance = 6.0f * sqrt(max(0.0f, V0)) + 1e-10;
+        const float phi_luminance = 6.0f * sqrt(max(0.0f, V0 + 1e-10));
         const float phi_shadow = 0.1f;
 
         for (int i = 0; i < 9; ++i) {
@@ -64,7 +66,7 @@ void main() {
             float Di = ph_linearize_depth(sample_data.depth);
             float Si = texelFetch(visibility_history, p, 0).r;
 
-            const float k = kernel[i];
+            const float wK = kernel[i];
 
             // Color (luminance) weight
             float wC = center_sample.is_hand ? 1.0f : svgf_luma_edge_stopping_weight(L0, Li, phi_luminance);
@@ -79,7 +81,7 @@ void main() {
             float ws_mix_factor = (center_sample.age / PH_RESTIR_ACCUMULATION_FRAMES) * 3.0f;
             float wS = mix(1.0f, svgf_shadow_stopping_weight(S0, Si, phi_shadow), min(ws_mix_factor, 1.0f));
 
-            float w = wC * wN * wP * wS * k;
+            float w = wK * wC * wN * wP * wS;
             W_sum += w;
             C_sum += Ci.xyz * w;
             V_sum += Vi * w * w;
@@ -89,7 +91,7 @@ void main() {
         V_sum = max(0.0001f, V_sum);
 
         center_sample.color = mix(center_sample.color, C_sum / W_sum, pass_weight);
-        center_sample.variance = max(V_sum / (W_sum * W_sum), 0.0f);
+        center_sample.variance = mix(center_sample.variance, max(V_sum / (W_sum * W_sum), 0.0f), pass_weight);
     }
 
     svgf_sample_encode(center_sample, denoise_out);
