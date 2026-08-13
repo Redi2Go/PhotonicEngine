@@ -50,30 +50,19 @@ vec3 ph_rand_sample_position(inout uint rand_state, vec3 light_position, vec3 sa
     return disk_point.x * sample_tangent + disk_point.y * sample_bitangent;
 }
 
-// Thanks null!
-vec3 ph_sample_cosine_weighted_hemisphere(inout uint rnd_state) {
-    const float pi = 3.14159265359f;
+// Random direction code from zephyr starlight
+// This produces the most unbiased result for restir
+// No idea why either
+float ph_rand_dist(inout uint state) {
+    const float c_pi = 3.14159265359f;
+    const float c_twopi = 2.0f * c_pi;
 
-    vec2 u = vec2(
-        ph_rand_next_float(rnd_state),
-        ph_rand_next_float(rnd_state)
-    );
-
-    float r = sqrt(u.x);
-    float theta = (2.0 * pi) * u.y;
-
-    return vec3(r * cos(theta), r * sin(theta), sqrt(max(0.0, 1.0 - u.x)));
+    return sqrt(-log2(ph_rand_next_float(state))) * cos(c_twopi * ph_rand_next_float(state));
 }
-vec3 ph_rand_direction(inout uint state, vec3 normal)
-{
-    vec3 local_dir = ph_sample_cosine_weighted_hemisphere(state);
 
-    vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-
-    vec3 tangent = normalize(cross(up, normal));
-    vec3 bitangent = cross(normal, tangent);
-
-    return mat3(tangent, bitangent, normal) * local_dir;
+vec3 ph_rand_direction(inout uint state, vec3 normal) {
+    vec3 dir = normalize(vec3(ph_rand_dist(state), ph_rand_dist(state), ph_rand_dist(state)));
+    return normalize(dir + normal);
 }
 
 #endif
