@@ -72,7 +72,12 @@ float direct_sample_init_weight(
 
     Light light = light_list_get(int(smple.light_index));
 
-    vec3 offset = ph_rand_sample_position(rnd_state, light.position, sample_pos);
+#if defined PH_RESTIR_SOFT_SHADOWS
+    const vec3 offset = ph_rand_sample_position(rnd_state, light.position, sample_pos);
+#else
+    const vec3 offset = vec3(0.0f);
+#endif
+
     smple.packed_offset = packSnormR11G11B10(offset / ph_light_jitter_radius);
 
     light.position+= direct_sample_get_offset(smple);
