@@ -19,7 +19,7 @@ public interface GiProperties {
 
     @IntRange(min = 1)
     @DefaultValue("100")
-    @Defines("PH_MAX_GI_BOUNCES")
+    @Defines("PH_MAX_GI_TRACE_STEPS")
     int getMaxTraceSteps();
 
     @DefaultValue("false")
