@@ -23,7 +23,7 @@ public class IntPropertyType implements PropertyType<Integer> {
     @Override
     public Integer parse(String key, String value, Method method, Logger logger) {
         try {
-            return Integer.parseInt(key);
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             logger.warn("Unexpected value for integer key {} in shaders.properties: got {}, but expected an integer", key, value);
             return DEFAULT_VALUE;

@@ -23,7 +23,7 @@ public class FloatPropertyType implements PropertyType<Float> {
     @Override
     public Float parse(String key, String value, Method method, Logger logger) {
         try {
-            return Float.parseFloat(key);
+            return Float.parseFloat(value);
         } catch (NumberFormatException e) {
             logger.warn("Unexpected value for float key {} in shaders.properties: got {}, but expected a float", key, value);
             return DEFAULT_VALUE;
