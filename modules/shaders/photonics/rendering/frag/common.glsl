@@ -11,11 +11,7 @@ uint frag_rnd_state = 0u;
 
 FragData _frag_data;
 
-#if defined FRAG_USE_PLAYER_POS
-vec3 frag_player_pos;
-#else
 #define frag_player_pos frag_data_player_pos(_frag_data)
-#endif
 
 #if defined FRAG_USE_RT_POS
 vec3 frag_rt_pos;
@@ -42,10 +38,6 @@ vec3 frag_tex_normal;
 void setup_frag_data(int rnd_seed) {
     frag_rnd_state = ph_new_rand_state(gl_FragCoord.xy, frameCounter, 0);
     frag_data_load(_frag_data, frag_tex_coord);
-
-#if defined FRAG_USE_PLAYER_POS
-    frag_player_pos = frag_data_player_pos(_frag_data);
-#endif
 
 #if defined FRAG_USE_RT_POS
     frag_rt_pos = frag_data_rt_pos(_frag_data);
