@@ -52,41 +52,43 @@ void indirect_sample_set_hit_point(
     smple.hit_point -= rt_camera_position;
 }
 
-float indirect_sample_normal_factor(FragData frag, vec3 hit_pos) {
-    const float c_pi = 3.14159265359f;
-    const float rcp_pi = 1.0f / c_pi;
 
-    vec3 hit_dir = normalize(hit_pos - frag_data_rt_pos(frag));
-    return clamp(dot(frag_data_tex_normal(frag), hit_dir), 0.0001f, 1.0f) * rcp_pi;
+float indirect_sample_weight(IndirectSample smple) {
+    return ph_luminance(smple.color);
 }
 
-float indirect_sample_compute_jacobian(IndirectSample smple, vec3 dst_pos, vec3 src_pos) {
-    vec3 hit_position = indirect_sample_get_hit_point(smple);
+float indirect_sample_compute_jacobian(IndirectSample smple, FragData src_frag) {
+    #define dst_pos frag_player_pos
+    #define dst_geo_normal frag_geo_normal
+    #define dst_tex_normal frag_tex_normal
 
-    vec3 to_current = dst_pos - hit_position;
-    vec3 to_source  = src_pos - hit_position;
+    #define src_pos frag_data_player_pos(src_frag)
+    #define src_geo_normal frag_data_geo_normal(src_frag)
+    #define src_tex_normal frag_data_tex_normal(src_frag)
 
-    float to_current_sq = dot(to_current, to_current);
-    float to_source_sq = dot(to_source, to_source);
+    #define hit_pos smple.hit_point
+    #define hit_normal indirect_sample_get_hit_normal(smple)
 
-    vec3 hit_normal = indirect_sample_get_hit_normal(smple);
+    vec3 to_dst = hit_pos - dst_pos;
+    float to_dst_sq = dot(to_dst, to_dst);
+    float to_dst_inv = inversesqrt(to_dst_sq);
 
-    float jacobian = (dot(hit_normal, to_current * inversesqrt(to_current_sq)) / to_current_sq);
-    jacobian /= (dot(hit_normal, to_source * inversesqrt(to_source_sq)) / to_source_sq);
+    float jacobian     = dot(hit_normal, to_dst * to_dst_inv) / to_dst_sq;
+    float normal_shift = dot(dst_tex_normal, -to_dst * to_dst_inv) / dot(dst_geo_normal, -to_dst * to_dst_inv);
 
-    return isinf(jacobian) || isnan(jacobian) ? 0.0f : jacobian;
-}
+    vec3 to_src = hit_pos - src_pos;
+    float to_src_sq = dot(to_src, to_src);
+    float to_src_inv = inversesqrt(to_src_sq);
 
-float indirect_sample_compute_shift(IndirectSample smple, FragData dst_frag, FragData src_frag, float limit) {
-    vec3 hit_point = indirect_sample_get_hit_point(smple);
-    float occlusion_old = indirect_sample_normal_factor(src_frag, hit_point);
-    float occlusion_new = indirect_sample_normal_factor(dst_frag, hit_point);
+    jacobian     /= dot(hit_normal, to_src * inversesqrt(to_src_sq)) / to_src_sq;
+    normal_shift /= dot(src_tex_normal, -to_src * to_src_inv) / dot(src_geo_normal, -to_src * to_src_inv);
 
-    float occlusion_factor = occlusion_new / occlusion_old;
-    float jacobian_factor = indirect_sample_compute_jacobian(smple, frag_data_rt_pos(dst_frag), frag_data_rt_pos(src_frag));
+    return jacobian * normal_shift;
 
-    if (occlusion_factor > limit) return -1.0f;
-    if (jacobian_factor > limit) return -1.0f;
-
-    return jacobian_factor * occlusion_factor;
+    #undef dst_pos
+    #undef dst_tex_normal
+    #undef src_pos
+    #undef src_tex_normal
+    #undef hit_pos
+    #undef hit_normal
 }

@@ -24,25 +24,22 @@ void main() {
 
     float indirect_sample_weight = 0.0f;
     IndirectReservoir indirect_result = indirect_reservoir_empty();
-    IndirectReservoir temp_indirect = indirect_reservoir_empty();
+    IndirectReservoir reuse_indirect = indirect_reservoir_empty();
 
     // load temporal sampled reservoir
-    if (indirect_reservoir_load_previous(temp_indirect, prev_texel, true)) {
-        temp_indirect.total_samples = min(temp_indirect.total_samples, max_indirect_temporal_samples);
-        float shift = indirect_sample_compute_shift(temp_indirect.smple, _frag_data, prev_frag, 20.0f);
-
-        if (shift >= 0.0f) {
-            indirect_reservoir_merge(
-                    indirect_result,
-                    temp_indirect,
-                    clamp(shift, 0.0f, 3.0f),
-                    indirect_sample_weight
-            );
-        }
+    if (indirect_reservoir_load_previous(reuse_indirect, prev_texel, true)) {
+        indirect_reservoir_reuse(
+            indirect_result,
+            reuse_indirect,
+            prev_frag,
+            max_indirect_temporal_samples,
+            150.0f,
+            indirect_sample_weight
+        );
     }
 
-    indirect_reservoir_load(temp_indirect, frag_tex_coord);
-    indirect_reservoir_merge(indirect_result, temp_indirect, 1.0f, indirect_sample_weight);
+    indirect_reservoir_load(reuse_indirect, frag_tex_coord);
+    indirect_reservoir_merge(indirect_result, reuse_indirect, 1.0f, indirect_sample_weight);
 
     // write resulting reservoir
     indirect_reservoir_finalize_weight(indirect_result, indirect_sample_weight);

@@ -37,7 +37,7 @@ void main() {
         vec3  Ni = fast_frag_tex_normal(sample_data);
 
         if (!isinf(Di)) {
-            const float phi_depth = 0.5f;
+            const float phi_depth = 0.1f;
             float wP = svgf_depth_edge_stopping_weight(D0, Di, phi_depth);
             float wN = svgf_normal_edge_stopping_weight(N0, Ni);
 

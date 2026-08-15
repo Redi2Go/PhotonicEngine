@@ -34,7 +34,7 @@ void main() {
     indirect_sample_set_hit_normal(reservoir.smple, hit_normal);
     indirect_sample_set_hit_point(reservoir.smple, hit_position, frag_rt_pos, frag_geo_normal, frag_rnd_state);
 
-    reservoir.weight = ph_luminance(reservoir.smple.color * indirect_sample_normal_factor(_frag_data, hit_position));
+    reservoir.weight = indirect_sample_weight(reservoir.smple);
     reservoir.total_samples = 1.0f;
 
     indirect_reservoir_finalize_weight(reservoir, reservoir.weight);

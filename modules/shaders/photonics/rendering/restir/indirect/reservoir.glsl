@@ -49,21 +49,45 @@ bool indirect_reservoir_update(
 }
 
 bool indirect_reservoir_merge(
-    inout IndirectReservoir result,
-    IndirectReservoir other,
+    inout IndirectReservoir reservoir,
+    IndirectReservoir source,
     float jacobian,
     inout float sample_weight
 ) {
-    float other_sample_weight = ph_luminance(other.smple.color);
+    float source_sample_weight = indirect_sample_weight(source.smple);
 
-    float other_weight = other_sample_weight * other.weight * other.total_samples * jacobian;
-    if (indirect_reservoir_update(result, other.smple, other_weight, other.total_samples)) {
-        sample_weight = other_sample_weight;
+    float souce_weight = source_sample_weight * source.weight * source.total_samples * jacobian;
+    if (indirect_reservoir_update(reservoir, source.smple, souce_weight, source.total_samples)) {
+        sample_weight = source_sample_weight;
         return true;
     }
 
     return false;
 }
+
+void indirect_reservoir_reuse(
+        inout IndirectReservoir reservoir,
+        IndirectReservoir source,
+        FragData source_frag,
+        float max_samples,
+        float weight_limit,
+        inout float sample_weight
+) {
+    const float min_weight = 1.0f / weight_limit;
+    const float max_weight = weight_limit;
+
+    float jacobian = indirect_sample_compute_jacobian(source.smple, source_frag);
+    if (isnan(jacobian) || isinf(jacobian) || jacobian < min_weight || jacobian > max_weight) return;
+
+    source.total_samples = min(source.total_samples, max_samples);
+
+    float source_sample_weight = indirect_sample_weight(source.smple);
+    float source_weight = source_sample_weight * jacobian * source.weight * source.total_samples;
+    if (!indirect_reservoir_update(reservoir, source.smple, source_weight, source.total_samples)) return;
+
+    sample_weight = source_sample_weight;
+}
+
 
 void indirect_reservoir_clamp_samples(inout IndirectReservoir reservoir) {
     if (reservoir.total_samples <= max_indirect_reservoir_samples) return;
