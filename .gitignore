@@ -118,3 +118,4 @@ run/
 !gradle-wrapper.jar
 /lib/
 /start.bat
+/modules/core/rendering
