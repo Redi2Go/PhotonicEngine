@@ -32,7 +32,7 @@ void main() {
     IndirectReservoir reservoir = indirect_reservoir_empty();
     indirect_sample_set_color(reservoir.smple, indirect_result);
     indirect_sample_set_hit_normal(reservoir.smple, hit_normal);
-    indirect_sample_set_hit_point(reservoir.smple, hit_position, frag_rt_pos, frag_geo_normal, frag_rnd_state);
+    indirect_sample_set_hit_point(reservoir.smple, hit_position, frag_rt_pos, frag_tex_normal, frag_rnd_state);
 
     reservoir.weight = indirect_sample_weight(reservoir.smple);
     reservoir.total_samples = 1.0f;
