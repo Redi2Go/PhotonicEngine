@@ -1,8 +1,8 @@
 package at.redi2go.photonics.common.iris;
 
-import at.redi2go.photonics.api.mc.core.IBlockPos;
-import at.redi2go.photonics.api.mc.world.level.IBlock;
-import at.redi2go.photonics.api.mc.world.level.ILevelReader;
+import at.redi2go.photonics.game.mc.core.IBlockPos;
+import at.redi2go.photonics.game.mc.world.level.IBlock;
+import at.redi2go.photonics.game.mc.world.level.ILevelReader;
 import at.redi2go.photonics.core.config.Variable;
 import at.redi2go.photonics.core.config.lights.block.LightBlock;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;

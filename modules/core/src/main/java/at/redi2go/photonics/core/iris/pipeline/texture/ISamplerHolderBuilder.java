@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.pipeline.texture;
 
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

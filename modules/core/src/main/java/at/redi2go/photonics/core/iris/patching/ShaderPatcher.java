@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.patching;
 
-import at.redi2go.photonics.api.ModLoader;
+import at.redi2go.photonics.game.ModLoader;
 import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPackPath;
 import at.redi2go.photonics.core.iris.IrisPack;

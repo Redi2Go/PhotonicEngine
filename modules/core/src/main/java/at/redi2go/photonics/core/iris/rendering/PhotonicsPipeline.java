@@ -1,10 +1,9 @@
 package at.redi2go.photonics.core.iris.rendering;
 
-import at.redi2go.photonics.api.mc.Minecraft;
+import at.redi2go.photonics.game.mc.Minecraft;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
-import at.redi2go.photonics.core.iris.rendering.restir.RestirProperties;
 import at.redi2go.photonics.core.rendering.AbstractRenderingComponent;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 import at.redi2go.photonics.core.rendering.SectionManager;

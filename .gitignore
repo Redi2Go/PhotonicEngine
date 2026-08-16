@@ -119,4 +119,4 @@ run/
 /lib/
 /start.bat
 /modules/core/rendering
-/modules/api/gpu
+/modules/game/gpu

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.meshing.impl;
 
-import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.game.mc.Id;
 import at.redi2go.photonics.common.mixins.meshing.OuterWrappedRenderTypeAccessor;
 import at.redi2go.photonics.common.mixins.meshing.RenderSetupAccessor;
 import at.redi2go.photonics.common.mixins.meshing.RenderTypeAccessor;

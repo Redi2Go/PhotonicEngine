@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.mixins.iris.pipeline.sampler;
 
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import net.irisshaders.iris.gl.sampler.SamplerHolder;

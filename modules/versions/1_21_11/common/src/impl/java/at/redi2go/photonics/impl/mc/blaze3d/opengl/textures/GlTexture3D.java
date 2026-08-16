@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mc.blaze3d.opengl.textures;
 
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture3D;
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture3D;
+import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 import org.jspecify.annotations.Nullable;

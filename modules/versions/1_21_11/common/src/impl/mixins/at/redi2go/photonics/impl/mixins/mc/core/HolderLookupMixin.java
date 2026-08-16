@@ -1,9 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.core;
 
-import at.redi2go.photonics.api.mc.core.IHolderLookup;
+import at.redi2go.photonics.game.mc.core.IHolderLookup;
 import net.minecraft.core.HolderLookup;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(HolderLookup.class)

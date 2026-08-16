@@ -1,11 +1,11 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.systems;
 
-import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.IGpuBufferSlice;
-import at.redi2go.photonics.api.gpu.systems.ICommandEncoder;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture3D;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBuffer;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBufferSlice;
+import at.redi2go.photonics.game.gpu.systems.ICommandEncoder;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture3D;
 import at.redi2go.photonics.impl.mc.blaze3d.opengl.textures.IGlTexture;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
@@ -19,8 +19,6 @@ import org.joml.Vector3ic;
 import org.joml.Vector4fc;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;

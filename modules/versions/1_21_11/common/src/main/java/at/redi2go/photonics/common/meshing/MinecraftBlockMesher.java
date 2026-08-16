@@ -1,8 +1,8 @@
 package at.redi2go.photonics.common.meshing;
 
-import at.redi2go.photonics.api.mc.core.IBlockPos;
-import at.redi2go.photonics.api.mc.world.level.IBlockAndTintGetter;
-import at.redi2go.photonics.api.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.mc.core.IBlockPos;
+import at.redi2go.photonics.game.mc.world.level.IBlockAndTintGetter;
+import at.redi2go.photonics.game.mc.world.level.IBlockState;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockBuilder;
 import at.redi2go.photonics.core.rendering.world.bakery.BlockMesher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;

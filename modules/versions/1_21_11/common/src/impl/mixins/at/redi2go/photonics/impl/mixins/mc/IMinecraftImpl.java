@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc;
 
-import at.redi2go.photonics.api.mc.Minecraft;
-import at.redi2go.photonics.api.mc.world.level.ILevel;
+import at.redi2go.photonics.game.mc.Minecraft;
+import at.redi2go.photonics.game.mc.world.level.ILevel;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;

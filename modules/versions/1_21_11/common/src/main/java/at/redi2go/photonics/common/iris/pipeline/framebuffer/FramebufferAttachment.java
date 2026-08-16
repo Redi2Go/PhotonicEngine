@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.iris.pipeline.framebuffer;
 
-import at.redi2go.photonics.api.Disposable;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.game.Disposable;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture2D;
 import org.joml.Vector2ic;
 
 public record FramebufferAttachment(

@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
-import at.redi2go.photonics.api.mc.Id;
-import at.redi2go.photonics.api.mc.world.level.IBlock;
+import at.redi2go.photonics.game.mc.Id;
+import at.redi2go.photonics.game.mc.world.level.IBlock;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;

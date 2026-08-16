@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins;
 
-import at.redi2go.photonics.api.ModLoader;
+import at.redi2go.photonics.game.ModLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

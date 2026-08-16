@@ -1,12 +1,10 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.buffer;
 
-import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
-import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.IGpuBufferSlice;
+import at.redi2go.photonics.game.gpu.buffers.BufferUsage;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBuffer;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBufferSlice;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.opengl.GlBuffer;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GlBuffer.class)

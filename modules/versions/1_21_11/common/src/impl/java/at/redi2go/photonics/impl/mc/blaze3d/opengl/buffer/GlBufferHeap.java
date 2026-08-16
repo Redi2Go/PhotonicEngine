@@ -1,11 +1,11 @@
 package at.redi2go.photonics.impl.mc.blaze3d.opengl.buffer;
 
-import at.redi2go.photonics.api.gpu.buffers.BufferUsage;
-import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.heap.AbstractGpuBufferHeap;
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
-import at.redi2go.photonics.api.gpu.buffers.heap.MemoryView;
-import at.redi2go.photonics.api.gpu.systems.IGpuDevice;
+import at.redi2go.photonics.game.gpu.buffers.BufferUsage;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBuffer;
+import at.redi2go.photonics.game.gpu.buffers.heap.AbstractGpuBufferHeap;
+import at.redi2go.photonics.game.gpu.buffers.heap.IGpuBufferHeap;
+import at.redi2go.photonics.game.gpu.buffers.heap.MemoryView;
+import at.redi2go.photonics.game.gpu.systems.IGpuDevice;
 import at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl.buffer.GlBufferAccessor;
 import org.jetbrains.annotations.Nullable;
 

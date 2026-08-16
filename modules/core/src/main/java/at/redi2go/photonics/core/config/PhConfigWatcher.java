@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.config;
 
-import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.game.Disposable;
 
 import java.util.function.Consumer;
 import java.util.function.Function;

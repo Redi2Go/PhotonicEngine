@@ -1,13 +1,11 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.common.textures;
 
-import at.redi2go.photonics.api.gpu.textures.IAddressMode;
-import at.redi2go.photonics.api.gpu.textures.IFilterMode;
-import at.redi2go.photonics.api.gpu.textures.IGpuSampler;
+import at.redi2go.photonics.game.gpu.textures.IAddressMode;
+import at.redi2go.photonics.game.gpu.textures.IFilterMode;
+import at.redi2go.photonics.game.gpu.textures.IGpuSampler;
 import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

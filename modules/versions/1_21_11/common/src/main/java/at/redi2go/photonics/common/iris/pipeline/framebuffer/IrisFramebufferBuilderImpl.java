@@ -1,9 +1,9 @@
 package at.redi2go.photonics.common.iris.pipeline.framebuffer;
 
-import at.redi2go.photonics.api.gpu.systems.IRenderSystem;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
-import at.redi2go.photonics.api.gpu.textures.TextureUsage;
+import at.redi2go.photonics.game.gpu.systems.IRenderSystem;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.gpu.textures.TextureUsage;
 import at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage;
 import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import org.joml.Vector2ic;

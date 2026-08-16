@@ -34,7 +34,7 @@ subprojects {
     version = parent!!.version
     group = parent!!.group
 
-    val apiPath = ":modules:api"
+    val gamePath = ":modules:game"
     val corePath = ":modules:core"
 
     val commonPath = "${parent!!.path}:common"
@@ -79,14 +79,14 @@ subprojects {
                     isTransitive = false
                 }
 
-            add("shadow", project(apiPath)) { isTransitive = false }
+            add("shadow", project(gamePath)) { isTransitive = false }
             add("shadow", project(corePath)) { isTransitive = false }
         } else {
-            add("implementation", project(apiPath))
+            add("implementation", project(gamePath))
             add("implementation", project(corePath))
         }
 
-        add("runtimeOnly", project(apiPath))
+        add("runtimeOnly", project(gamePath))
         add("runtimeOnly", project(corePath))
 
         ext.set("proj", this@subprojects)
@@ -131,7 +131,7 @@ subprojects {
             if (project.name != "common")
                 addSources(project(commonPath))
 
-            addSources(project(apiPath))
+            addSources(project(gamePath))
             addSources(project(corePath))
         }
 

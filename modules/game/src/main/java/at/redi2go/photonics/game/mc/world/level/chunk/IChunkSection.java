@@ -1,0 +1,20 @@
+package at.redi2go.photonics.game.mc.world.level.chunk;
+
+import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import org.joml.Vector3ic;
+
+public interface IChunkSection {
+    int SECTION_WIDTH = 16;
+    int SECTION_HEIGHT = 16;
+    int SECTION_SIZE = 4096;
+
+    IBlockState ph$getBlockState(int x, int y, int z);
+
+    default IBlockState ph$getBlockState(Vector3ic pos) {
+        return ph$getBlockState(pos.x(), pos.y(), pos.z());
+    }
+
+    boolean ph$hasOnlyAir();
+
+    IChunkSection ph$createCopy();
+}

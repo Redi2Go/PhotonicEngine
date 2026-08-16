@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.common.textures;
 
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
 import at.redi2go.photonics.impl.mc.blaze3d.common.GpuDeviceImpl;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc.blaze3d.opengl;
 
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
 import net.irisshaders.iris.gl.texture.InternalTextureFormat;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;

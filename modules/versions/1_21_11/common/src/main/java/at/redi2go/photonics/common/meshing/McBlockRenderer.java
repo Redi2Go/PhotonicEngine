@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.meshing;
 
-import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.game.mc.Id;
 import at.redi2go.photonics.common.BlockRenderDispatcherExt;
 import at.redi2go.photonics.common.iris.IrisUtil;
 import at.redi2go.photonics.common.meshing.impl.BlockBuilderBufferSource;

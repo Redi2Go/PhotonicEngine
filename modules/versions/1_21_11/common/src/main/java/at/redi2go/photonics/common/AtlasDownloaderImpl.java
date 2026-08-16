@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common;
 
-import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.game.mc.Id;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
@@ -15,7 +15,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
 import it.unimi.dsi.fastutil.Pair;
-import net.irisshaders.iris.gl.texture.TextureAccess;
 import net.irisshaders.iris.pbr.texture.PBRTextureHolder;
 import net.irisshaders.iris.pbr.texture.PBRTextureManager;
 import net.irisshaders.iris.targets.backed.NativeImageBackedSingleColorTexture;

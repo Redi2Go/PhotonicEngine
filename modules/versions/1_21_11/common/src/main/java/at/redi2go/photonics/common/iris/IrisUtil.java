@@ -1,13 +1,12 @@
 package at.redi2go.photonics.common.iris;
 
-import at.redi2go.photonics.api.gpu.textures.IGpuSampler;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture3D;
+import at.redi2go.photonics.game.gpu.textures.IGpuSampler;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture3D;
 import at.redi2go.photonics.common.iris.pipeline.IrisRenderingPipelineExt;
 import at.redi2go.photonics.common.iris.pipeline.PipelineManagerExt;
 import at.redi2go.photonics.common.mixins.iris.pipeline.sampler.GlSamplerAccessor;
-import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import at.redi2go.photonics.impl.mc.blaze3d.opengl.textures.AbstractGlTexture;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.irisshaders.iris.Iris;
@@ -18,8 +17,6 @@ import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
 import net.irisshaders.iris.shaderpack.materialmap.WorldRenderingSettings;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 public class IrisUtil {
     public static PipelineManagerExt getPipelineManager() {

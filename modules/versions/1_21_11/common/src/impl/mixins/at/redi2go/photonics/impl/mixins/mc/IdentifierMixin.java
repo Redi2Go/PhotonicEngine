@@ -1,10 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc;
 
-import at.redi2go.photonics.api.mc.Id;
+import at.redi2go.photonics.game.mc.Id;
 import net.minecraft.resources.Identifier;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.patching;
 
-import at.redi2go.photonics.api.Disposable;
+import at.redi2go.photonics.game.Disposable;
 import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.core.Photonics;
 import org.apache.commons.lang3.tuple.Triple;

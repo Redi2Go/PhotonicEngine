@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.iris.pipeline.buffer;
 
-import at.redi2go.photonics.api.gpu.buffers.IGpuBuffer;
-import at.redi2go.photonics.api.gpu.buffers.heap.IGpuBufferHeap;
+import at.redi2go.photonics.game.gpu.buffers.IGpuBuffer;
+import at.redi2go.photonics.game.gpu.buffers.heap.IGpuBufferHeap;
 
 import java.util.function.Supplier;
 

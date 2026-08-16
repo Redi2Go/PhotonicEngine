@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.mixins.meshing;
 
-import at.redi2go.photonics.api.gpu.textures.TextureUsage;
+import at.redi2go.photonics.game.gpu.textures.TextureUsage;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;

@@ -1,16 +1,8 @@
 package at.redi2go.photonics.impl.mc.blaze3d.opengl.textures;
 
-import at.redi2go.photonics.api.gpu.textures.IGpuTexture2D;
-import at.redi2go.photonics.api.gpu.textures.ITextureFormat;
-import at.redi2go.photonics.api.gpu.textures.TextureUsage;
-import at.redi2go.photonics.impl.mc.blaze3d.opengl.GlDebugLabelExt;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlSampler;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.SamplerCache;
-import net.irisshaders.iris.gl.texture.InternalTextureFormat;
-import org.jetbrains.annotations.NonNls;
+import at.redi2go.photonics.game.gpu.textures.IGpuTexture2D;
+import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.gpu.textures.TextureUsage;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.jspecify.annotations.Nullable;

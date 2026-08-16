@@ -31,7 +31,7 @@ dependencyResolutionManagement {
     versionCatalog(name = "mcLibs", "modules/versions/mc_libs.toml")
 }
 
-include(":modules:api")
+include(":modules:game")
 include(":modules:core")
 include(":modules:versions")
 

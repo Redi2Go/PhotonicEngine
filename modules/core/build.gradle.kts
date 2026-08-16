@@ -28,7 +28,7 @@ dependencies {
     implementation(sharedLibs.brigadier)
     implementation(sharedLibs.fastutil.concurrent.wrapper)
 
-    implementation(projects.modules.api)
+    implementation(projects.modules.game)
     implementation(coreLibs.jetrains.annotations)
     implementation(coreLibs.slf4j.api)
 }
