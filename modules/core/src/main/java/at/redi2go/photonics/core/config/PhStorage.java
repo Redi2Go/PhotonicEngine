@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.config;
 
-import at.redi2go.photonics.game.mc.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.core.config.lights.LightDefines;
 import at.redi2go.photonics.core.config.lights.LightGroup;
 

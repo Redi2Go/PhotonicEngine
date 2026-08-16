@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.core;
 
-import at.redi2go.photonics.game.mc.core.IHolder;
-import at.redi2go.photonics.game.mc.core.IHolderSet;
+import at.redi2go.photonics.game.minecraft.core.IHolder;
+import at.redi2go.photonics.game.minecraft.core.IHolderSet;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import org.spongepowered.asm.mixin.Mixin;

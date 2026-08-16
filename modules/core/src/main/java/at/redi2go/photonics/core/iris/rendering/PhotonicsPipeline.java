@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.rendering;
 
-import at.redi2go.photonics.game.mc.Minecraft;
+import at.redi2go.photonics.game.minecraft.Minecraft;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;

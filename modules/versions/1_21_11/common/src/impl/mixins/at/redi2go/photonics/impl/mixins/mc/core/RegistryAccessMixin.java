@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc.core;
 
-import at.redi2go.photonics.game.mc.core.IRegistryAccess;
+import at.redi2go.photonics.game.minecraft.core.IRegistryAccess;
 import net.minecraft.core.RegistryAccess;
 import org.spongepowered.asm.mixin.Mixin;
 

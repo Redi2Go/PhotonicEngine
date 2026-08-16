@@ -1,9 +1,9 @@
 package at.redi2go.photonics.impl.mixins.mc.commands.arguments.blocks;
 
-import at.redi2go.photonics.game.mc.IProperty;
-import at.redi2go.photonics.game.mc.commands.arguments.blocks.IBlockStateParser;
-import at.redi2go.photonics.game.mc.nbt.ICompoundTag;
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.IProperty;
+import at.redi2go.photonics.game.minecraft.commands.arguments.blocks.IBlockStateParser;
+import at.redi2go.photonics.game.minecraft.nbt.ICompoundTag;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;

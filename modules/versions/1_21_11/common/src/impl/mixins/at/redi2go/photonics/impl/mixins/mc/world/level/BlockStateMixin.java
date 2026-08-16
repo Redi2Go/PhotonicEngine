@@ -1,10 +1,10 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
-import at.redi2go.photonics.game.mc.IProperty;
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.IBlockGetter;
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.IProperty;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockGetter;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import com.mojang.serialization.MapCodec;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.core.BlockPos;

@@ -1,12 +1,12 @@
 package at.redi2go.photonics.core.config.lights.predicate;
 
-import at.redi2go.photonics.game.mc.IProperty;
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.nbt.ICompoundTag;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
-import at.redi2go.photonics.game.mc.world.level.ILevelReader;
-import at.redi2go.photonics.game.mc.world.level.block.IBlockEntity;
+import at.redi2go.photonics.game.minecraft.IProperty;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.nbt.ICompoundTag;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
+import at.redi2go.photonics.game.minecraft.world.level.block.IBlockEntity;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 

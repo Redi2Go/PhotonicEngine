@@ -1,8 +1,8 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.world.level.ILevel;
-import at.redi2go.photonics.game.mc.world.level.chunk.IChunkAccess;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.world.level.ILevel;
+import at.redi2go.photonics.game.minecraft.world.level.chunk.IChunkAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris;
 
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 
 import java.util.Optional;
 

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc.core;
 
-import at.redi2go.photonics.game.mc.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

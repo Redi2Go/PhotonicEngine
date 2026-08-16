@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level.block.state;
 
-import at.redi2go.photonics.game.mc.IProperty;
-import at.redi2go.photonics.game.mc.world.level.block.state.IStateDefinition;
+import at.redi2go.photonics.game.minecraft.IProperty;
+import at.redi2go.photonics.game.minecraft.world.level.block.state.IStateDefinition;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jspecify.annotations.Nullable;

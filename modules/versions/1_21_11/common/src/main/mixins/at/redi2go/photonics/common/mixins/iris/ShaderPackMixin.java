@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common.mixins.iris;
 
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import at.redi2go.photonics.core.iris.IrisManager;
 import at.redi2go.photonics.core.iris.IrisPack;
 import at.redi2go.photonics.common.StringPairDefineHolder;

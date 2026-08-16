@@ -1,10 +1,10 @@
 package at.redi2go.photonics.core.config.lights.predicate;
 
-import at.redi2go.photonics.game.mc.commands.arguments.blocks.IBlockStateParser;
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.core.registries.Registries;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.ILevelReader;
+import at.redi2go.photonics.game.minecraft.commands.arguments.blocks.IBlockStateParser;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.core.registries.Registries;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import org.jetbrains.annotations.NonNls;

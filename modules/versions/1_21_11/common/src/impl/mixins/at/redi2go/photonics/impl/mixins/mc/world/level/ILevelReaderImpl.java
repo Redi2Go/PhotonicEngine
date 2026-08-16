@@ -1,7 +1,7 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
-import at.redi2go.photonics.game.mc.world.level.ILevelReader;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import at.redi2go.photonics.impl.mc.world.level.SingleBlockLevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,9 +1,9 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level;
 
-import at.redi2go.photonics.game.mc.Id;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
-import at.redi2go.photonics.game.mc.world.level.block.state.IStateDefinition;
+import at.redi2go.photonics.game.minecraft.Id;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.block.state.IStateDefinition;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;

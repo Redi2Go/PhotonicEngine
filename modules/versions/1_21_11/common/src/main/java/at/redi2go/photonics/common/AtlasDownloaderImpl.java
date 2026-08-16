@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common;
 
-import at.redi2go.photonics.game.mc.Id;
+import at.redi2go.photonics.game.minecraft.Id;
 import at.redi2go.photonics.core.Photonics;
 import at.redi2go.photonics.core.rendering.world.IgnoredInterruptedException;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.config;
 
-import at.redi2go.photonics.game.mc.Minecraft;
+import at.redi2go.photonics.game.minecraft.Minecraft;
 import at.redi2go.photonics.core.Photonics;
 
 import java.io.IOException;

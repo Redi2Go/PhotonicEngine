@@ -1,8 +1,8 @@
 package at.redi2go.photonics.impl.mixins.mc.commands.arguments.blocks;
 
-import at.redi2go.photonics.game.mc.commands.arguments.blocks.IBlockStateParser;
-import at.redi2go.photonics.game.mc.core.IHolderLookup;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.commands.arguments.blocks.IBlockStateParser;
+import at.redi2go.photonics.game.minecraft.core.IHolderLookup;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Either;

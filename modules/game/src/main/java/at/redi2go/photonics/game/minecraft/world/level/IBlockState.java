@@ -1,0 +1,22 @@
+package at.redi2go.photonics.game.minecraft.world.level;
+
+import at.redi2go.photonics.game.minecraft.IProperty;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+
+public interface IBlockState {
+    IBlock ph$block();
+
+    default boolean ph$is(IBlock block) {
+        return ph$block() == block;
+    }
+
+    boolean ph$isAir();
+
+    boolean ph$isSuffocating(IBlockGetter blockGetter, IBlockPos blockPos);
+
+    boolean ph$isCollisionShapeFullBlock(IBlockGetter blockGetter, IBlockPos blockPos);
+
+    boolean ph$hasProperty(IProperty<?> property);
+
+    <T extends Comparable<T>> T ph$getValue(IProperty<T> property);
+}

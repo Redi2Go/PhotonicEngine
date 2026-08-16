@@ -1,8 +1,8 @@
 package at.redi2go.photonics.impl.mixins.mc.world.level.block;
 
-import at.redi2go.photonics.game.mc.core.IHolderLookup;
-import at.redi2go.photonics.game.mc.nbt.ICompoundTag;
-import at.redi2go.photonics.game.mc.world.level.block.IBlockEntity;
+import at.redi2go.photonics.game.minecraft.core.IHolderLookup;
+import at.redi2go.photonics.game.minecraft.nbt.ICompoundTag;
+import at.redi2go.photonics.game.minecraft.world.level.block.IBlockEntity;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;

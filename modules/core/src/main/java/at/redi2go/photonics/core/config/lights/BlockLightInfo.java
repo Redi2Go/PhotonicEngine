@@ -1,8 +1,8 @@
 package at.redi2go.photonics.core.config.lights;
 
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.ILevelReader;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import at.redi2go.photonics.core.config.lights.color.LightColor;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;
 import org.jetbrains.annotations.NonNls;

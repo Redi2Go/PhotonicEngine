@@ -1,6 +1,6 @@
 package at.redi2go.photonics.common;
 
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import at.redi2go.photonics.common.mixins.InventoryAccessor;
 import at.redi2go.photonics.core.rendering.lights.HandheldItem;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;

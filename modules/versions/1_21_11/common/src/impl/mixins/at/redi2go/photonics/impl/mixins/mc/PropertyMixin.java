@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.mixins.mc;
 
-import at.redi2go.photonics.game.mc.IProperty;
+import at.redi2go.photonics.game.minecraft.IProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

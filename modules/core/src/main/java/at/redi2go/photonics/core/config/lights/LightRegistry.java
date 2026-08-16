@@ -1,9 +1,9 @@
 package at.redi2go.photonics.core.config.lights;
 
-import at.redi2go.photonics.game.mc.core.IBlockPos;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
-import at.redi2go.photonics.game.mc.world.level.IBlockState;
-import at.redi2go.photonics.game.mc.world.level.ILevelReader;
+import at.redi2go.photonics.game.minecraft.core.IBlockPos;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
+import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import org.jetbrains.annotations.Nullable;

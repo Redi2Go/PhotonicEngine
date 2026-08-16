@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.config.adapter;
 
-import at.redi2go.photonics.game.mc.Id;
-import at.redi2go.photonics.game.mc.world.level.IBlock;
+import at.redi2go.photonics.game.minecraft.Id;
+import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
