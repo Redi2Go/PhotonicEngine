@@ -3,7 +3,7 @@ package at.redi2go.photonics.game.blaze3d.textures;
 import at.redi2go.photonics.game.blaze3d.images.IImageFormat;
 
 public interface ITextureFormat {
-    IImageFormat toImageFormat();
+    IImageFormat ph$toImageFormat();
 
     static ITextureFormat rgba() {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN

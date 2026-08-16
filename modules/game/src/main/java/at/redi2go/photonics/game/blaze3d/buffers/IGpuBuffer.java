@@ -9,9 +9,9 @@ public interface IGpuBuffer extends Disposable {
 
     long ph$size();
 
-    IGpuBufferSlice slice(long offset, long length);
+    IGpuBufferSlice ph$slice(long offset, long length);
 
-    IGpuBufferSlice slice();
+    IGpuBufferSlice ph$slice();
 
     boolean ph$isClosed();
 
