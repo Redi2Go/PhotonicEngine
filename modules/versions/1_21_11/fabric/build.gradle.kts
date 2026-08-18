@@ -14,11 +14,15 @@ tasks {
     processResources {
         inputs.property("version", project.version)
 
+        val phVersion = constants.versions.photonics.get()
+        val mcVersion = mainLibs.versions.minecraft.get()
+        val fabricLoaderVersion = mainLibs.versions.fabric.loader.get()
+
         filesMatching("fabric.mod.json") {
             expand(
-                "photonics_version" to constants.versions.photonics.get(),
-                "minecraft_version" to mainLibs.versions.minecraft.get(),
-                "fabric_loader_version" to mainLibs.versions.fabric.loader.get()
+                "photonics_version" to phVersion,
+                "minecraft_version" to mcVersion,
+                "fabric_loader_version" to fabricLoaderVersion
             )
         }
     }

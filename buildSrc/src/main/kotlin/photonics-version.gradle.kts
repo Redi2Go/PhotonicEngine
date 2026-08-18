@@ -68,15 +68,9 @@ subprojects {
     // Some of this is unnecessary and no I don't care
     dependencies {
         if (project.name != "common") {
-            add(
-                "shadow",
-                add(
-                    "implementation",
-                    project(commonPath, configuration = "namedElements")
-                ) {
-                    isTransitive = false
-                }
-            ) {
+            add("shadow", add("implementation", project(commonPath, configuration = "namedElements")) {
+                isTransitive = false
+            }) {
                 isTransitive = false
             }
 
@@ -137,7 +131,7 @@ subprojects {
         }
 
         shadowJar {
-            archiveFileName = provider { "${jarName()}-shaded.jar" }
+            archiveFileName = "${jarName()}-shaded.jar"
             configurations = listOf(project.configurations.getByName("shadow"))
 
 
