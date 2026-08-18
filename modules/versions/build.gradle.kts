@@ -11,5 +11,7 @@ version = constants.versions.photonics.get()
 group = constants.versions.mavenGroup.get()
 
 subprojects {
-    apply(plugin = "photonics-version")
+    apply {
+        plugin("photonics-version")
+    }
 }

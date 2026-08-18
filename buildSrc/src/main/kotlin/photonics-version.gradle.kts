@@ -6,16 +6,17 @@ group = parent!!.group
 val photonics: PhotonicsExtension = project.extensions.create("photonics")
 
 subprojects {
-    apply(plugin = "com.gradleup.shadow")
-
-    apply(plugin = "java")
+    apply {
+        plugin("com.gradleup.shadow")
+        plugin("java")
+    }
 
     java {
         withSourcesJar()
     }
 
-    val main by sourceSets.getting
-    val impl by sourceSets.creating {
+    val main = sourceSets.getByName("main")
+    val impl = sourceSets.create("impl") {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
     }
@@ -67,17 +68,17 @@ subprojects {
     // Some of this is unnecessary and no I don't care
     dependencies {
         if (project.name != "common") {
+            add(
+                "shadow",
                 add(
-                    "shadow",
-                    add(
-                        "implementation",
-                        project(commonPath, configuration = "namedElements")
-                    ) {
-                        isTransitive = false
-                    }
+                    "implementation",
+                    project(commonPath, configuration = "namedElements")
                 ) {
                     isTransitive = false
                 }
+            ) {
+                isTransitive = false
+            }
 
             add("shadow", project(gamePath)) { isTransitive = false }
             add("shadow", project(corePath)) { isTransitive = false }
