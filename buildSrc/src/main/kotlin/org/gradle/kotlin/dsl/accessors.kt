@@ -4,9 +4,12 @@ import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
+import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.language.jvm.tasks.ProcessResources
 
 inline val Project.loom: LoomGradleExtensionAPI
     get() = extensions.getByName<LoomGradleExtensionAPI>("loom")

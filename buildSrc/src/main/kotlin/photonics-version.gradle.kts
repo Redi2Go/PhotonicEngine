@@ -1,3 +1,5 @@
+import buildSrc.tasks.remapping.RemapMixins
+import buildSrc.tasks.remapping.RemapMixins.Companion.remapMixins
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
 
 version = parent!!.version
@@ -25,10 +27,6 @@ subprojects {
         main {
             compileClasspath += impl.output
             runtimeClasspath += impl.output
-        }
-
-        configureEach {
-            java.srcDirs("$projectDir/src/${name}/mixins")
         }
     }
 
@@ -105,7 +103,19 @@ subprojects {
             }
         }
 
+        val remapMain = remapMixins("main") {
+            packagePrefix = "at.redi2go.photonics"
+            outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/main")
+        }
+
+        val remapImpl = remapMixins("impl") {
+            packagePrefix = "at.redi2go.photonics"
+            outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/impl")
+        }
+
         named<Jar>("jar") {
+            dependsOn(remapMain, remapImpl)
+
             from(impl.output)
         }
 

@@ -38,6 +38,7 @@ dependencies {
     implementation(plugin(sharedLibs.plugins.shadow))
 
     implementation(plugin(mcLibs.plugins.loom.gradle))
+    implementation(sharedLibs.fastutil)
 }
 
 fun plugin(plugin: Provider<PluginDependency>): Provider<String> =
