@@ -1,9 +1,9 @@
 package at.redi2go.photonics.core.iris.rendering;
 
-import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
-import at.redi2go.photonics.core.rendering.HandheldLightComponent;
+//import at.redi2go.photonics.core.rendering.HandheldLightComponent;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 
 import static at.redi2go.photonics.core.iris.pipeline.texture.AttachmentUsage.CREATE_SAMPLER;
@@ -40,7 +40,7 @@ public class Pipelines {
     ) {
         if (!properties.getHandheldProperties().isEnabled()) return;
 
-        var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
+//        var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
                 .addAttachment("handheld_diffuse", ITextureFormat.rgb32f(), CREATE_SAMPLER)
@@ -53,10 +53,10 @@ public class Pipelines {
                 .deferredPass("handheld", "h0_handheld.fsh", null)
                 .build();
 
-        ext.registerRenderer(() -> {
-            if (handheldComponent.hasItem())
-                pipeline.renderAll();
-        });
+//        ext.registerRenderer(() -> {
+//            if (handheldComponent.hasItem())
+//                pipeline.renderAll();
+//        });
     }
 
     public static void exposureHistory(PhotonicsPipeline ext, IrisPipeline irisPipeline) {

@@ -1,11 +1,11 @@
 package at.redi2go.photonics.core.iris.pipeline.texture;
 
-import at.redi2go.photonics.game.gpu.textures.IGpuTexture;
+import at.redi2go.photonics.game.blaze3d.textures.IGpuTexture;
 
 import java.util.function.Supplier;
 
 public interface ISamplerHolder {
-    void addSampler(String name, Supplier<IGpuTexture.WithSampler<?>> textureAndSampler);
+    void addSampler(String name, Supplier<IGpuTexture.WithSampler> textureAndSampler);
 
-    void addDefaultSampler(String name, Supplier<IGpuTexture<?>> texture);
+    void addDefaultSampler(String name, Supplier<IGpuTexture> texture);
 }

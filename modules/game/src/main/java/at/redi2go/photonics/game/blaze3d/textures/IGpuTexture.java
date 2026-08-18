@@ -18,5 +18,16 @@ public interface IGpuTexture extends Disposable {
 
     int ph$getMipLevels();
 
+    default WithSampler withSampler(IGpuSampler sampler) {
+        if (ph$isClosed()) throw new IllegalStateException("closed");
+
+        return new WithSampler(this, sampler);
+    }
+
     boolean ph$isClosed();
+
+
+    record WithSampler(IGpuTexture texture, IGpuSampler sampler) {
+
+    }
 }

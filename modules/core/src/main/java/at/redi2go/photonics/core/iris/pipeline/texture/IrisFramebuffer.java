@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.iris.pipeline.texture;
 
 import at.redi2go.photonics.game.Disposable;
-import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
 import at.redi2go.photonics.core.rendering.RenderingComponent;
 
 import java.util.function.BooleanSupplier;

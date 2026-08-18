@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.rendering.restir;
 
-import at.redi2go.photonics.game.gpu.textures.ITextureFormat;
+import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
