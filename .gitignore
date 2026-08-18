@@ -120,3 +120,4 @@ run/
 /start.bat
 /modules/core/rendering
 /modules/game/gpu
+/modules/versions/1_21_11/common/src_old
