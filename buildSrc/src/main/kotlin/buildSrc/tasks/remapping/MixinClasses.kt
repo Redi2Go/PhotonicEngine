@@ -18,23 +18,6 @@ import kotlin.sequences.forEach
 value class MixinClasses private constructor(private val mapping: MutableMap<Type, Type>) {
     constructor() : this(mutableMapOf())
 
-    constructor(mixinDir: Path, packagePrefix: String) : this() {
-        var mixinDir = mixinDir.absolute()
-
-        for (clazz in mixinDir.walk()) {
-            val path = clazz.absolute().relativeTo(mixinDir)
-
-            val basePackage = path.toString().substringBeforeLast('/').removeSurrounding("/").replace('/', '.')
-            val className = path.nameWithoutExtension
-            if (className.isEmpty()) continue
-
-            mapping.put(
-                typeFromImport(packagePrefix, MIXIN_PACKAGE, basePackage, className),
-                typeFromImport(packagePrefix, basePackage, className)
-            )
-        }
-    }
-
     fun remap(before: Type, packagePrefix: String) {
         mapping[before] = typeFromImport(
             packagePrefix,

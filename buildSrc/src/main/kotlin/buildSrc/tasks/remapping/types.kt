@@ -8,6 +8,10 @@ fun typeFromImport(vararg parts: String): Type {
 
 val MixinType = typeFromImport("org.spongepowered.asm.mixin.Mixin")
 
+val OptionalType = typeFromImport("at.redi2go.photonics.mixin.Optional")
+val ClientType = typeFromImport("at.redi2go.photonics.mixin.ClientSide")
+val ServerType = typeFromImport("at.redi2go.photonics.mixin.ServerSide")
+
 val Type.simpleName: String
     get() = internalName.substringAfterLast('/')
 

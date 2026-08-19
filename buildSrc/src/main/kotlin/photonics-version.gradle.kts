@@ -105,11 +105,19 @@ subprojects {
 
         val remapMain = remapMixins("main") {
             packagePrefix = "at.redi2go.photonics"
+            compatibilityLevel = JavaVersion.VERSION_16
+            minVersion = "0.8"
+            mixinPrefix = "photonics-${project.name}-main"
+
             outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/main")
         }
 
         val remapImpl = remapMixins("impl") {
             packagePrefix = "at.redi2go.photonics"
+            compatibilityLevel = JavaVersion.VERSION_16
+            minVersion = "0.8"
+            mixinPrefix = "photonics-${project.name}-impl"
+
             outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/impl")
         }
 
