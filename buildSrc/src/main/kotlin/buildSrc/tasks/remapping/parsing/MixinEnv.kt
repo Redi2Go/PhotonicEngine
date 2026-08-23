@@ -1,4 +1,4 @@
-package buildSrc.tasks.remapping
+package buildSrc.tasks.remapping.parsing
 
 enum class MixinEnv {
     COMMON,

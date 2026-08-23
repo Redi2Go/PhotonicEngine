@@ -1,4 +1,4 @@
-package buildSrc.tasks.remapping
+package buildSrc.tasks.remapping.parsing
 
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder

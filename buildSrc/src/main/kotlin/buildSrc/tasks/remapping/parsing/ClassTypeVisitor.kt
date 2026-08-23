@@ -1,4 +1,4 @@
-package buildSrc.tasks.remapping
+package buildSrc.tasks.remapping.parsing
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Type

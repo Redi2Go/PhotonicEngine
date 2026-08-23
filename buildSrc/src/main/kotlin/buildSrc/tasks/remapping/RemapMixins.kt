@@ -1,131 +1,125 @@
 package buildSrc.tasks.remapping
 
+import buildSrc.tasks.remapping.parsing.JavaPackage
+import buildSrc.tasks.remapping.parsing.ClassRegistry
+import buildSrc.tasks.remapping.parsing.JavaClass
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
-import it.unimi.dsi.fastutil.objects.Object2IntMap
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
-import org.gradle.api.JavaVersion
-import org.gradle.api.tasks.InputFiles
-import org.gradle.kotlin.dsl.getByName
+import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.Remapper
+import java.nio.file.DirectoryNotEmptyException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.*
 import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.absolute
+import kotlin.io.path.PathWalkOption
 import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteExisting
 import kotlin.io.path.deleteRecursively
-import kotlin.io.path.isRegularFile
+import kotlin.io.path.div
+import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 import kotlin.io.path.readBytes
+import kotlin.io.path.relativeTo
 import kotlin.io.path.walk
 import kotlin.io.path.writeBytes
-import kotlin.math.max
-
-private const val FILE_MODIFIED = 2
-private const val FILE_REMOVED = 1
 
 const val MIXIN_PACKAGE = "_mixins"
 
 abstract class RemapMixins : DefaultTask() {
-    @get:Input abstract val packagePrefix: Property<String>
-    @get:Input abstract val compatibilityLevel: Property<JavaVersion>
-    @get:Input abstract val minVersion: Property<String>
-    @get:Input abstract val mixinPrefix: Property<String>
+    @get:Input
+    abstract val packagePrefix: Property<String>
 
-    @get:InputFiles
+//    @get:InputFiles
+//    protected abstract val inputMappings: FileCollection
+
+    @get:Incremental
+    @get:InputDirectory
     protected abstract val inputDir: DirectoryProperty
 
     @get:OutputDirectory
-    abstract val outputDir: DirectoryProperty
-
-    @get:OutputDirectory
-    abstract val classesOutputDir: DirectoryProperty
-
-    @get:OutputDirectory
-    abstract val resourcesOutputDir: DirectoryProperty
-
-    init {
-        classesOutputDir.value(outputDir.dir("classes"))
-        resourcesOutputDir.value(outputDir.dir("resources"))
-    }
-
-    private val mixinPath: Path
-        get() = classesOutputDir.getAsPath()
-            .resolve(packagePrefix.get().replace('.', '/'))
-            .resolve(MIXIN_PACKAGE)
-
-    private val inputFiles: Sequence<Path>
-        get() = inputDir.getAsPath().walk()
+    protected abstract val outputDir: DirectoryProperty
 
     @TaskAction
-    fun execute() {
-        clearOutputDir()
+    fun execute(changes: InputChanges) {
+        val inputDir = inputDir.getAsPath()
+        val outputDir = outputDir.getAsPath()
 
-        val packagePrefix = packagePrefix.get()
+        val packagePrefix = JavaPackage.fromImport(packagePrefix.get())
+        val registry = scanClasses(inputDir, packagePrefix)
 
-        val mixinClasses = MixinClasses()
-        mixinClasses.remapAll(inputFiles, packagePrefix)
+        removeStaleFiles(changes, registry)
 
-        val remapper = mixinClasses.createRemapper()
-        val classesOutputDir = classesOutputDir.getAsPath()
+        val remapper = registry.createRemapper()
+        changes.getFileChanges(this.inputDir)
+            .asSequence()
+            .filter { it.changeType != ChangeType.REMOVED }
+            .map { it.file.toPath() }
+            .distinct()
+            .forEach {
+                val relatvieDir = it.relativeTo(inputDir)
+                val srcName = relatvieDir.getName(0).toString()
 
-        val mixinPackage = "$packagePrefix.$MIXIN_PACKAGE"
-        val requiredMixins = MixinJson(true, mixinPackage, compatibilityLevel.get(), minVersion.get())
-        val optionalMixins = requiredMixins.optional()
+                val javaClass = registry.remap(JavaClass.fromPath(it, inputDir / srcName))
+                val outputFile = javaClass.toPath(outputDir / srcName)
 
-        inputFiles.forEach {
-            val reader = ClassReader(it.readBytes())
-
-            val writer = ClassWriter(reader, 0)
-            val mixinData = MixinDataVisitor(Opcodes.ASM9, writer)
-            val classRemapper = ClassRemapper(mixinData, remapper)
-            reader.accept(classRemapper, 0)
-
-            val classPackage = mixinData.type.packageName
-            val className = mixinData.type.simpleName
-
-            if (mixinData.isMixin) {
-                val mixinFile = if (mixinData.isRequired) requiredMixins else optionalMixins
-
-                val mixinBuilder = StringBuilder()
-                mixinBuilder.append(classPackage.removePrefix(mixinPackage))
-                mixinBuilder.append('.')
-                mixinBuilder.append(className)
-
-                mixinFile.addMixin(
-                    mixinData.env,
-                    mixinBuilder.toString().trim { it == '.' }
-                )
+                outputFile.parent.createDirectories()
+                outputFile.writeBytes(remapClass(it, remapper), WRITE, CREATE, TRUNCATE_EXISTING)
             }
+    }
 
-            val file = classesOutputDir.resolve(classPackage.replace('.', '/'))
-                .resolve("$className.class")
-                .apply {
-                    parent.createDirectories()
-                    writeBytes(writer.toByteArray(), WRITE, CREATE, TRUNCATE_EXISTING)
-                }
+    private fun scanClasses(dir: Path, packagePrefix: JavaPackage): ClassRegistry {
+        val registry = ClassRegistry()
+
+        registry.addAll(
+            dir.listDirectoryEntries().asSequence().flatMap { it.walk() },
+            packagePrefix
+        )
+
+        return registry
+    }
+
+    private fun removeStaleFiles(changes: InputChanges, registry: ClassRegistry) {
+        when {
+            changes.isIncremental -> clearOutputDir()
+
+            else -> for (sourceSet in outputDir.getAsPath().listDirectoryEntries()) {
+                sourceSet.walk(PathWalkOption.INCLUDE_DIRECTORIES)
+                    .toList()
+                    .asReversed()
+                    .filter { !registry.contains(JavaClass.fromPath(it, sourceSet)) || it.isDirectory() }
+                    .forEach { it.deleteIfEmpty() }
+            }
         }
+    }
 
-        if (!requiredMixins.isEmpty())
-            requiredMixins.writeTo(resourcesOutputDir.getAsPath().resolve("${mixinPrefix.get()}.mixins.json"))
+    private fun remapClass(file: Path, remapper: Remapper): ByteArray {
+        val reader = ClassReader(file.readBytes())
 
-        if (!optionalMixins.isEmpty())
-            optionalMixins.writeTo(resourcesOutputDir.getAsPath().resolve("${mixinPrefix.get()}-optional.mixins.json"))
+        val writer = ClassWriter(reader, 0)
+        val classRemapper = ClassRemapper(writer, remapper)
+        reader.accept(classRemapper, 0)
+
+        return writer.toByteArray()
     }
 
     @OptIn(ExperimentalPathApi::class)
@@ -137,23 +131,46 @@ abstract class RemapMixins : DefaultTask() {
 
     companion object {
         fun TaskContainer.remapMixins(
-            sourceName: String,
+            buildDir: DirectoryProperty,
             configure: Action<RemapMixins> = Action { }
         ): TaskProvider<RemapMixins> {
-            val taskMiddlePart = if (sourceName != "main") sourceName.replaceFirstChar(Char::uppercase) else ""
+            val compileOutputDir = buildDir.dir("compilation/classes/java")
+            val remapOutputDir = buildDir.dir("classes/java")
 
-            return register<RemapMixins>("remap${taskMiddlePart}Mixins") {
-                configure.execute(this)
+            val javaCompiles = withType<JavaCompile>()
+                .named { !it.contains("test", ignoreCase = true) }
 
-                val compileJava = getByName<JavaCompile>("compile${taskMiddlePart}Java")
-                inputDir.set(compileJava.destinationDirectory)
+            javaCompiles.configureEach {
+                val name = destinationDirectory.getAsPath().name
 
-                dependsOn(compileJava)
+                destinationDirectory = compileOutputDir.map { it.dir(name) }
             }
+
+            val remapMixins = register<RemapMixins>("remapMixins") {
+                dependsOn(javaCompiles)
+
+                inputDir = compileOutputDir
+                outputDir = remapOutputDir
+
+                configure.execute(this)
+            }
+
+            named("classes") {
+                dependsOn(remapMixins)
+            }
+
+            return remapMixins
         }
     }
 }
 
 private fun DirectoryProperty.getAsPath(): Path = get().asFile.toPath().toAbsolutePath()
 
-
+private fun Path.deleteIfEmpty(): Boolean {
+    try {
+        deleteExisting()
+        return true
+    } catch (ex: DirectoryNotEmptyException) {
+        return false;
+    }
+}

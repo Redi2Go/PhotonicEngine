@@ -103,27 +103,11 @@ subprojects {
             }
         }
 
-        val remapMain = remapMixins("main") {
+        remapMixins(project.layout.buildDirectory) {
             packagePrefix = "at.redi2go.photonics"
-            compatibilityLevel = JavaVersion.VERSION_16
-            minVersion = "0.8"
-            mixinPrefix = "photonics-${project.name}-main"
-
-            outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/main")
-        }
-
-        val remapImpl = remapMixins("impl") {
-            packagePrefix = "at.redi2go.photonics"
-            compatibilityLevel = JavaVersion.VERSION_16
-            minVersion = "0.8"
-            mixinPrefix = "photonics-${project.name}-impl"
-
-            outputDir = project.layout.buildDirectory.dir("generated/remappedMixins/impl")
         }
 
         named<Jar>("jar") {
-            dependsOn(remapMain, remapImpl)
-
             from(impl.output)
         }
 
