@@ -12,9 +12,7 @@ public interface IBlockState {
 
     boolean ph$isAir();
 
-    boolean ph$isSuffocating(IBlockGetter blockGetter, IBlockPos blockPos);
-
-    boolean ph$isCollisionShapeFullBlock(IBlockGetter blockGetter, IBlockPos blockPos);
+    boolean ph$isViewBlocking(IBlockGetter blockGetter, IBlockPos blockPos);
 
     boolean ph$hasProperty(IProperty<?> property);
 
