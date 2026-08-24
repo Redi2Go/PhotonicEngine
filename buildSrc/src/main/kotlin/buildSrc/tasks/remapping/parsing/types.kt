@@ -13,7 +13,7 @@ class JavaPackage private constructor(private val parts: Array<String>, val isMi
 
     val nameCount: Int get() = parts.size
 
-    val internalName: String get() = parts.joinToString { "/" }
+    val internalName: String get() = parts.joinToString("/")
 
     fun startsWith(prefix: JavaPackage): Boolean {
         if (prefix.nameCount > nameCount) return false;
@@ -88,6 +88,14 @@ data class JavaClass(val packageName: JavaPackage, val simpleName: String) {
 
     fun moveToMixins(packagePrefix: JavaPackage): JavaClass =
         JavaClass(packageName.moveToMixins(packagePrefix), simpleName)
+
+    fun getMixinName(packagePrefix: JavaPackage): String {
+        val packageName = packageName.toString()
+            .removePrefix(packagePrefix.toString())
+            .substring(1)
+
+        return "$packageName.$simpleName"
+    }
 
     fun toPath(root: Path): Path =
         packageName.toPath(root) / "$simpleName.class"

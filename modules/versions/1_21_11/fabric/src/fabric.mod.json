@@ -19,10 +19,8 @@
     ]
   },
   "mixins": [
-    "photonics-common.mixins.json",
-    "photonics-common-impl.mixins.json",
-    "photonics-fabric.mixins.json",
-    "photonics-fabric-impl.mixins.json"
+    "photonics-required.mixins.json",
+    "photonics-optional.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",

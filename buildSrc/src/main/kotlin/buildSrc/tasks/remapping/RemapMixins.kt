@@ -5,13 +5,22 @@ import buildSrc.tasks.remapping.parsing.ClassRegistry
 import buildSrc.tasks.remapping.parsing.JavaClass
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.BuildLayout
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocationProperty
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -31,10 +40,12 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.*
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.PathWalkOption
+import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteExisting
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
@@ -43,14 +54,18 @@ import kotlin.io.path.relativeTo
 import kotlin.io.path.walk
 import kotlin.io.path.writeBytes
 
+const val REMAP_MIXINS_TASK = "remapMixins"
 const val MIXIN_PACKAGE = "_mixins"
+const val REGISTRY_FILE = "previous-registry"
+const val REGISTRY_FILE_PATH = "tmp/remapMixins/$REGISTRY_FILE"
 
 abstract class RemapMixins : DefaultTask() {
     @get:Input
     abstract val packagePrefix: Property<String>
 
-//    @get:InputFiles
-//    protected abstract val inputMappings: FileCollection
+    @get:InputFiles
+    @get:IgnoreEmptyDirectories
+    abstract val inputMappings: ListProperty<RegularFile>
 
     @get:Incremental
     @get:InputDirectory
@@ -58,6 +73,9 @@ abstract class RemapMixins : DefaultTask() {
 
     @get:OutputDirectory
     protected abstract val outputDir: DirectoryProperty
+
+    @get:OutputFile
+    internal abstract val registryOutput: RegularFileProperty
 
     @TaskAction
     fun execute(changes: InputChanges) {
@@ -85,10 +103,25 @@ abstract class RemapMixins : DefaultTask() {
                 outputFile.parent.createDirectories()
                 outputFile.writeBytes(remapClass(it, remapper), WRITE, CREATE, TRUNCATE_EXISTING)
             }
+
+        registryOutput.getAsPath()
+            .apply {
+                parent.createDirectories()
+
+                bufferedWriter(
+                    options = arrayOf(WRITE, CREATE, TRUNCATE_EXISTING)
+                ).use {
+                    registry.writeTo(it)
+                }
+            }
     }
 
     private fun scanClasses(dir: Path, packagePrefix: JavaPackage): ClassRegistry {
         val registry = ClassRegistry()
+
+        inputMappings.get().forEach {
+            registry.readFrom(it.asFile.toPath())
+        }
 
         registry.addAll(
             dir.listDirectoryEntries().asSequence().flatMap { it.walk() },
@@ -126,7 +159,7 @@ abstract class RemapMixins : DefaultTask() {
     private fun clearOutputDir() {
         outputDir.getAsPath()
             .listDirectoryEntries()
-            .map { it.deleteRecursively() }
+            .forEach { it.deleteRecursively() }
     }
 
     companion object {
@@ -146,11 +179,12 @@ abstract class RemapMixins : DefaultTask() {
                 destinationDirectory = compileOutputDir.map { it.dir(name) }
             }
 
-            val remapMixins = register<RemapMixins>("remapMixins") {
+            val remapMixins = register<RemapMixins>(REMAP_MIXINS_TASK) {
                 dependsOn(javaCompiles)
 
                 inputDir = compileOutputDir
                 outputDir = remapOutputDir
+                registryOutput = buildDir.file(REGISTRY_FILE_PATH)
 
                 configure.execute(this)
             }
@@ -164,7 +198,7 @@ abstract class RemapMixins : DefaultTask() {
     }
 }
 
-private fun DirectoryProperty.getAsPath(): Path = get().asFile.toPath().toAbsolutePath()
+fun FileSystemLocationProperty<*>.getAsPath(): Path = get().asFile.toPath().toAbsolutePath()
 
 private fun Path.deleteIfEmpty(): Boolean {
     try {

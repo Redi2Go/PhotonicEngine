@@ -4,6 +4,12 @@ photonics {
     minecraft = mainLibs.versions.minecraft.get()
     javaVersion = JavaVersion.VERSION_21
 
+    mixins {
+        packageName = "at.redi2go.photonics"
+        compatabilityLevel = JavaVersion.VERSION_16
+        minVersion = "0.8"
+    }
+
     commonDependencies {
         mappings(loom.officialMojangMappings())
 

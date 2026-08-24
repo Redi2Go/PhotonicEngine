@@ -1,28 +1,46 @@
 package org.gradle.kotlin.dsl
 
+import buildSrc.tasks.remapping.REGISTRY_FILE
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import org.gradle.api.Action
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.file.RegularFile
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.accessors.runtime.addConfiguredDependencyTo
 import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
-import org.gradle.language.jvm.tasks.ProcessResources
+import javax.inject.Inject
 
 var DependencyHandlerScope._fabricLoader: Any? by Extensions
 
-interface PhotonicsExtension {
-    val _dependencyBlock: Property<Action<PhotonicsCommonDependenciesScope>>
+abstract class PhotonicsExtension {
+    abstract val _dependencyBlock: Property<Action<PhotonicsCommonDependenciesScope>>
+    val mixins: PhotonicsMixinsOptions = objectFactory.newInstance()
 
-    val minecraft: Property<String>
+    abstract val minecraft: Property<String>
 
-    val javaVersion: Property<JavaVersion>
+    abstract val javaVersion: Property<JavaVersion>
 
     fun commonDependencies(action: Action<PhotonicsCommonDependenciesScope>) {
         this._dependencyBlock = action;
     }
+
+    fun mixins(action: Action<PhotonicsMixinsOptions>) {
+        action.execute(mixins)
+    }
+
+    @get:Inject
+    protected abstract val objectFactory: ObjectFactory
+}
+
+abstract class PhotonicsMixinsOptions {
+    abstract val packageName: Property<String>
+    abstract val compatabilityLevel: Property<JavaVersion>
+    abstract val minVersion: Property<String>
 }
 
 @JvmInline

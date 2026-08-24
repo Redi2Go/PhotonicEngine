@@ -7,7 +7,11 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.Remapper
 import org.objectweb.asm.commons.SimpleRemapper
+import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.nio.file.Path
+import kotlin.io.path.bufferedReader
+import kotlin.io.path.exists
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.sequences.forEach
@@ -41,6 +45,43 @@ class ClassRegistry {
             _mixins.entries
                 .associate { (key, value) -> key.internalName to value.type.internalName }
         )
+    }
+
+    fun writeTo(writer: BufferedWriter) {
+        for ((before, mixin) in  _mixins) {
+            writer.write(before.internalName)
+            writer.newLine()
+
+            writer.write(mixin.type.internalName)
+            writer.newLine()
+
+            writer.write(mixin.env.name)
+            writer.newLine()
+
+            writer.write(mixin.isOptional.toString())
+            writer.newLine()
+        }
+    }
+
+    fun readFrom(reader: BufferedReader) {
+        reader.readLines()
+            .filter { it.isNotEmpty() }
+            .chunked(4)
+            .forEach {
+                _mixins.put(
+                    JavaClass.fromInternalName(it[0]),
+                    Mixin(
+                        JavaClass.fromInternalName(it[1]),
+                        MixinEnv.valueOf(it[2]),
+                        it[3].toBooleanStrict()
+                    )
+                )
+            }
+    }
+
+    fun readFrom(path: Path) {
+        if (path.exists())
+            path.bufferedReader().use(this::readFrom)
     }
 
     private inner class MixinVisitor(val packagePrefix: JavaPackage) : ClassVisitor(Opcodes.ASM9, null) {

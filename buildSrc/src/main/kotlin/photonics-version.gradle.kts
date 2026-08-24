@@ -1,6 +1,11 @@
-import buildSrc.tasks.remapping.RemapMixins
+import buildSrc.tasks.remapping.GenerateMixinFiles.Companion.generateMixinFiles
+import buildSrc.tasks.remapping.MIXIN_PACKAGE
+import buildSrc.tasks.remapping.REGISTRY_FILE_PATH
 import buildSrc.tasks.remapping.RemapMixins.Companion.remapMixins
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.relativeTo
 
 version = parent!!.version
 group = parent!!.group
@@ -86,8 +91,47 @@ subprojects {
     }
 
     tasks {
-        named<ProcessResources>("processResources") {
+        remapMixins(project.layout.buildDirectory) {
+            packagePrefix = photonics.mixins.packageName
+
             if (project.name != "common") {
+                inputMappings.add(
+                    project(commonPath).layout
+                        .buildDirectory
+                        .file(REGISTRY_FILE_PATH)
+                )
+            }
+        }
+
+        if (project.name != "common") {
+            generateMixinFiles {
+                packageName = photonics.mixins.packageName.map { "$it.$MIXIN_PACKAGE" }
+                compatabilityLevel = photonics.mixins.compatabilityLevel
+                minVersion = photonics.mixins.minVersion
+
+                outputDir = project.layout.buildDirectory.dir("generated/mixinFiles")
+            }
+
+            named<ProcessResources>("processResources") {
+                val sourceSets = sourceSets.asSequence()
+                    .map { it.name }
+                    .toSet()
+
+                val srcDir = layout.projectDirectory.dir("src")
+                from(srcDir) {
+                    into("/")
+
+                    exclude {
+                        val srcPath = srcDir.asFile.toPath()
+                        val filePath = it.file.toPath()
+
+                        if (filePath.isDirectory()) {
+                            val relativePath = filePath.relativeTo(srcPath)
+                            sourceSets.contains(relativePath.getName(0).toString())
+                        } else false
+                    }
+                }
+
                 from(patchesPath) {
                     into("/assets/photonics/patches/")
                 }
@@ -101,10 +145,6 @@ subprojects {
                     into("/")
                 }
             }
-        }
-
-        remapMixins(project.layout.buildDirectory) {
-            packagePrefix = "at.redi2go.photonics"
         }
 
         named<Jar>("jar") {
