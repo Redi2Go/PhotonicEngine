@@ -1,0 +1,17 @@
+package at.redi2go.photonics.impl.minecraft.world.level;
+
+import at.redi2go.photonics.game.minecraft.world.level.ILevelHeightAccessor;
+import net.minecraft.world.level.LevelHeightAccessor;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+@Mixin(LevelHeightAccessor.class)
+public interface LevelHeightAccessorImpl extends ILevelHeightAccessor {
+    @Shadow
+    int getSectionIndexFromSectionY(int i);
+
+    @Override
+    default int ph$getSectionIndexFromSectionY(int sectionY) {
+        return getSectionIndexFromSectionY(sectionY);
+    }
+}
