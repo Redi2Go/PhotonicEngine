@@ -13,4 +13,10 @@ public interface IChunkSection {
     boolean ph$hasOnlyAir();
 
     IChunkSection ph$createCopy();
+
+    interface ILightData {
+        int ph$getLightLevel(int x, int y, int z);
+
+        int ph$getLightLevel(int index);
+    }
 }
