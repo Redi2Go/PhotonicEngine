@@ -10,7 +10,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.Strictness;
 import com.google.gson.annotations.Expose;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.IOException;

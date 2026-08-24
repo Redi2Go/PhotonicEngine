@@ -3,8 +3,8 @@ package at.redi2go.photonics.game.minecraft.world.level;
 import at.redi2go.photonics.game.minecraft.core.IBlockPos;
 import at.redi2go.photonics.game.minecraft.world.level.chunk.IChunkAccess;
 import at.redi2go.photonics.game.minecraft.world.level.chunk.IChunkSection;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3ic;
+import org.jspecify.annotations.Nullable;
 
 public interface ILevel extends ILevelReader {
     @Nullable IChunkAccess ph$getChunkOrNull(int x, int z);
@@ -20,9 +20,9 @@ public interface ILevel extends ILevelReader {
         return ph$getSection(section.x(), section.y(), section.z());
     }
 
-    @Nullable IChunkSection.ILightData ph$getSectionLightData(int x, int y, int z, ILightLayer layer);
+    IChunkSection.@Nullable ILightData ph$getSectionLightData(int x, int y, int z, ILightLayer layer);
 
-    default @Nullable IChunkSection.ILightData ph$getSectionLightData(Vector3ic section, ILightLayer layer) {
+    default IChunkSection.@Nullable ILightData ph$getSectionLightData(Vector3ic section, ILightLayer layer) {
         return ph$getSectionLightData(section.x(), section.y(), section.z(), layer);
     }
 }

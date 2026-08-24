@@ -6,7 +6,7 @@ import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.List;

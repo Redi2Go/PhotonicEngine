@@ -7,15 +7,15 @@ import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import at.redi2go.photonics.game.minecraft.world.level.block.IBlockEntity;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 
 public record LightPredicateImpl(
-        @NonNls IBlockState blockState,
-        @NonNls List<IProperty<?>> properties,
+        @NonNull IBlockState blockState,
+        @NonNull List<IProperty<?>> properties,
         @Nullable ICompoundTag nbt,
         int priority
 ) implements LightPredicate {
@@ -30,7 +30,7 @@ public record LightPredicateImpl(
     }
 
     @Override
-    public boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader) {
+    public boolean test(@NonNull IBlockPos pos, @NonNull ILevelReader levelReader) {
         // Copied from BlockPredicateArgument.BlockPredicate
 
         final IBlockState state = levelReader.ph$getBlockState(pos);

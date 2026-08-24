@@ -10,7 +10,7 @@ import at.redi2go.photonics.core.iris.patching.sources.JarSource;
 import at.redi2go.photonics.core.iris.patching.sources.ShaderPatchesSource;
 import at.redi2go.photonics.core.util.Fs;
 import com.google.common.collect.ImmutableList;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -14,8 +14,8 @@ import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
 import at.redi2go.photonics.core.iris.rendering.PhotonicsRenderer;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.Objects;
@@ -50,14 +50,14 @@ public class IrisManager {
         return activePipeline != null;
     }
 
-    public static void setupShaderPatcher(@NonNls IrisPack pack, boolean patchEnabled) {
+    public static void setupShaderPatcher(@NonNull IrisPack pack, boolean patchEnabled) {
         Objects.requireNonNull(pack, "pack");
 
         activePatcher = new ShaderPatcher(pack);
         propertiesManager.setForceEnabled(!pack.ph$supportsPhotonics() && activePatcher.hasPatch() && patchEnabled);
     }
 
-    public static void setupProperties(@NonNls Properties properties, @NonNls Logger logger) {
+    public static void setupProperties(@NonNull Properties properties, @NonNull Logger logger) {
         Objects.requireNonNull(properties, "properties");
         Objects.requireNonNull(logger, "logger");
 
@@ -68,9 +68,9 @@ public class IrisManager {
     }
     
     public static void setupPipeline(
-            @NonNls Supplier<AtlasDownloader> atlasDownloaderSupplier,
-            @NonNls Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
-            @NonNls IrisPipeline irisPipeline
+            @NonNull Supplier<AtlasDownloader> atlasDownloaderSupplier,
+            @NonNull Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
+            @NonNull IrisPipeline irisPipeline
     ) {
         Objects.requireNonNull(atlasDownloaderSupplier, "atlasDownloaderSupplier");
         Objects.requireNonNull(handheldItemSupplierSupplier, "handheldItemSupplierSupplier");

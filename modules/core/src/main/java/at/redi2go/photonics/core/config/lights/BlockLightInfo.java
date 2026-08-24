@@ -5,7 +5,7 @@ import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import at.redi2go.photonics.core.config.lights.color.LightColor;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;
-import org.jetbrains.annotations.NonNls;
+import org.jspecify.annotations.NonNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
@@ -18,8 +18,8 @@ import java.util.Objects;
 public final class BlockLightInfo implements Comparable<BlockLightInfo> {
     public static final Vector3f LUMINANCE_COEF = new Vector3f(0.2126F, 0.7152F, 0.0722F);
 
-    private final @NonNls LightPredicate predicate;
-    private final @NonNls LightColor color;
+    private final @NonNull LightPredicate predicate;
+    private final @NonNull LightColor color;
     private final float intensity;  // Intensity is multiplied by 100 to make it more intuitive to edit, see adjustedIntensity
     private final float radius; // This value is 'reversed' compared to the value used by Photonics so its more intuitive to edit, see radiusRcp
     private final float falloff;
@@ -32,8 +32,8 @@ public final class BlockLightInfo implements Comparable<BlockLightInfo> {
     private final float blockRadius;
 
     public BlockLightInfo(
-            @NonNls LightPredicate predicate,
-            @NonNls LightColor color,
+            @NonNull LightPredicate predicate,
+            @NonNull LightColor color,
             float intensity,
             float radius,
             float falloff,
@@ -127,7 +127,7 @@ public final class BlockLightInfo implements Comparable<BlockLightInfo> {
     }
 
     @Override
-    public int compareTo(@NonNls BlockLightInfo o) {
+    public int compareTo(@NonNull BlockLightInfo o) {
         return predicate.compareTo(o.predicate);
     }
 

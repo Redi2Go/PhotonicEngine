@@ -7,7 +7,7 @@ import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import org.jetbrains.annotations.NonNls;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ public interface LightPredicate extends Comparable<LightPredicate> {
      */
     int DEFAULT_PRIORITY = Integer.MIN_VALUE;
 
-    @NonNls
+    @NonNull
     IBlock block();
 
     int priority();
@@ -32,10 +32,10 @@ public interface LightPredicate extends Comparable<LightPredicate> {
      * Returns {@code true} if {@code pos} passes this predicate.
      * This method does not test if the chunk at {@code pos} is loaded.
      */
-    boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader);
+    boolean test(@NonNull IBlockPos pos, @NonNull ILevelReader levelReader);
 
     @Override
-    default int compareTo(@NonNls LightPredicate o) {
+    default int compareTo(@NonNull LightPredicate o) {
         return Integer.compare(this.priority(), o.priority());
     }
 

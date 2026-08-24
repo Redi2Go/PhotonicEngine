@@ -12,7 +12,7 @@ import at.redi2go.photonics.core.iris.properties.impl.annotations.Magic;
 import at.redi2go.photonics.core.iris.properties.impl.states.DefineState;
 import at.redi2go.photonics.core.iris.properties.impl.states.OverrideState;
 import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationHandler;

@@ -6,8 +6,8 @@ import at.redi2go.photonics.core.iris.pipeline.texture.IrisFramebuffer;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolderBuilder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolderBuilder;
 import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -21,9 +21,9 @@ public interface IrisRenderer {
             ISamplerHolderBuilder<Builder>,
             IDynamicUniformHolderBuilder<Builder>,
             IUniformHolderBuilder<Builder> {
-        Builder withFragmentPrefix(@NonNls String prefix);
+        Builder withFragmentPrefix(@NonNull String prefix);
 
-        Builder withVertexPrefix(@NonNls String prefix);
+        Builder withVertexPrefix(@NonNull String prefix);
 
         Builder debugGroup(String name);
 

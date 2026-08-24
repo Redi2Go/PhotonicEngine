@@ -1,7 +1,7 @@
 package at.redi2go.photonics.game.minecraft;
 
 import at.redi2go.photonics.game.minecraft.world.level.ILevel;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector3d;
 
 public interface IMinecraft {

@@ -3,12 +3,12 @@ import at.redi2go.photonics.game.minecraft.commands.arguments.blocks.IBlockState
 import at.redi2go.photonics.game.minecraft.core.IBlockPos;
 import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.ILevelReader;
-import org.jetbrains.annotations.NonNls;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
 public record BasicLightPredicate(
-        @NonNls IBlock block,
+        @NonNull IBlock block,
         int priority
 ) implements LightPredicate {
     public BasicLightPredicate {
@@ -16,7 +16,7 @@ public record BasicLightPredicate(
     }
 
     @Override
-    public boolean test(@NonNls IBlockPos pos, @NonNls ILevelReader levelReader) {
+    public boolean test(@NonNull IBlockPos pos, @NonNull ILevelReader levelReader) {
         return levelReader.ph$getBlockState(pos).ph$is(this.block);
     }
 

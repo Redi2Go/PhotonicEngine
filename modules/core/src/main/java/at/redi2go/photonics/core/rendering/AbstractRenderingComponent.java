@@ -5,7 +5,7 @@ import at.redi2go.photonics.core.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.core.iris.pipeline.texture.ISamplerHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IDynamicUniformHolder;
 import at.redi2go.photonics.core.iris.pipeline.uniform.IUniformHolder;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;

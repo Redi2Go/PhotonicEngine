@@ -1,7 +1,7 @@
 package at.redi2go.photonics.core.iris.properties.impl;
 
 import at.redi2go.photonics.core.iris.properties.annotations.Key;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationHandler;

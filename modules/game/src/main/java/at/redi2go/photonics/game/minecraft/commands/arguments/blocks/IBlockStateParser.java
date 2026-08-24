@@ -8,7 +8,7 @@ import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import com.mojang.brigadier.StringReader;
 import com.mojang.datafixers.util.Either;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 

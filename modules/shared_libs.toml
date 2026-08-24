@@ -4,6 +4,7 @@ idea-gradle = "1.2"
 shadow = "9.4.1"
 
 # Common
+jspecify = "1.0.0"
 joml = "1.10.8"
 gson = "2.13.2"
 semver = "3.1.0"
@@ -20,6 +21,7 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 
 [libraries]
 
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 joml = { module = "org.joml:joml", version.ref = "joml" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 semver = { module = "com.vdurmont:semver4j", version.ref = "semver" }

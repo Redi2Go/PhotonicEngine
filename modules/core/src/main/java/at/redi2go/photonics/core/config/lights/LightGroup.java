@@ -11,7 +11,7 @@ import at.redi2go.photonics.core.config.lights.intensity.LightIntensity;
 import at.redi2go.photonics.core.config.lights.predicate.LightPredicate;
 import at.redi2go.photonics.core.config.lights.radius.LightRadius;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.List;

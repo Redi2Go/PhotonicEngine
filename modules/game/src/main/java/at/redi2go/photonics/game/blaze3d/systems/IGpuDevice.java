@@ -9,7 +9,7 @@ import at.redi2go.photonics.game.blaze3d.textures.IGpuSampler;
 import at.redi2go.photonics.game.blaze3d.textures.IGpuTexture;
 import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
 import at.redi2go.photonics.game.blaze3d.textures.TextureUsage;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;

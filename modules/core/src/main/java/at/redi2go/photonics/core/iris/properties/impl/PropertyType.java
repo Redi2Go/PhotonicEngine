@@ -10,7 +10,7 @@ import at.redi2go.photonics.core.iris.properties.impl.types.FloatPropertyType;
 import at.redi2go.photonics.core.iris.properties.impl.types.IntPropertyType;
 import at.redi2go.photonics.core.iris.properties.impl.types.StringPropertyType;
 import com.google.gson.internal.Primitives;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;

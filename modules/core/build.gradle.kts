@@ -20,6 +20,7 @@ repositories {
 }
 
 dependencies {
+    implementation(sharedLibs.jspecify)
     implementation(sharedLibs.joml)
     implementation(sharedLibs.gson)
     implementation(sharedLibs.semver)
@@ -29,7 +30,6 @@ dependencies {
     implementation(sharedLibs.fastutil.concurrent.wrapper)
 
     implementation(projects.modules.game)
-    implementation(coreLibs.jetrains.annotations)
     implementation(coreLibs.slf4j.api)
 }
 

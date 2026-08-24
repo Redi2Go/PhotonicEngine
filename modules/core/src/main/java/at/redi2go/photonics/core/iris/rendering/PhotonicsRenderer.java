@@ -11,7 +11,7 @@ import at.redi2go.photonics.core.iris.rendering.sharp.SharpPipeline;
 import at.redi2go.photonics.core.iris.rendering.sharp.SharpProperties;
 import at.redi2go.photonics.core.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.core.rendering.world.bakery.texture.AtlasDownloader;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 

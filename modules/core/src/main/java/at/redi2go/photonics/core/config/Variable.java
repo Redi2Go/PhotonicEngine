@@ -3,8 +3,8 @@ package at.redi2go.photonics.core.config;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -15,7 +15,7 @@ import java.util.Optional;
  *
  * @param <U> The type of the variable
  */
-public abstract class Variable<@NonNls U> {
+public abstract class Variable<@NonNull U> {
     /**
      * The character that indicates a variable reference
      */
@@ -47,8 +47,8 @@ public abstract class Variable<@NonNls U> {
     private @Nullable Owner owner;
 
     protected Variable(
-            @NonNls String name,
-            @NonNls Type<U> type
+            @NonNull String name,
+            @NonNull Type<U> type
     ) {
         this.name = Objects.requireNonNull(name, "name was null");
         this.type = Objects.requireNonNull(type, "type was null");
@@ -58,7 +58,7 @@ public abstract class Variable<@NonNls U> {
         return name;
     }
 
-    public void setOwner(@NonNls Owner owner) {
+    public void setOwner(@NonNull Owner owner) {
         if (this.owner != null && this.owner != owner)
             throw new IllegalStateException("variable '" + name + "' already has an owner");
 
@@ -103,7 +103,7 @@ public abstract class Variable<@NonNls U> {
         return VAR_CHAR + name;
     }
 
-    public record Type<@NonNls U>(String name) { }
+    public record Type<@NonNull U>(String name) { }
 
     public interface Owner {
         /**
@@ -111,13 +111,13 @@ public abstract class Variable<@NonNls U> {
          */
         int mod();
 
-        <@NonNls T> Optional<T> getValue(
-                @NonNls Type<T> type,
-                @NonNls String name
+        <@NonNull T> Optional<T> getValue(
+                @NonNull Type<T> type,
+                @NonNull String name
         );
     }
 
-    public static abstract class Adapter<@NonNls U, T extends Variable<? extends U>> extends TypeAdapter<U> {
+    public static abstract class Adapter<@NonNull U, T extends Variable<? extends U>> extends TypeAdapter<U> {
         protected abstract U readValue(JsonReader in) throws IOException;
 
         protected abstract void writeValue(JsonWriter out, U value) throws IOException;
@@ -167,7 +167,7 @@ public abstract class Variable<@NonNls U> {
         }
     }
 
-    public static abstract class StrAdapter<@NonNls U, T extends Variable<? extends U>> extends Adapter<U, T> {
+    public static abstract class StrAdapter<@NonNull U, T extends Variable<? extends U>> extends Adapter<U, T> {
         @Override
         protected abstract U fromString(String str) throws IOException;
 

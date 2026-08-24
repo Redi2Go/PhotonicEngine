@@ -20,6 +20,7 @@ repositories {
 }
 
 dependencies {
+    implementation(sharedLibs.jspecify)
     implementation(sharedLibs.joml)
     implementation(sharedLibs.dataFixerUpper)
     implementation(sharedLibs.brigadier)
