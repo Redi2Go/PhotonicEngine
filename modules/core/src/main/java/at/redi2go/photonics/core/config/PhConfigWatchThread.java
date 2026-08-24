@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.config;
 
-import at.redi2go.photonics.game.minecraft.Minecraft;
+import at.redi2go.photonics.game.minecraft.IMinecraft;
 import at.redi2go.photonics.core.Photonics;
 
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class PhConfigWatchThread extends Thread {
                             continue;
                         }
 
-                        Minecraft.schedule(() -> {
+                        IMinecraft.schedule(() -> {
                             Photonics.LOGGER.info("Detected config change, reloading...");
                             PhConfig.reloadConfig();
                         });
