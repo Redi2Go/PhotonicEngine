@@ -21,6 +21,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -67,8 +68,9 @@ abstract class RemapMixins : DefaultTask() {
     @get:IgnoreEmptyDirectories
     abstract val inputMappings: ListProperty<RegularFile>
 
-    @get:Incremental
+    @get:SkipWhenEmpty
     @get:InputDirectory
+    @get:IgnoreEmptyDirectories
     protected abstract val inputDir: DirectoryProperty
 
     @get:OutputDirectory
