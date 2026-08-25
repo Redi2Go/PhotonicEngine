@@ -1,6 +1,6 @@
 package at.redi2go.photonics.impl.minecraft.world.level;
 
-import at.redi2go.photonics.game.minecraft.IIdentifier;
+import at.redi2go.photonics.game.minecraft.Id;
 import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
 import at.redi2go.photonics.game.minecraft.world.level.block.state.IStateDefinition;
@@ -26,8 +26,8 @@ public abstract class BlockImpl implements IBlock {
 
     @Override
     @SuppressWarnings("DataFlowIssue")
-    public IIdentifier ph$id() {
-        return (IIdentifier) (Object) BuiltInRegistries.BLOCK.getKey((Block) (Object) this);
+    public Id ph$id() {
+        return (Id) (Object) BuiltInRegistries.BLOCK.getKey((Block) (Object) this);
     }
 
     @Override
@@ -45,7 +45,7 @@ public abstract class BlockImpl implements IBlock {
     public interface StaticMethods {
         @Overwrite
         @SuppressWarnings({"unchecked", "rawtypes", "DataFlowIssue"})
-        static Optional<IBlock> fromId(IIdentifier id) {
+        static Optional<IBlock> fromId(Id id) {
             return (Optional) BuiltInRegistries.BLOCK
                     .get((Identifier) (Object) id)
                     .map(Holder.Reference::value);

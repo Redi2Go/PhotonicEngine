@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.config.adapter;
 
-import at.redi2go.photonics.game.minecraft.IIdentifier;
+import at.redi2go.photonics.game.minecraft.Id;
 import at.redi2go.photonics.game.minecraft.world.level.IBlock;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
@@ -16,6 +16,6 @@ public class BlockAdapter extends TypeAdapter<IBlock> {
 
     @Override
     public IBlock read(JsonReader in) throws IOException {
-        return IBlock.fromIdOrThrow(IIdentifier.parse(in.nextString()));
+        return IBlock.fromIdOrThrow(Id.parse(in.nextString()));
     }
 }
