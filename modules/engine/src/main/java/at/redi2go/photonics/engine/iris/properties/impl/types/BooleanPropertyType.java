@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl.types;
 
-import at.redi2go.photonics.engine.iris.pipeline.DefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.impl.PropertyType;
 import org.slf4j.Logger;
 
@@ -34,7 +34,7 @@ public class BooleanPropertyType implements PropertyType<Boolean> {
     }
 
     @Override
-    public void registerDefine(DefineHolder defineHolder, String key, Boolean value) {
+    public void registerDefine(IDefineHolder defineHolder, String key, Boolean value) {
         if (!value) return;
 
         defineHolder.stringDefine(key, "");

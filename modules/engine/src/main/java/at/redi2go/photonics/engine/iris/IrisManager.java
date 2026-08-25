@@ -2,7 +2,7 @@ package at.redi2go.photonics.engine.iris;
 
 import at.redi2go.photonics.engine.Photonics;
 import at.redi2go.photonics.engine.iris.patching.ShaderPatcher;
-import at.redi2go.photonics.engine.iris.pipeline.DefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
 import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolder;
 import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolder;
@@ -111,12 +111,12 @@ public class IrisManager {
             pipeline.onSectionChanged(x, y, z);
     }
 
-    public static void registerVersionDefines(DefineHolder defines) {
+    public static void registerVersionDefines(IDefineHolder defines) {
         defines.stringDefine("PHOTONICS", "");
         defines.stringDefine("PHOTONICS_VERSION", Photonics.getVersionString());
     }
 
-    public static void registerDefines(DefineHolder defines) {
+    public static void registerDefines(IDefineHolder defines) {
         propertiesManager.registerDefines(defines);
     }
 

@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl.types;
 
-import at.redi2go.photonics.engine.iris.pipeline.DefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.impl.PropertyType;
 import org.slf4j.Logger;
 
@@ -30,7 +30,7 @@ public class StringPropertyType implements PropertyType<String> {
     }
 
     @Override
-    public void registerDefine(DefineHolder defineHolder, String key, String value) {
+    public void registerDefine(IDefineHolder defineHolder, String key, String value) {
         defineHolder.stringDefine(key, value);
     }
 }

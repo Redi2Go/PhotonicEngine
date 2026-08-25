@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl.types;
 
-import at.redi2go.photonics.engine.iris.pipeline.DefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.annotations.IntRange;
 import at.redi2go.photonics.engine.iris.properties.impl.PropertyType;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class IntPropertyType implements PropertyType<Integer> {
     }
 
     @Override
-    public void registerDefine(DefineHolder defineHolder, String key, Integer value) {
+    public void registerDefine(IDefineHolder defineHolder, String key, Integer value) {
         defineHolder.intDefine(key, value);
     }
 }

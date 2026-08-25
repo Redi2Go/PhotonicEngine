@@ -1,6 +1,6 @@
-package at.redi2go.photonics.engine.iris.pipeline;
+package at.redi2go.photonics.engine.iris.pipeline.defines;
 
-public interface DefineHolder {
+public interface IDefineHolder {
     void stringDefine(String name, String value);
 
     void intDefine(String name, int value);

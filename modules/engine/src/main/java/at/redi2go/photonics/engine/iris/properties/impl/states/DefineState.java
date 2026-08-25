@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl.states;
 
-import at.redi2go.photonics.engine.iris.pipeline.MutableDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.MutableDefineHolder;
 
 import java.lang.reflect.InvocationHandler;
 import java.util.Map;

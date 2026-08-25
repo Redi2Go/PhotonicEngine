@@ -1,14 +1,18 @@
 package at.redi2go.photonics.engine.iris.pipeline;
 
 import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolderBuilder;
 import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolderBuilder;
 import at.redi2go.photonics.engine.iris.pipeline.texture.IrisFramebuffer;
 import at.redi2go.photonics.engine.iris.pipeline.uniform.IDynamicUniformHolderBuilder;
 import at.redi2go.photonics.engine.iris.pipeline.uniform.IUniformHolderBuilder;
+import at.redi2go.photonics.game.minecraft.Id;
 import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -17,6 +21,7 @@ public interface IrisRenderer {
     void renderAll();
 
     interface Builder extends
+            IDefineHolderBuilder<Builder>,
             IBufferHolderBuilder<Builder>,
             ISamplerHolderBuilder<Builder>,
             IDynamicUniformHolderBuilder<Builder>,
@@ -36,8 +41,27 @@ public interface IrisRenderer {
         Builder deferredPass(
                 String name,
                 @Nullable String fragmentShader,
-                @Nullable String vertexShader
+                @Nullable String vertexShader,
+                BiConsumer<PassBuilder, Id> builderAction
         );
+
+        default Builder deferredPass(
+                String name,
+                @Nullable String fragmentShader,
+                @Nullable String vertexShader,
+                BooleanSupplier condition,
+                BiConsumer<PassBuilder, Id> builderAction
+        ) {
+            return condition.getAsBoolean() ? deferredPass(name, fragmentShader, vertexShader, builderAction) : this;
+        }
+
+        default Builder deferredPass(
+                String name,
+                @Nullable String fragmentShader,
+                @Nullable String vertexShader
+        ) {
+            return deferredPass(name, fragmentShader, vertexShader, (p0, dim) -> {});
+        }
 
         default Builder deferredPass(
                 String name,
@@ -73,5 +97,9 @@ public interface IrisRenderer {
         default IrisRenderer build() {
             return build(Function.identity());
         }
+    }
+
+    interface PassBuilder extends IDefineHolder {
+
     }
 }

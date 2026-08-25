@@ -1,7 +1,7 @@
 package at.redi2go.photonics.engine.iris.properties.impl;
 
 import at.redi2go.photonics.engine.Photonics;
-import at.redi2go.photonics.engine.iris.pipeline.DefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.annotations.DefaultValue;
 import at.redi2go.photonics.engine.iris.properties.impl.types.BooleanPropertyType;
 import at.redi2go.photonics.engine.iris.properties.impl.types.EnumPropertyType;
@@ -30,7 +30,7 @@ public interface PropertyType<T> {
 
     boolean validate(String key, T value, Method method, Logger logger);
 
-    void registerDefine(DefineHolder defineHolder, String key, T value);
+    void registerDefine(IDefineHolder defineHolder, String key, T value);
 
     default T extractValue(String key, @Nullable String value, Method method, Logger logger) {
         String defaultValue = getDefaultValue(method);
