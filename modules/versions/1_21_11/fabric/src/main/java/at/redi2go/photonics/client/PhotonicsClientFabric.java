@@ -1,13 +1,12 @@
 package at.redi2go.photonics.client;
 
-import at.redi2go.photonics.core.Photonics;
+import at.redi2go.photonics.engine.Photonics;
 import com.vdurmont.semver4j.Semver;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class PhotonicsClientFabric implements ClientModInitializer {

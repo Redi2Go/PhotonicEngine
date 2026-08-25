@@ -1,0 +1,22 @@
+package at.redi2go.photonics.engine.collect;
+
+import com.trivago.fastutilconcurrentwrapper.PrimitiveLongKeyMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
+
+import java.util.function.BiFunction;
+
+public interface LongObjectMap<V> extends PrimitiveLongKeyMap {
+    V get(long key);
+
+    V put(long key, V value);
+
+    V putIfAbsent(long key, V value);
+
+    V remove(long key);
+
+    boolean remove(long key, V value);
+
+    V computeIfAbsent(long key, Long2ObjectFunction<V> mappingFunction);
+
+    V computeIfPresent(long key, BiFunction<Long, V, V> mappingFunction);
+}

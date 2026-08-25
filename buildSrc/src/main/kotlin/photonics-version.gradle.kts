@@ -4,7 +4,6 @@ import buildSrc.tasks.remapping.REGISTRY_FILE_PATH
 import buildSrc.tasks.remapping.RemapMixins.Companion.remapMixins
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar.Companion.shadowJar
 import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
 import kotlin.io.path.relativeTo
 
 version = parent!!.version
@@ -39,7 +38,7 @@ subprojects {
     group = parent!!.group
 
     val gamePath = ":modules:game"
-    val corePath = ":modules:core"
+    val enginePath = ":modules:engine"
 
     val commonPath = "${parent!!.path}:common"
 
@@ -78,14 +77,14 @@ subprojects {
             }
 
             add("shadow", project(gamePath)) { isTransitive = false }
-            add("shadow", project(corePath)) { isTransitive = false }
+            add("shadow", project(enginePath)) { isTransitive = false }
         } else {
             add("implementation", project(gamePath))
-            add("implementation", project(corePath))
+            add("implementation", project(enginePath))
         }
 
         add("runtimeOnly", project(gamePath))
-        add("runtimeOnly", project(corePath))
+        add("runtimeOnly", project(enginePath))
 
         ext.set("proj", this@subprojects)
     }
@@ -169,7 +168,7 @@ subprojects {
                 addSources(project(commonPath))
 
             addSources(project(gamePath))
-            addSources(project(corePath))
+            addSources(project(enginePath))
         }
 
         shadowJar {

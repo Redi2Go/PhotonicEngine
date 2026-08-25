@@ -26,13 +26,13 @@ dependencyResolutionManagement {
     versionCatalog(name = "constants", "modules/constants.toml")
     versionCatalog(name = "sharedLibs", "modules/shared_libs.toml")
 
-    versionCatalog(name = "coreLibs", "modules/core/core_libs.toml")
+    versionCatalog(name = "engineLibs", "modules/engine/engine_libs.toml")
 
     versionCatalog(name = "mcLibs", "modules/versions/mc_libs.toml")
 }
 
 include(":modules:game")
-include(":modules:core")
+include(":modules:engine")
 include(":modules:versions")
 
 includeMcVersion("1.21.11")
