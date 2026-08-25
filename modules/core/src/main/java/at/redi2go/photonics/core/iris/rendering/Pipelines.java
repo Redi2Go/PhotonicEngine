@@ -18,9 +18,9 @@ public class Pipelines {
 
     public static void fragData(PhotonicsPipeline ext, PhotonicsProperties properties, IrisPipeline irisPipeline) {
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("frag_data0", TextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("frag_data1", TextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
-                .addAttachment("fast_frag_data", TextureFormat.rg32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("frag_data0", TextureFormat.RGBA32F, CREATE_SAMPLER | FLIP)
+                .addAttachment("frag_data1", TextureFormat.RGBA32UI, CREATE_SAMPLER | FLIP)
+                .addAttachment("fast_frag_data", TextureFormat.RG32F, CREATE_SAMPLER | FLIP)
                 .build(ext::registerComponent);
 
         irisPipeline.newRenderer()
@@ -43,7 +43,7 @@ public class Pipelines {
 //        var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("handheld_diffuse", TextureFormat.rgb32f(), CREATE_SAMPLER)
+                .addAttachment("handheld_diffuse", TextureFormat.RGB32F, CREATE_SAMPLER)
                 .build(ext::registerComponent);
 
         var pipeline = irisPipeline.newRenderer()
@@ -61,7 +61,7 @@ public class Pipelines {
 
     public static void exposureHistory(PhotonicsPipeline ext, IrisPipeline irisPipeline) {
         var framebuffer = irisPipeline.newFramebuffer(1, 1)
-                .addAttachment("prev_exposure", TextureFormat.r32f(), CREATE_SAMPLER)
+                .addAttachment("prev_exposure", TextureFormat.R32F, CREATE_SAMPLER)
                 .build(ext::registerComponent);
 
         irisPipeline.newRenderer()
