@@ -66,9 +66,9 @@ public interface BlockStateParserImpl {
         public abstract @Nullable CompoundTag nbt();
 
         @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "rawtypes"})
         public IHolderSet<IBlock> ph$tag() {
-            return (IHolderSet<IBlock>) tag();
+            return (IHolderSet) tag();
         }
 
         @Override

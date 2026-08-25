@@ -53,7 +53,6 @@ public interface LevelReaderImpl extends ILevelReader {
         }
     }
 
-    // Using jspecify here is annoying, but whatever
     class SingleBlockLevelReader implements LevelReader {
         private final BlockState blockState;
 
@@ -62,6 +61,7 @@ public interface LevelReaderImpl extends ILevelReader {
         }
 
         @Override
+        @Deprecated
         public boolean hasChunk(int i, int j) {
             return true;
         }
