@@ -57,7 +57,7 @@ public final class GlTexture2D extends GlTexture {
 
     @Override
     public void bind() {
-        GlStateManager._bindTexture(id);
+        GlStateManager._bindTexture(handle);
     }
 
     @Override
@@ -144,7 +144,7 @@ public final class GlTexture2D extends GlTexture {
                 ));
 
             GlStateManager.clearGlErrors();
-            dsa.invokeBindFrameBufferTextures(readFbo, id, 0, mipLevel, GL30.GL_READ_FRAMEBUFFER);
+            dsa.invokeBindFrameBufferTextures(readFbo, handle, 0, mipLevel, GL30.GL_READ_FRAMEBUFFER);
             GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, ((GlBufferAccessor) dstBuffer).getHandle());
             GlStateManager._pixelStore(GL11.GL_PACK_ROW_LENGTH, copySize.x());
 

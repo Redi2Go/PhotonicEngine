@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public sealed abstract class GlTexture implements IGpuTexture, GlObject permits GlTexture1D, GlTexture2D, GlTexture3D, GlTextureCubemap {
-    protected final int id;
+    protected final int handle;
     private boolean closed;
 
     protected final String label;
@@ -41,8 +41,8 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
         checkArguments(size, mipLevels);
 
         GlStateManager.clearGlErrors();
-        this.id = GlStateManager._genTexture();
-        this.label = Objects.requireNonNullElseGet(label, () -> String.valueOf(id));
+        this.handle = GlStateManager._genTexture();
+        this.label = Objects.requireNonNullElseGet(label, () -> String.valueOf(handle));
         this.usage = usage;
         this.format = format;
 
@@ -67,7 +67,7 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
     public abstract int getTarget();
 
     protected void bind() {
-        GL11.glBindTexture(getTarget(), id);
+        GL11.glBindTexture(getTarget(), handle);
     }
 
     protected void unbind() {
@@ -90,8 +90,8 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
     }
 
     @Override
-    public int ph$id() {
-        return id;
+    public int ph$getHandle() {
+        return handle;
     }
 
     @Override
@@ -140,7 +140,7 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
         RenderSystem.assertOnRenderThread();
         if (!closed) {
             closed = true;
-            GlStateManager._deleteTexture(this.id);
+            GlStateManager._deleteTexture(this.handle);
         }
     }
 

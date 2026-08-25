@@ -1,8 +1,6 @@
 package at.redi2go.photonics.impl.blaze3d.opengl;
 
-import at.redi2go.photonics.impl.blaze3d.opengl.systems.GlDeviceImpl;
 import at.redi2go.photonics.impl.blaze3d.opengl.textures.GlTexture;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.StringUtil;
 import org.lwjgl.opengl.EXTDebugLabel;
 import org.lwjgl.opengl.KHRDebug;
@@ -19,7 +17,7 @@ public interface GlDebugLabelsExt {
 
         @Override
         public void applyLabel(GlTexture texture) {
-            KHRDebug.glObjectLabel(5890, texture.ph$id(), StringUtil.truncateStringIfNecessary(texture.ph$getLabel(), this.maxLabelLength, true));
+            KHRDebug.glObjectLabel(5890, texture.ph$getHandle(), StringUtil.truncateStringIfNecessary(texture.ph$getLabel(), this.maxLabelLength, true));
         }
     }
 
@@ -35,7 +33,7 @@ public interface GlDebugLabelsExt {
     abstract class ExtImpl implements GlDebugLabelsExt {
         @Override
         public void applyLabel(GlTexture texture) {
-            EXTDebugLabel.glLabelObjectEXT(5890, texture.ph$id(), StringUtil.truncateStringIfNecessary(texture.ph$getLabel(), 256, true));
+            EXTDebugLabel.glLabelObjectEXT(5890, texture.ph$getHandle(), StringUtil.truncateStringIfNecessary(texture.ph$getLabel(), 256, true));
         }
     }
 }
