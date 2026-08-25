@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.rendering;
 
-import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
+import at.redi2go.photonics.game.blaze3d.textures.TextureFormat;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 //import at.redi2go.photonics.core.rendering.HandheldLightComponent;
@@ -18,9 +18,9 @@ public class Pipelines {
 
     public static void fragData(PhotonicsPipeline ext, PhotonicsProperties properties, IrisPipeline irisPipeline) {
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("frag_data0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("frag_data1", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
-                .addAttachment("fast_frag_data", ITextureFormat.rg32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("frag_data0", TextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("frag_data1", TextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("fast_frag_data", TextureFormat.rg32f(), CREATE_SAMPLER | FLIP)
                 .build(ext::registerComponent);
 
         irisPipeline.newRenderer()
@@ -43,7 +43,7 @@ public class Pipelines {
 //        var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("handheld_diffuse", ITextureFormat.rgb32f(), CREATE_SAMPLER)
+                .addAttachment("handheld_diffuse", TextureFormat.rgb32f(), CREATE_SAMPLER)
                 .build(ext::registerComponent);
 
         var pipeline = irisPipeline.newRenderer()
@@ -61,7 +61,7 @@ public class Pipelines {
 
     public static void exposureHistory(PhotonicsPipeline ext, IrisPipeline irisPipeline) {
         var framebuffer = irisPipeline.newFramebuffer(1, 1)
-                .addAttachment("prev_exposure", ITextureFormat.r32f(), CREATE_SAMPLER)
+                .addAttachment("prev_exposure", TextureFormat.r32f(), CREATE_SAMPLER)
                 .build(ext::registerComponent);
 
         irisPipeline.newRenderer()

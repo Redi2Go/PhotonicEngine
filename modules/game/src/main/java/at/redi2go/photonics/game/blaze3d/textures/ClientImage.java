@@ -1,4 +1,4 @@
-package at.redi2go.photonics.game.blaze3d.images;
+package at.redi2go.photonics.game.blaze3d.textures;
 
 import org.joml.Vector2fc;
 import org.joml.Vector2ic;
@@ -11,8 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class ClientImage {
-    private final IImageFormat format;
-    private final int colorByteSize;
+    private final TextureFormat format;
 
     private final int width;
     private final int height;
@@ -20,35 +19,37 @@ public class ClientImage {
 
     private final ByteBuffer storage;
 
-    public ClientImage(IImageFormat format, int width, int height, int depth) {
+    public ClientImage(TextureFormat format, int width, int height, int depth) {
+        if (!format.supportsWrite())
+            throw new IllegalArgumentException(format.name() + " is not writable");
+
         this.format = format;
-        this.colorByteSize = format.ph$getColorByteSize();
 
         this.width = width;
         this.height = height;
         this.depth = depth;
 
-        this.storage = ByteBuffer.allocateDirect(width * height * depth * colorByteSize)
+        this.storage = ByteBuffer.allocateDirect(width * height * depth * format.getTexelByteSize())
                 .order(ByteOrder.nativeOrder());
     }
 
-    public ClientImage(IImageFormat format, Vector3ic size) {
+    public ClientImage(TextureFormat format, Vector3ic size) {
         this(format, size.x(), size.y(), size.z());
     }
 
-    public ClientImage(IImageFormat format, int width, int height) {
+    public ClientImage(TextureFormat format, int width, int height) {
         this(format, width, height, 1);
     }
 
-    public ClientImage(IImageFormat format, Vector2ic size) {
+    public ClientImage(TextureFormat format, Vector2ic size) {
         this(format, size.x(), size.y(), 1);
     }
 
-    public ClientImage(IImageFormat format, int width) {
+    public ClientImage(TextureFormat format, int width) {
         this(format, width, 1, 1);
     }
 
-    public IImageFormat getFormat() {
+    public TextureFormat getFormat() {
         return format;
     }
 
@@ -93,86 +94,83 @@ public class ClientImage {
         checkInBounds(x, y, z);
 
         int index = x + (width * y) + ((width * height) * z);
-        return index * colorByteSize;
+        return index * format.getTexelByteSize();
     }
 
     private void writeInt(int offset, int r, int g, int b, int a) {
-        int componentCount = format.ph$getPixelFormat().ph$getComponentCount();
-        IPixelType pixelType = format.ph$getPixelType();
+        int componentCount = format.getTexelFormat().getComponentCount();
+        TexelType texelType = format.getTexelType();
 
-        pixelType.writeInt(storage, offset, r);
+        texelType.writeInt(storage, offset, r);
         if (componentCount < 2) return;
 
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeInt(storage, offset, g);
+        offset += texelType.getByteSize();
+        texelType.writeInt(storage, offset, g);
         if (componentCount < 3) return;
 
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeInt(storage, offset, b);
+        offset += texelType.getByteSize();
+        texelType.writeInt(storage, offset, b);
 
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeInt(storage, offset, a);
+        offset += texelType.getByteSize();
+        texelType.writeInt(storage, offset, a);
     }
 
     private void writeFloat(int offset, float r, float g, float b, float a) {
-        int componentCount = format.ph$getPixelFormat().ph$getComponentCount();
+        int componentCount = format.getTexelFormat().getComponentCount();
+        TexelType texelType = format.getTexelType();
 
-        IPixelType pixelType = format.ph$getPixelType();
-        boolean isNormalized = format.isNormalized();
-
-        pixelType.writeFloat(storage, offset, r, isNormalized);
+        texelType.writeFloat(storage, offset, r);
         if (componentCount < 2) return;
 
-
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeFloat(storage, offset, g, isNormalized);
+        offset += texelType.getByteSize();
+        texelType.writeFloat(storage, offset, g);
         if (componentCount < 3) return;
 
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeFloat(storage, offset, b, isNormalized);
+        offset += texelType.getByteSize();
+        texelType.writeFloat(storage, offset, b);
 
-        offset += pixelType.ph$getByteSize();
-        pixelType.writeFloat(storage, offset, a, isNormalized);
+        offset += texelType.getByteSize();
+        texelType.writeFloat(storage, offset, a);
     }
 
     public void setPixelInt(int index, int r) {
-        writeInt(index * colorByteSize, r, 0, 0, 0);
+        writeInt(index * format.getTexelByteSize(), r, 0, 0, 0);
     }
 
     public void setPixelInt(int index, int r, int g) {
-        writeInt(index * colorByteSize, r, g, 0, 0);
+        writeInt(index * format.getTexelByteSize(), r, g, 0, 0);
     }
 
     public void setPixelInt(int index, Vector2ic color) {
-        writeInt(index * colorByteSize, color.x(), color.y(), 0, 0);
+        writeInt(index * format.getTexelByteSize(), color.x(), color.y(), 0, 0);
     }
 
     public void setPixelInt(int index, int r, int g, int b, int a) {
-        writeInt(index * colorByteSize, r, g, b, a);
+        writeInt(index * format.getTexelByteSize(), r, g, b, a);
     }
 
     public void setPixelInt(int index, Vector4ic color) {
-        writeInt(index * colorByteSize, color.x(), color.y(), color.z(), color.w());
+        writeInt(index * format.getTexelByteSize(), color.x(), color.y(), color.z(), color.w());
     }
 
     public void setPixelFloat(int index, float r) {
-        writeFloat(index * colorByteSize, r, 0, 0, 0);
+        writeFloat(index * format.getTexelByteSize(), r, 0, 0, 0);
     }
 
     public void setPixelFloat(int index, float r, float g) {
-        writeFloat(index * colorByteSize, r, g, 0, 0);
+        writeFloat(index * format.getTexelByteSize(), r, g, 0, 0);
     }
 
     public void setPixelFloat(int index, Vector2fc color) {
-        writeFloat(index * colorByteSize, color.x(), color.y(), 0, 0);
+        writeFloat(index * format.getTexelByteSize(), color.x(), color.y(), 0, 0);
     }
 
     public void setPixelFloat(int index, float r, float g, float b, float a) {
-        writeFloat(index * colorByteSize, r, g, b, a);
+        writeFloat(index * format.getTexelByteSize(), r, g, b, a);
     }
 
     public void setPixelFloat(int index, Vector4fc color) {
-        writeFloat(index * colorByteSize, color.x(), color.y(), color.z(), color.w());
+        writeFloat(index * format.getTexelByteSize(), color.x(), color.y(), color.z(), color.w());
     }
 
     public void setPixelInt(Vector3ic pos, int r) {

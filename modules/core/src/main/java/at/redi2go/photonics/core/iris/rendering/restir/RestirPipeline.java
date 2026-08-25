@@ -1,6 +1,6 @@
 package at.redi2go.photonics.core.iris.rendering.restir;
 
-import at.redi2go.photonics.game.blaze3d.textures.ITextureFormat;
+import at.redi2go.photonics.game.blaze3d.textures.TextureFormat;
 import at.redi2go.photonics.core.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.core.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.core.iris.rendering.PhotonicsPipeline;
@@ -48,7 +48,7 @@ public class RestirPipeline extends PhotonicsPipeline {
         if (!isAnySpatialReuseEnabled()) return;
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("neighbor_reservoir", ITextureFormat.rgba32f(), CREATE_SAMPLER)
+                .addAttachment("neighbor_reservoir", TextureFormat.rgba32f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 
         irisPipeline.newRenderer()
@@ -63,8 +63,8 @@ public class RestirPipeline extends PhotonicsPipeline {
         if (!isBlockLightEnabled()) return;
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("di_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("di_output", ITextureFormat.rgba16f(), CREATE_SAMPLER)
+                .addAttachment("di_reservoirs0", TextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("di_output", TextureFormat.rgba16f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 
         irisPipeline.newRenderer()
@@ -87,9 +87,9 @@ public class RestirPipeline extends PhotonicsPipeline {
         if (!isRestirGiEnabled()) return;
 
         var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("gi_reservoirs0", ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("gi_reservoirs1", ITextureFormat.rgb32ui(), CREATE_SAMPLER | FLIP)
-                .addAttachment("gi_output", ITextureFormat.rgba16f(), CREATE_SAMPLER)
+                .addAttachment("gi_reservoirs0", TextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("gi_reservoirs1", TextureFormat.rgb32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("gi_output", TextureFormat.rgba16f(), CREATE_SAMPLER)
                 .build(this::registerComponent);
 
         irisPipeline.newRenderer()
@@ -112,13 +112,13 @@ public class RestirPipeline extends PhotonicsPipeline {
         if (!isRestirEnabled()) return;
 
         var temporalFramebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("diffuse_history", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
-                .addAttachment("fast_diffuse_history", isDenoisingEnabled() ? ITextureFormat.rgba16f() : ITextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
-                .addAttachment("visibility_history", ITextureFormat.r16f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("diffuse_history", TextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP)
+                .addAttachment("fast_diffuse_history", isDenoisingEnabled() ? TextureFormat.rgba16f() : TextureFormat.rgba32f(), CREATE_SAMPLER | FLIP)
+                .addAttachment("visibility_history", TextureFormat.r16f(), CREATE_SAMPLER | FLIP)
                 .build(this::registerComponent);
 
         var denoiseFramebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
-                .addAttachment("denoise_result", ITextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP, this::isDenoisingEnabled)
+                .addAttachment("denoise_result", TextureFormat.rgba32ui(), CREATE_SAMPLER | FLIP, this::isDenoisingEnabled)
                 .build(this::registerComponent);
 
         int[] atrousIteration = new int[] {0};
