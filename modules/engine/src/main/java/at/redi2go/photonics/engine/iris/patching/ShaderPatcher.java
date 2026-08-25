@@ -23,28 +23,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class ShaderPatcher {
-    // TODO replace with comment at the top of the file
-    private static final Set<String> AUTO_REPLACED_FILES = Set.of(
-            "light.glsl",
-            "light_list.glsl",
-            "palette.glsl",
-            "samplers.glsl",
-            "tracing.glsl",
-            "uniforms.glsl",
+    private static final Set<String> IRREPLACEABLE_FILES = Set.of("shader_interface.glsl", "write_indirect.glsl");
 
-            // LEGACY FILE NAMES
-            "photonics.glsl",
-            "ph_samplers.glsl"
-    );
     private static final Path PATCHED_DEBUG_PATH = ModLoader.getGameDir().resolve(".ph-patched-shaders");
     private static final Path PHOTONICS_SHADERS_PATH = getPhotonicsShadersPath();
 
-    private final IrisPack pack;
     private final @Nullable Patch patch;
 
     public ShaderPatcher(IrisPack pack) {
-        this.pack = pack;
-
         if (pack.ph$supportsPhotonics()) {
             patch = null;
             return;
@@ -96,6 +82,10 @@ public class ShaderPatcher {
                 .normalize();
     }
 
+    private boolean shouldReplace(Path relativePath) {
+        return relativePath.getNameCount() == 1 && !IRREPLACEABLE_FILES.contains(relativePath.toString());
+    }
+
     public @Nullable String readPhotonicsFile(
             IrisPackPath packPath,
             Function<IrisPackPath, @Nullable String> shaderSourceSupplier
@@ -108,8 +98,7 @@ public class ShaderPatcher {
 
         readFile:
         {
-            // If no patch is applied check if the shader has a replacement
-            if (patch == null && !AUTO_REPLACED_FILES.contains(relativePath.toString())) {
+            if (!shouldReplace(relativePath)) {
                 source = shaderSourceSupplier.apply(packPath);
                 if (source != null) break readFile;
             }
