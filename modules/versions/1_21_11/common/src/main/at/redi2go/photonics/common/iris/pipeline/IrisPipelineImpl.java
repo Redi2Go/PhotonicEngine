@@ -5,21 +5,27 @@ import at.redi2go.photonics.common.iris.pipeline.renderer.IrisRendererBuilder;
 import at.redi2go.photonics.common.iris.pipeline.renderer.DeferredIrisPassAction;
 import at.redi2go.photonics.common.iris.pipeline.textures.FramebufferSize;
 import at.redi2go.photonics.common.iris.pipeline.textures.IrisFramebufferBuilderImpl;
+import at.redi2go.photonics.engine.iris.IrisManager;
 import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDynamicDefines;
 import at.redi2go.photonics.engine.iris.pipeline.textures.IrisFramebuffer;
 import at.redi2go.photonics.engine.iris.pipeline.textures.IrisSamplerHolder;
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolder;
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolder;
+import at.redi2go.photonics.game.minecraft.Id;
 import org.jetbrains.annotations.NonNls;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class IrisPipelineImpl implements IrisPipeline {
+    private final IrisDynamicDefines defines;
     private final List<Consumer<IrisBufferHolder>> buffers;
     private final List<Consumer<IrisSamplerHolder>> samplers;
     private final List<Consumer<IrisDynamicUniformHolder>> dynamicUniforms;
@@ -28,6 +34,7 @@ public class IrisPipelineImpl implements IrisPipeline {
     private final List<DeferredIrisPassAction> commonRenderers;
 
     public IrisPipelineImpl(List<DeferredIrisPassAction> commonRenderers) {
+        this.defines = IrisManager.newDynamicDefines();
         this.buffers = new ArrayList<>();
         this.samplers = new ArrayList<>();
         this.dynamicUniforms = new ArrayList<>();
@@ -36,6 +43,19 @@ public class IrisPipelineImpl implements IrisPipeline {
         this.commonRenderers = commonRenderers;
     }
 
+    @Override
+    public IrisPipeline withDefine(BiConsumer<IrisDefineHolder, Id> consumer) {
+        defines.withDefine(consumer);
+
+        return this;
+    }
+
+    @Override
+    public IrisPipeline withDefines(List<BiConsumer<IrisDefineHolder, Id>> consumers) {
+        defines.withDefines(consumers);
+
+        return this;
+    }
 
     @Override
     public IrisPipeline withBuffer(Consumer<IrisBufferHolder> consumer) {
