@@ -1,7 +1,7 @@
 package at.redi2go.photonics.common.iris.pipeline;
 
-import at.redi2go.photonics.common.iris.pipeline.builder.IrisPipelineBuilderImpl;
-import at.redi2go.photonics.common.iris.pipeline.renderer.IrisRendererBuilder;
+import at.redi2go.photonics.common.iris.pipeline.builder.IrisRendererBuilderImpl;
+import at.redi2go.photonics.common.iris.pipeline.renderer.IrisPassActionBuilder;
 import at.redi2go.photonics.common.iris.pipeline.renderer.DeferredIrisPassAction;
 import at.redi2go.photonics.common.iris.pipeline.textures.FramebufferSize;
 import at.redi2go.photonics.common.iris.pipeline.textures.IrisFramebufferBuilderImpl;
@@ -121,13 +121,13 @@ public class IrisPipelineImpl implements IrisPipeline {
         );
     }
 
-    public IrisRendererBuilder newRendererAction(@NonNls String name) {
+    public IrisPassActionBuilder newRendererAction(@NonNls String name) {
         Objects.requireNonNull(name, "name");
-        return new IrisRendererBuilder(name, commonRenderers);
+        return new IrisPassActionBuilder(name, commonRenderers);
     }
 
     @Override
     public IrisRenderer.Builder newRenderer(Consumer<IrisRenderer> registration) {
-        return new IrisPipelineBuilderImpl(this, registration);
+        return new IrisRendererBuilderImpl(this, registration);
     }
 }

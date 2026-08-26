@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class IrisRendererBuilder implements PipelineActionBuilder {
+public class IrisPassActionBuilder implements PipelineActionBuilder {
     private final String name;
 
     private final List<DeferredIrisPassAction.Pass> passes = new ArrayList<>();
@@ -20,7 +20,7 @@ public class IrisRendererBuilder implements PipelineActionBuilder {
 
     private boolean finished = false;
 
-    public IrisRendererBuilder(
+    public IrisPassActionBuilder(
             String name,
             List<DeferredIrisPassAction> commonRenderers
     ) {

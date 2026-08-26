@@ -2,7 +2,6 @@ package at.redi2go.photonics.common.iris.pipeline.builder;
 
 import at.redi2go.photonics.common.iris.pipeline.IrisPipelineImpl;
 import at.redi2go.photonics.common.iris.pipeline.PipelineAction;
-import at.redi2go.photonics.common.iris.pipeline.renderer.IrisPassAction;
 import at.redi2go.photonics.common.iris.pipeline.renderer.IrisRendererImpl;
 import at.redi2go.photonics.engine.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolder;
@@ -22,9 +21,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer implements IrisRenderer.Builder, BiConsumer<IrisDefineHolder, Id> {
+public class IrisRendererBuilderImpl extends AbstractActionBuilderConsumer implements IrisRenderer.Builder, BiConsumer<IrisDefineHolder, Id> {
     private final List<BiConsumer<IrisDefineHolder, Id>> defines;
     private @Nullable IrisFramebuffer framebuffer = null;
 
@@ -33,7 +31,7 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     private @NonNls String fragmentPrefix = "";
     private @NonNls String vertexPrefix = "";
 
-    public IrisPipelineBuilderImpl(IrisPipelineImpl factory, Consumer<IrisRenderer> registration) {
+    public IrisRendererBuilderImpl(IrisPipelineImpl factory, Consumer<IrisRenderer> registration) {
         super(factory, "Photonics");
 
         this.defines = new ArrayList<>();
