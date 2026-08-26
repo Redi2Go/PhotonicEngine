@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -24,9 +25,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer implements IrisRenderer.Builder, BiConsumer<IrisDefineHolder, Id> {
-    private final Consumer<IrisRenderer> registration;
-    private List<BiConsumer<IrisDefineHolder, Id>> defines;
+    private final List<BiConsumer<IrisDefineHolder, Id>> defines;
     private @Nullable IrisFramebuffer framebuffer = null;
+
+    private final Consumer<IrisRenderer> registration;
 
     private @NonNls String fragmentPrefix = "";
     private @NonNls String vertexPrefix = "";
@@ -34,6 +36,7 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     public IrisPipelineBuilderImpl(IrisPipelineImpl factory, Consumer<IrisRenderer> registration) {
         super(factory, "Photonics");
 
+        this.defines = new ArrayList<>();
         this.registration = registration;
     }
 
