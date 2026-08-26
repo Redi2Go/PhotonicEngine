@@ -1,6 +1,8 @@
 package at.redi2go.photonics.game.blaze3d.systems;
 
+import at.redi2go.photonics.game.blaze3d.Requires;
 import at.redi2go.photonics.game.blaze3d.buffers.BufferUsage;
+import at.redi2go.photonics.game.blaze3d.textures.TextureUsage;
 import at.redi2go.photonics.game.blaze3d.buffers.IGpuBuffer;
 import at.redi2go.photonics.game.blaze3d.buffers.IGpuBufferSlice;
 import at.redi2go.photonics.game.blaze3d.textures.ClientImage;
@@ -15,16 +17,29 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 
 public interface ICommandEncoder {
-    void ph$writeToBuffer(IGpuBufferSlice gpuBufferSlice, ByteBuffer byteBuffer);
+    void ph$writeToBuffer(
+            @Requires(BufferUsage.COPY_DST) IGpuBufferSlice gpuBufferSlice,
+            ByteBuffer byteBuffer
+    );
 
-    IGpuBuffer.MappedView ph$mapBuffer(IGpuBuffer gpuBuffer, @BufferUsage int mapUsage);
+    IGpuBuffer.MappedView ph$mapBuffer(
+            @Requires({BufferUsage.MAP_READ, BufferUsage.MAP_WRITE}) IGpuBuffer gpuBuffer,
+            @BufferUsage int mapUsage
+    );
 
-    IGpuBuffer.MappedView ph$mapBuffer(IGpuBufferSlice gpuBufferSlice, @BufferUsage int mapUsage);
 
-    void ph$copyToBuffer(IGpuBufferSlice srcSlice, IGpuBufferSlice dstSlice);
+    IGpuBuffer.MappedView ph$mapBuffer(
+            @Requires({BufferUsage.MAP_READ, BufferUsage.MAP_WRITE}) IGpuBufferSlice gpuBufferSlice,
+            @BufferUsage int mapUsage
+    );
+
+    void ph$copyToBuffer(
+            @Requires(BufferUsage.COPY_SRC) IGpuBufferSlice srcSlice,
+            @Requires(BufferUsage.COPY_DST) IGpuBufferSlice dstSlice
+    );
 
     void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ByteBuffer byteBuffer,
             TextureFormat bufferFormat,
             int layer,
@@ -34,7 +49,7 @@ public interface ICommandEncoder {
     );
 
     default void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ByteBuffer byteBuffer,
             TextureFormat bufferFormat,
             int layer,
@@ -54,7 +69,7 @@ public interface ICommandEncoder {
     }
 
     default void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ByteBuffer byteBuffer,
             TextureFormat bufferFormat,
             int layer,
@@ -74,7 +89,7 @@ public interface ICommandEncoder {
     }
 
     default void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ClientImage image,
             int layer,
             int mipLevel,
@@ -92,7 +107,7 @@ public interface ICommandEncoder {
     }
 
     default void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ClientImage image,
             int layer,
             int mipLevel,
@@ -110,7 +125,7 @@ public interface ICommandEncoder {
     }
 
     default void ph$writeToTexture(
-            IGpuTexture gpuTexture,
+            @Requires(TextureUsage.COPY_DST) IGpuTexture gpuTexture,
             ClientImage image,
             int layer,
             int mipLevel,
@@ -128,32 +143,14 @@ public interface ICommandEncoder {
     }
 
     CompletableFuture<Void> ph$copyTextureToBuffer(
-            IGpuTexture srcTexture,
+            @Requires(TextureUsage.COPY_SRC) IGpuTexture srcTexture,
             Vector2ic srcOffset,
             Vector2ic copySize,
-            IGpuBuffer dstBuffer,
+            @Requires(BufferUsage.COPY_DST) IGpuBuffer dstBuffer,
             long dstOffset,
             int layer,
             int mipLevel
     );
-
-    default CompletableFuture<Void> ph$copyTextureToBuffer(
-            IGpuTexture srcTexture,
-            IGpuBuffer dstBuffer,
-            long dstOffset,
-            int layer,
-            int mipLevel
-    ) {
-        return ph$copyTextureToBuffer(
-                srcTexture,
-                new Vector2i(0, 0),
-                new Vector2i(srcTexture.ph$getWidth(mipLevel), srcTexture.ph$getHeight(mipLevel)),
-                dstBuffer,
-                dstOffset,
-                layer,
-                mipLevel
-        );
-    }
 
 //TODO Maybe implement this
 //    void ph$copyTextureToTexture(
