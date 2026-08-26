@@ -21,16 +21,13 @@ subprojects {
         withSourcesJar()
     }
 
-    val main = sourceSets.getByName("main")
-    val impl = sourceSets.create("impl") {
-        compileClasspath += main.compileClasspath
-        runtimeClasspath += main.runtimeClasspath
-    }
-
     sourceSets {
         main {
-            compileClasspath += impl.output
-            runtimeClasspath += impl.output
+            java.setSrcDirs(listOf<String>())
+            java.srcDir(projectDir.resolve("src/main"))
+            java.srcDir(projectDir.resolve("src/impl"))
+
+            resources.setSrcDirs(listOf<String>())
         }
     }
 
@@ -131,6 +128,7 @@ subprojects {
                     }
                 }
 
+
                 from(patchesPath) {
                     into("/assets/photonics/patches/")
                 }
@@ -146,10 +144,6 @@ subprojects {
             }
         }
 
-        named<Jar>("jar") {
-            from(impl.output)
-        }
-
         named<Jar>("sourcesJar") {
             fun addSources(sourceSet: SourceSet) {
                 from(sourceSet.java.srcDirs)
@@ -161,9 +155,6 @@ subprojects {
                 addSources(project.sourceSets.findByName("impl") ?: return)
             }
 
-
-            addSources(impl)
-
             if (project.name != "common")
                 addSources(project(commonPath))
 
@@ -174,9 +165,6 @@ subprojects {
         shadowJar {
             archiveFileName = "${jarName()}-shaded.jar"
             configurations = listOf(project.configurations.getByName("shadow"))
-
-
-            from(impl.output)
         }
     }
 }
