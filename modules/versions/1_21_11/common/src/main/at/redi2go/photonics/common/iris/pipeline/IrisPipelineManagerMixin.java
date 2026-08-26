@@ -71,9 +71,9 @@ public abstract class IrisPipelineManagerMixin implements IrisPipelineManagerExt
 
     @Inject(method = "preparePipeline", at = @At("TAIL"))
     private void selectPipeline(NamespacedId currentDimension, CallbackInfoReturnable<WorldRenderingPipeline> cir) {
-        if (!(pipeline instanceof IrisRenderingPipeline)) clearRenderers();
-
-        setRenderers(((IrisRenderingPipelineExt) pipeline).getRenderers());
+        if (pipeline instanceof IrisRenderingPipeline) {
+            setRenderers(((IrisRenderingPipelineExt) pipeline).getRenderers());
+        } else clearRenderers();
     }
 
     @Override
