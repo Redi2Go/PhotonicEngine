@@ -39,7 +39,7 @@ public final class GlTexture3D extends GlTexture {
 
     @Override
     public int ph$getDepth(int mipLevel) {
-        return Math.min(depthOrLayers >> mipLevel, 1);
+        return depthOrLayers >> mipLevel;
     }
 
     @Override

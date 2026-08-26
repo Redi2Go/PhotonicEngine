@@ -10,6 +10,7 @@ import com.mojang.blaze3d.GpuOutOfMemoryException;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.joml.Vector2ic;
+import org.joml.Vector3i;
 import org.joml.Vector3ic;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -131,7 +132,7 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
 
             for (int layer = 0; layer < ph$getLayers(); layer++) {
                 for (int mip = 0; mip < mipLevels; mip++)
-                    state.texImage(layer, mip, ph$getSize(mipLevels), null);
+                    state.texImage(layer, mip, ph$getSize(mip), null);
             }
         }
     }
@@ -293,6 +294,10 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
         if (mipLevels < 1) throw new IllegalArgumentException("mipLevels must be at least 1 (was " + mipLevels + ")");
     }
 
+    private static Vector3ic maxOne(Vector3ic value) {
+        return value.max(new Vector3i(1), new Vector3i());
+    }
+
     public static GlTexture createTexture(
             @Nullable String label,
             @TextureUsage int usage,
@@ -304,9 +309,9 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
 
         if ((usage & TextureUsage.CUBEMAP_COMPATIBLE) != 0)
             return new GlTextureCubemap(label, usage, textureFormat, size, mipLevels);
-        if (size.z() > 1) return new GlTexture3D(label, usage, textureFormat, size, mipLevels);
-        if (size.y() > 1) return new GlTexture2D(label, usage, textureFormat, size, mipLevels);
+        if (size.z() > 0) return new GlTexture3D(label, usage, textureFormat, maxOne(size), mipLevels);
+        if (size.y() > 0) return new GlTexture2D(label, usage, textureFormat, maxOne(size), mipLevels);
 
-        return new GlTexture1D(label, usage, textureFormat, size, mipLevels);
+        return new GlTexture1D(label, usage, textureFormat, maxOne(size), mipLevels);
     }
 }

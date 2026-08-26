@@ -41,7 +41,11 @@ public interface IGpuDevice {
     }
 
     static IGpuTexture createTexture(@Nullable Supplier<String> supplier, @TextureUsage int usage, TextureFormat textureFormat, Vector2ic size, int mipLevels) {
-        return IRenderSystem.getDevice().ph$createTexture(supplier, usage, textureFormat, new Vector3i(size, 1), mipLevels);
+        return IRenderSystem.getDevice().ph$createTexture(supplier, usage, textureFormat, new Vector3i(size, 0), mipLevels);
+    }
+
+    static IGpuTexture createTexture(@Nullable Supplier<String> supplier, @TextureUsage int usage, TextureFormat textureFormat, int width, int mipLevels) {
+        return IRenderSystem.getDevice().ph$createTexture(supplier, usage, textureFormat, new Vector3i(width, 0, 0), mipLevels);
     }
 
     static IGpuBuffer createBuffer(@Nullable Supplier<String> supplier, @BufferUsage int usage, long byteSize) {
