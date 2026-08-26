@@ -12,20 +12,24 @@ import org.joml.Vector2ic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
     private final FramebufferSize sizeSupplier;
     private final Vector2ic initialSize;
+    private final Consumer<IrisFramebuffer> registration;
 
     private final List<FramebufferAttachment> writeAttachments = new ArrayList<>();
     private final List<FramebufferAttachment> readAttachments = new ArrayList<>();
 
     private boolean isFlippable = false;
 
-    public IrisFramebufferBuilderImpl(FramebufferSize sizeSupplier) {
+    public IrisFramebufferBuilderImpl(FramebufferSize sizeSupplier, Consumer<IrisFramebuffer> registration) {
         this.sizeSupplier = sizeSupplier;
         initialSize = sizeSupplier.get();
+
+        this.registration = registration;
     }
 
     @Override
@@ -71,15 +75,20 @@ public class IrisFramebufferBuilderImpl implements IrisFramebuffer.Builder {
         return this;
     }
 
-    public IrisFramebuffer build(Function<IrisFramebuffer, IrisFramebuffer> registration) {
+    @Override
+    public IrisFramebuffer build() {
         if (writeAttachments.isEmpty()) return EmptyFramebuffer.INSTANCE;
 
-        return registration.apply(isFlippable ? new SingleFramebuffer(
+        var result = (isFlippable ? new SingleFramebuffer(
                 writeAttachments,
                 sizeSupplier
         ) : new FlippableFramebuffer(
                 new SingleFramebuffer(writeAttachments, sizeSupplier),
                 new SingleFramebuffer(readAttachments, sizeSupplier)
         ));
+
+        registration.accept(result);
+
+        return result;
     }
 }

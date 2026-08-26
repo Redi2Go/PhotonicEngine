@@ -8,6 +8,7 @@ import at.redi2go.photonics.engine.rendering.AbstractRenderingComponent;
 import at.redi2go.photonics.engine.rendering.RenderingComponent;
 //import at.redi2go.photonics.core.rendering.SectionManager;
 
+import at.redi2go.photonics.game.minecraft.core.registries.Dimensions;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -30,6 +31,17 @@ public abstract class PhotonicsPipeline extends AbstractRenderingComponent {
         registerComponent(pipeline);
 
         registerResource(atlasDownloader);
+
+        pipeline.withDefine((defines, dim) -> {
+            if (dim.equals(Dimensions.THE_END)) {
+                defines.stringDefine("END", "");
+            } else if (dim.equals(Dimensions.THE_NETHER)) {
+                defines.stringDefine("NETHER", "");
+            } else {
+                defines.stringDefine("OVERWORLD", "");
+            }
+        });
+
 //        var sectionManager = registerComponent(new SectionManager(Minecraft::getRenderDistance));
 //
 //        var worldAllocator = registerComponent(new BufferWorldAllocator(1 << 29));

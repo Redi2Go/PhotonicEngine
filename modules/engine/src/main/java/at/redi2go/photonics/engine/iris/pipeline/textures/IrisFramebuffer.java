@@ -19,10 +19,6 @@ public interface IrisFramebuffer extends RenderingComponent, Disposable {
             return condition.getAsBoolean() ? addAttachment(name, format, usage) : this;
         }
 
-        IrisFramebuffer build(Function<IrisFramebuffer, IrisFramebuffer> registration);
-
-        default IrisFramebuffer build() {
-            return build(Function.identity());
-        }
+        IrisFramebuffer build();
     }
 }

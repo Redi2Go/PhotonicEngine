@@ -24,14 +24,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer implements IrisRenderer.Builder, BiConsumer<IrisDefineHolder, Id> {
+    private final Consumer<IrisRenderer> registration;
     private List<BiConsumer<IrisDefineHolder, Id>> defines;
     private @Nullable IrisFramebuffer framebuffer = null;
 
     private @NonNls String fragmentPrefix = "";
     private @NonNls String vertexPrefix = "";
 
-    public IrisPipelineBuilderImpl(IrisPipelineImpl factory) {
+    public IrisPipelineBuilderImpl(IrisPipelineImpl factory, Consumer<IrisRenderer> registration) {
         super(factory, "Photonics");
+
+        this.registration = registration;
     }
 
     @Override
@@ -174,8 +177,11 @@ public class IrisPipelineBuilderImpl extends AbstractActionBuilderConsumer imple
     }
 
     @Override
-    public IrisRenderer build(Function<IrisRenderer, IrisRenderer> registration) {
-        return registration.apply(new IrisRendererImpl(buildActions()));
+    public IrisRenderer build() {
+        var result = new IrisRendererImpl(buildActions());
+        registration.accept(result);
+
+        return result;
     }
 
     @Override

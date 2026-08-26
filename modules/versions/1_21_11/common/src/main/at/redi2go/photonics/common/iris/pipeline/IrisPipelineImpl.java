@@ -106,26 +106,28 @@ public class IrisPipelineImpl implements IrisPipeline {
     }
 
     @Override
-    public IrisFramebuffer.Builder newFramebuffer(int width, int height) {
+    public IrisFramebuffer.Builder newFramebuffer(int width, int height, Consumer<IrisFramebuffer> registration) {
         return new IrisFramebufferBuilderImpl(
-                new FramebufferSize.Fixed(width, height)
+                new FramebufferSize.Fixed(width, height),
+                registration
         );
     }
 
     @Override
-    public IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale) {
+    public IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale,Consumer<IrisFramebuffer> registration) {
         return new IrisFramebufferBuilderImpl(
-                new FramebufferSize.Relative(widthScale, heightScale)
+                new FramebufferSize.Relative(widthScale, heightScale),
+                registration
         );
     }
 
-    public IrisRendererBuilder newRenderer(@NonNls String name) {
+    public IrisRendererBuilder newRendererAction(@NonNls String name) {
         Objects.requireNonNull(name, "name");
         return new IrisRendererBuilder(name, commonRenderers);
     }
 
     @Override
-    public IrisRenderer.Builder newRenderer() {
-        return new IrisPipelineBuilderImpl(this);
+    public IrisRenderer.Builder newRenderer(Consumer<IrisRenderer> registration) {
+        return new IrisPipelineBuilderImpl(this, registration);
     }
 }

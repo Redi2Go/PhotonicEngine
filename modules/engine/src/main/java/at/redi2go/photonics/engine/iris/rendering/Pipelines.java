@@ -16,19 +16,19 @@ public class Pipelines {
     }
 
     public static void fragData(PhotonicsPipeline ext, PhotonicsProperties properties, IrisPipeline irisPipeline) {
-        var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
+        var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale(), ext::registerComponent)
                 .addAttachment("frag_data0", TextureFormat.RGBA32F, CREATE_SAMPLER | FLIP)
                 .addAttachment("frag_data1", TextureFormat.RGBA32UI, CREATE_SAMPLER | FLIP)
                 .addAttachment("fast_frag_data", TextureFormat.RG32F, CREATE_SAMPLER | FLIP)
-                .build(ext::registerComponent);
+                .build();
 
-        irisPipeline.newRenderer()
+        irisPipeline.newRenderer(ext::registerRenderer)
                 .debugGroup("frag data")
                 .withFragmentPrefix("/photonics/rendering/frag/passes/")
                 .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
                 .deferredPass("frag data", "f0_load_frag.fsh", null)
-                .build(ext::registerRenderer);
+                .build();
     }
 
     public static void handheldLighting(
@@ -40,11 +40,11 @@ public class Pipelines {
 
 //        var handheldComponent = ext.registerComponent(new HandheldLightComponent(handheldItemSupplier, properties));
 
-        var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale())
+        var framebuffer = irisPipeline.newFramebuffer(properties.getRenderScale(), ext::registerComponent)
                 .addAttachment("handheld_diffuse", TextureFormat.RGB32F, CREATE_SAMPLER)
-                .build(ext::registerComponent);
+                .build();
 
-        var pipeline = irisPipeline.newRenderer()
+        var pipeline = irisPipeline.newRenderer(ext::registerRenderer)
                 .debugGroup("handheld")
                 .withFragmentPrefix("/photonics/rendering/shared/")
                 .withFramebuffer(framebuffer)
@@ -58,16 +58,16 @@ public class Pipelines {
     }
 
     public static void exposureHistory(PhotonicsPipeline ext, IrisPipeline irisPipeline) {
-        var framebuffer = irisPipeline.newFramebuffer(1, 1)
+        var framebuffer = irisPipeline.newFramebuffer(1, 1, ext::registerComponent)
                 .addAttachment("prev_exposure", TextureFormat.R32F, CREATE_SAMPLER)
-                .build(ext::registerComponent);
+                .build();
 
-        irisPipeline.newRenderer()
+        irisPipeline.newRenderer(ext::registerRenderer)
                 .debugGroup("exposure")
                 .withFragmentPrefix("/photonics/rendering/frag/passes/")
                 .withFramebuffer(framebuffer)
                 .thenFlip(framebuffer)
                 .deferredPass("record exposure", "e0_record_exposure.fsh", null)
-                .build(ext::registerRenderer);
+                .build();
     }
 }

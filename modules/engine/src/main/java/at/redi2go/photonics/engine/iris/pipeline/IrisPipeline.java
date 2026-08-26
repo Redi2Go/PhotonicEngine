@@ -8,6 +8,9 @@ import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHold
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolderBuilder;
 import at.redi2go.photonics.engine.rendering.RenderingComponent;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public interface IrisPipeline extends
         RenderingComponent,
         IrisDefineHolderBuilder<IrisPipeline>,
@@ -15,13 +18,13 @@ public interface IrisPipeline extends
         ISamplerHolderBuilder<IrisPipeline>,
         IrisDynamicUniformHolderBuilder<IrisPipeline>,
         IrisUniformHolderBuilder<IrisPipeline> {
-    IrisFramebuffer.Builder newFramebuffer(int width, int height);
+    IrisFramebuffer.Builder newFramebuffer(int width, int height, Consumer<IrisFramebuffer> registration);
 
-    IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale);
+    IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale, Consumer<IrisFramebuffer> registration);
 
-    default IrisFramebuffer.Builder newFramebuffer(float scale) {
-        return newFramebuffer(scale, scale);
+    default IrisFramebuffer.Builder newFramebuffer(float scale, Consumer<IrisFramebuffer> registration) {
+        return newFramebuffer(scale, scale, registration);
     }
 
-    IrisRenderer.Builder newRenderer();
+    IrisRenderer.Builder newRenderer(Consumer<IrisRenderer> registration);
 }

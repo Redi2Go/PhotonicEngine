@@ -53,7 +53,7 @@ public abstract class AbstractActionBuilderConsumer implements PipelineActionBui
             BiConsumer<IrisRenderer.CompositePassBuilder, Id> builderAction
     ) {
         if (shouldCreateAction(e -> e.addDeferredPass(name, framebuffer, fragmentShader, vertexShader, builderAction))) {
-            var pass = factory.newRenderer(currentDebugGroup);
+            var pass = factory.newRendererAction(currentDebugGroup);
             pass.addDeferredPass(name, framebuffer, fragmentShader, vertexShader, builderAction);
 
             actions.add(pass);

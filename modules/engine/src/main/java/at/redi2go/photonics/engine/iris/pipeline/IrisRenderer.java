@@ -92,11 +92,7 @@ public interface IrisRenderer {
 
         Builder when(BooleanSupplier condition, Consumer<IrisRenderer.Builder> builderAction);
 
-        IrisRenderer build(Function<IrisRenderer, IrisRenderer> registration);
-
-        default IrisRenderer build() {
-            return build(Function.identity());
-        }
+        IrisRenderer build();
     }
 
     interface CompositePassBuilder extends IrisDefineHolder {
