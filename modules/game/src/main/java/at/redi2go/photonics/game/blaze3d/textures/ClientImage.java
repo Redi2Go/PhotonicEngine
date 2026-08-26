@@ -214,42 +214,42 @@ public class ClientImage {
     }
 
     public void setPixelInt(Vector2ic pos, int r) {
-        writeInt(getOffset(pos.x(), pos.y(), 1), r, 0, 0, 0);
+        writeInt(getOffset(pos.x(), pos.y(), 0), r, 0, 0, 0);
     }
 
     public void setPixelInt(Vector2ic pos, int r, int g) {
-        writeInt(getOffset(pos.x(), pos.y(), 1), r, g, 0, 0);
+        writeInt(getOffset(pos.x(), pos.y(), 0), r, g, 0, 0);
     }
 
     public void setPixelInt(Vector2ic pos, Vector2ic color) {
-        writeInt(getOffset(pos.x(), pos.y(), 1), color.x(), color.y(), 0, 0);
+        writeInt(getOffset(pos.x(), pos.y(), 0), color.x(), color.y(), 0, 0);
     }
 
     public void setPixelInt(Vector2ic pos, int r, int g, int b, int a) {
-        writeInt(getOffset(pos.x(), pos.y(), 1), r, g, b, a);
+        writeInt(getOffset(pos.x(), pos.y(), 0), r, g, b, a);
     }
 
     public void setPixelInt(Vector2ic pos, Vector4ic color) {
-        writeInt(getOffset(pos.x(), pos.y(), 1), color.x(), color.y(), color.z(), color.w());
+        writeInt(getOffset(pos.x(), pos.y(), 0), color.x(), color.y(), color.z(), color.w());
     }
 
     public void setPixelFloat(Vector2ic pos, float r) {
-        writeFloat(getOffset(pos.x(), pos.y(), 1), r, 0, 0, 0);
+        writeFloat(getOffset(pos.x(), pos.y(), 0), r, 0, 0, 0);
     }
 
     public void setPixelFloat(Vector2ic pos, float r, float g) {
-        writeFloat(getOffset(pos.x(), pos.y(), 1), r, g, 0, 0);
+        writeFloat(getOffset(pos.x(), pos.y(), 0), r, g, 0, 0);
     }
 
     public void setPixelFloat(Vector2ic pos, Vector2fc color) {
-        writeFloat(getOffset(pos.x(), pos.y(), 1), color.x(), color.y(), 0, 0);
+        writeFloat(getOffset(pos.x(), pos.y(), 0), color.x(), color.y(), 0, 0);
     }
 
     public void setPixelFloat(Vector2ic pos, float r, float g, float b, float a) {
-        writeFloat(getOffset(pos.x(), pos.y(), 1), r, g, b, a);
+        writeFloat(getOffset(pos.x(), pos.y(), 0), r, g, b, a);
     }
 
     public void setPixelFloat(Vector2ic pos, Vector4fc color) {
-        writeFloat(getOffset(pos.x(), pos.y(), 1), color.x(), color.y(), color.z(), color.w());
+        writeFloat(getOffset(pos.x(), pos.y(), 0), color.x(), color.y(), color.z(), color.w());
     }
 }
