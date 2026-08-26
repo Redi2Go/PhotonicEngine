@@ -1,12 +1,12 @@
 package at.redi2go.photonics.engine.iris.pipeline;
 
-import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
-import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.IrisFramebuffer;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IDynamicUniformHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IUniformHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDefineHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.ISamplerHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.IrisFramebuffer;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolderBuilder;
 import at.redi2go.photonics.game.minecraft.Id;
 import it.unimi.dsi.fastutil.ints.IntObjectBiConsumer;
 import org.jspecify.annotations.NonNull;
@@ -21,11 +21,11 @@ public interface IrisRenderer {
     void renderAll();
 
     interface Builder extends
-            IDefineHolderBuilder<Builder>,
-            IBufferHolderBuilder<Builder>,
+            IrisDefineHolderBuilder<Builder>,
+            IrisBufferHolderBuilder<Builder>,
             ISamplerHolderBuilder<Builder>,
-            IDynamicUniformHolderBuilder<Builder>,
-            IUniformHolderBuilder<Builder> {
+            IrisDynamicUniformHolderBuilder<Builder>,
+            IrisUniformHolderBuilder<Builder> {
         Builder withFragmentPrefix(@NonNull String prefix);
 
         Builder withVertexPrefix(@NonNull String prefix);
@@ -42,7 +42,7 @@ public interface IrisRenderer {
                 String name,
                 @Nullable String fragmentShader,
                 @Nullable String vertexShader,
-                BiConsumer<PassBuilder, Id> builderAction
+                BiConsumer<CompositePassBuilder, Id> builderAction
         );
 
         default Builder deferredPass(
@@ -50,7 +50,7 @@ public interface IrisRenderer {
                 @Nullable String fragmentShader,
                 @Nullable String vertexShader,
                 BooleanSupplier condition,
-                BiConsumer<PassBuilder, Id> builderAction
+                BiConsumer<CompositePassBuilder, Id> builderAction
         ) {
             return condition.getAsBoolean() ? deferredPass(name, fragmentShader, vertexShader, builderAction) : this;
         }
@@ -99,7 +99,7 @@ public interface IrisRenderer {
         }
     }
 
-    interface PassBuilder extends IDefineHolder {
+    interface CompositePassBuilder extends IrisDefineHolder {
 
     }
 }

@@ -17,6 +17,8 @@ public interface IrisPack {
 
     int ph$getBlockId(IBlockState block);
 
+    String readFile(IrisPackPath path);
+
     static Optional<IrisPack> getCurrentPack() {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }

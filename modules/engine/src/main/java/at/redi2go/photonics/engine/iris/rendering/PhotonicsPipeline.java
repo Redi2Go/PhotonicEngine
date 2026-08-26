@@ -1,7 +1,6 @@
 package at.redi2go.photonics.engine.iris.rendering;
 
 import at.redi2go.photonics.engine.rendering.world.bakery.texture.AtlasDownloader;
-import at.redi2go.photonics.engine.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.engine.iris.properties.PhotonicsProperties;

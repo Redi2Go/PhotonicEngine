@@ -27,6 +27,10 @@ public interface IrisPackPath {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }
 
+    static IrisPackPath fromPath(String path) {
+        return fromAbsolutePath(path.startsWith("/") ? path : "/" + path);
+    }
+
     class Adapter extends TypeAdapter<IrisPackPath> {
 
         @Override

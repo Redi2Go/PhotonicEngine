@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl.types;
 
-import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.impl.PropertyType;
 import org.slf4j.Logger;
 
@@ -55,7 +55,7 @@ public class EnumPropertyType implements PropertyType<Enum<?>> {
     }
 
     @Override
-    public void registerDefine(IDefineHolder defineHolder, String key, Enum<?> value) {
+    public void registerDefine(IrisDefineHolder defineHolder, String key, Enum<?> value) {
         defineHolder.enumDefine(key, value);
     }
 }

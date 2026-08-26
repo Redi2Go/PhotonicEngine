@@ -1,10 +1,10 @@
 package at.redi2go.photonics.engine.rendering;
 
 import at.redi2go.photonics.game.Disposable;
-import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IUniformHolder;
+import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.IrisSamplerHolder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolder;
 
 public interface RenderingComponent extends Disposable {
     default void onFrameBegin() {}
@@ -13,13 +13,13 @@ public interface RenderingComponent extends Disposable {
 
     default void onSectionChanged(int x, int y, int z) {}
 
-    default void registerUniforms(IUniformHolder uniforms) {}
+    default void registerUniforms(IrisUniformHolder uniforms) {}
 
-    default void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {}
+    default void registerDynamicUniforms(IrisDynamicUniformHolder dynamicUniforms) {}
 
-    default void registerBuffers(IBufferHolder buffers) {}
+    default void registerBuffers(IrisBufferHolder buffers) {}
 
-    default void registerCustomTextures(ISamplerHolder samplers) {}
+    default void registerCustomTextures(IrisSamplerHolder samplers) {}
 
     @Override
     default void close() {}

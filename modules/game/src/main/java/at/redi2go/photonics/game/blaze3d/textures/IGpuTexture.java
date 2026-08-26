@@ -1,6 +1,7 @@
 package at.redi2go.photonics.game.blaze3d.textures;
 
 import at.redi2go.photonics.game.Disposable;
+import org.joml.Vector2ic;
 import org.joml.Vector3i;
 import org.joml.Vector3ic;
 
@@ -32,6 +33,16 @@ public interface IGpuTexture extends Disposable {
 
     default Vector3ic ph$getSize(int mipLevel) {
         return new Vector3i(ph$getWidth(mipLevel), ph$getHeight(mipLevel), ph$getDepth(mipLevel));
+    }
+
+    void ph$resize(Vector3ic newSize);
+
+    default void ph$resize(Vector2ic newSize) {
+        ph$resize(new Vector3i(newSize, ph$getDepth()));
+    }
+
+    default void ph$resize(int width) {
+        ph$resize(new Vector3i(width, ph$getHeight(), ph$getDepth()));
     }
 
     int ph$getLayers();

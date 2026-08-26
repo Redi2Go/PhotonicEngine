@@ -1,18 +1,18 @@
 package at.redi2go.photonics.engine.iris.pipeline;
 
-import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.IrisFramebuffer;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IDynamicUniformHolderBuilder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IUniformHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.ISamplerHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.IrisFramebuffer;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolderBuilder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolderBuilder;
 import at.redi2go.photonics.engine.rendering.RenderingComponent;
 
 public interface IrisPipeline extends
         RenderingComponent,
-        IBufferHolderBuilder<IrisPipeline>,
+        IrisBufferHolderBuilder<IrisPipeline>,
         ISamplerHolderBuilder<IrisPipeline>,
-        IDynamicUniformHolderBuilder<IrisPipeline>,
-        IUniformHolderBuilder<IrisPipeline> {
+        IrisDynamicUniformHolderBuilder<IrisPipeline>,
+        IrisUniformHolderBuilder<IrisPipeline> {
     IrisFramebuffer.Builder newFramebuffer(int width, int height);
 
     IrisFramebuffer.Builder newFramebuffer(float widthScale, float heightScale);

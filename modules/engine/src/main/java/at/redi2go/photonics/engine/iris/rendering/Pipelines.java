@@ -4,10 +4,9 @@ import at.redi2go.photonics.game.blaze3d.textures.TextureFormat;
 import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.properties.PhotonicsProperties;
 //import at.redi2go.photonics.core.rendering.HandheldLightComponent;
-import at.redi2go.photonics.engine.rendering.lights.HandheldItemSupplier;
 
-import static at.redi2go.photonics.engine.iris.pipeline.texture.AttachmentUsage.CREATE_SAMPLER;
-import static at.redi2go.photonics.engine.iris.pipeline.texture.AttachmentUsage.FLIP;
+import static at.redi2go.photonics.engine.iris.pipeline.textures.AttachmentUsage.CREATE_SAMPLER;
+import static at.redi2go.photonics.engine.iris.pipeline.textures.AttachmentUsage.FLIP;
 
 public class Pipelines {
     public static String DEFAULT_VERTEX_SHADER = "/photonics/rendering/shared/screen.vsh";

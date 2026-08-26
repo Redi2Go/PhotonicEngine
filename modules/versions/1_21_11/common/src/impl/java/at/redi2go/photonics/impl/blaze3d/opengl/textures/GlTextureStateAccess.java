@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 public interface GlTextureStateAccess extends Disposable {
     void texParameter(int pname, int param);
 
-    void texImage(int layer, int mipLevel, @Nullable ByteBuffer pixels);
+    void texImage(int layer, int mipLevel, Vector3ic size, @Nullable ByteBuffer pixels);
 
     void texSubData(ByteBuffer byteBuffer, TextureFormat bufferFormat, int layer, int mipLevel, Vector3ic size, Vector3ic offset);
 

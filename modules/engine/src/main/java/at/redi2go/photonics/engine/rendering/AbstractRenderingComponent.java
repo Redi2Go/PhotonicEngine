@@ -1,10 +1,10 @@
 package at.redi2go.photonics.engine.rendering;
 
 import at.redi2go.photonics.game.Disposable;
-import at.redi2go.photonics.engine.iris.pipeline.buffer.IBufferHolder;
-import at.redi2go.photonics.engine.iris.pipeline.texture.ISamplerHolder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IDynamicUniformHolder;
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IUniformHolder;
+import at.redi2go.photonics.engine.iris.pipeline.buffers.IrisBufferHolder;
+import at.redi2go.photonics.engine.iris.pipeline.textures.IrisSamplerHolder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolder;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolder;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -56,25 +56,25 @@ public abstract class AbstractRenderingComponent implements RenderingComponent {
     }
 
     @Override
-    public void registerUniforms(IUniformHolder uniforms) {
+    public void registerUniforms(IrisUniformHolder uniforms) {
         for (var component : components)
             component.registerUniforms(uniforms);
     }
 
     @Override
-    public void registerDynamicUniforms(IDynamicUniformHolder dynamicUniforms) {
+    public void registerDynamicUniforms(IrisDynamicUniformHolder dynamicUniforms) {
         for (var component : components)
             component.registerDynamicUniforms(dynamicUniforms);
     }
 
     @Override
-    public void registerBuffers(IBufferHolder buffers) {
+    public void registerBuffers(IrisBufferHolder buffers) {
         for (var component : components)
             component.registerBuffers(buffers);
     }
 
     @Override
-    public void registerCustomTextures(ISamplerHolder samplers) {
+    public void registerCustomTextures(IrisSamplerHolder samplers) {
         for (var component : components)
             component.registerCustomTextures(samplers);
     }

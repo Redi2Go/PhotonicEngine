@@ -75,7 +75,7 @@ public abstract class GlDeviceImpl implements IGpuDevice {
 
             for (int layer = 0; layer < texture.ph$getLayers(); layer++) {
                 for (int mip = 0; mip < mipLevels; mip++)
-                    state.texImage(layer, mip, null);
+                    state.texImage(layer, mip, texture.ph$getSize(mipLevels), null);
             }
         }
 

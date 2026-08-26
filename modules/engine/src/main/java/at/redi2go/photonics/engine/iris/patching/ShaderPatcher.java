@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 public class ShaderPatcher {
     private static final Set<String> IRREPLACEABLE_FILES = Set.of("shader_interface.glsl", "write_indirect.glsl");
+    public static final List<String> POTENTIAL_STARTS = List.of("ph_lights.json");
 
     private static final Path PATCHED_DEBUG_PATH = ModLoader.getGameDir().resolve(".ph-patched-shaders");
     private static final Path PHOTONICS_SHADERS_PATH = getPhotonicsShadersPath();

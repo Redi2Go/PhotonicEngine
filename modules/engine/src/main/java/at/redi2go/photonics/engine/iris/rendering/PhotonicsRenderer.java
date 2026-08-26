@@ -9,7 +9,6 @@ import at.redi2go.photonics.engine.iris.rendering.restir.RestirPipeline;
 import at.redi2go.photonics.engine.iris.rendering.restir.RestirProperties;
 import at.redi2go.photonics.engine.iris.rendering.sharp.SharpPipeline;
 import at.redi2go.photonics.engine.iris.rendering.sharp.SharpProperties;
-import at.redi2go.photonics.engine.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.engine.rendering.world.bakery.texture.AtlasDownloader;
 import org.jspecify.annotations.Nullable;
 

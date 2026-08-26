@@ -13,6 +13,7 @@ import org.joml.Vector2ic;
 import org.joml.Vector3ic;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -25,9 +26,9 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
     protected final @TextureUsage int usage;
     protected final TextureFormat format;
 
-    protected final int width;
-    protected final int height;
-    protected final int depthOrLayers;
+    protected int width;
+    protected int height;
+    protected int depthOrLayers;
     protected final int mipLevels;
 
     GlTexture(
@@ -120,6 +121,22 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
     }
 
     @Override
+    public void ph$resize(Vector3ic newSize) {
+        if (ph$getSize(0).equals(newSize)) return;
+
+        try(var state = createStateAccess()) {
+            state.texParameter(GL12.GL_TEXTURE_MIN_LOD, 0);
+            state.texParameter(GL12.GL_TEXTURE_MAX_LOD, mipLevels - 1);
+            state.texParameter(GL12.GL_TEXTURE_MAX_LEVEL, mipLevels - 1);
+
+            for (int layer = 0; layer < ph$getLayers(); layer++) {
+                for (int mip = 0; mip < mipLevels; mip++)
+                    state.texImage(layer, mip, ph$getSize(mipLevels), null);
+            }
+        }
+    }
+
+    @Override
     public int ph$getMipLevels() {
         return mipLevels;
     }
@@ -176,10 +193,28 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
         }
 
         @Override
-        public void texImage(int layer, int mipLevel, @Nullable ByteBuffer pixels) {
+        public void texImage(int layer, int mipLevel, Vector3ic size, @Nullable ByteBuffer pixels) {
             checkCanUse();
             checkMipLevelRange(mipLevel);
             checkLayersRange(layer);
+
+            boolean resizeable = (usage & TextureUsage.RESIZEABLE) != 0;
+            if (resizeable) checkArguments(size, mipLevels);
+            if (!resizeable && !ph$getSize(0).equals(size)) throw new IllegalArgumentException("Only textures with RESIZEABLE can be resized");
+
+            int requiredByteSize = size.x() * size.y() * size.z() * format.getTexelByteSize();
+            if (pixels != null && requiredByteSize > pixels.remaining())
+                throw new IllegalArgumentException(String.format(
+                        "Copy would overrun the source buffer (remaining length of %s, but write is %s of format %s (%s bytes))",
+                        pixels.remaining(),
+                        printDimensions(size),
+                        format,
+                        requiredByteSize
+                ));
+
+            width = size.x();
+            height = size.y();
+            depthOrLayers = size.z();
 
             texImageImpl(layer, mipLevel, pixels);
         }

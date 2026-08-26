@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.rendering;
 
-import at.redi2go.photonics.engine.iris.pipeline.uniform.IValueUpdateNotifier;
+import at.redi2go.photonics.engine.iris.pipeline.uniforms.IValueUpdateNotifier;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

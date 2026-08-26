@@ -1,6 +1,6 @@
 package at.redi2go.photonics.engine.iris.properties.impl;
 
-import at.redi2go.photonics.engine.iris.pipeline.defines.IDefineHolder;
+import at.redi2go.photonics.engine.iris.pipeline.defines.IrisDefineHolder;
 import at.redi2go.photonics.engine.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.engine.iris.properties.PropertyDefines;
 import at.redi2go.photonics.engine.iris.properties.PropertyOverrides;
@@ -40,7 +40,7 @@ public class PropertiesManager implements InvocationHandler {
     private final DefineState defineState = new DefineState(magicMethods);
     private final OverrideState overrideState = new OverrideState(magicMethods, instanceLookup);
 
-    public void registerDefines(IDefineHolder defineHolder) {
+    public void registerDefines(IrisDefineHolder defineHolder) {
         defineState.registerDefines(defineHolder);
     }
 

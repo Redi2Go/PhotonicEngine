@@ -1,6 +1,5 @@
 package at.redi2go.photonics.impl.minecraft.client.player;
 
-import at.redi2go.photonics.engine.rendering.lights.HandheldItem;
 import at.redi2go.photonics.game.minecraft.client.player.IHandheldItem;
 import at.redi2go.photonics.game.minecraft.client.player.ILocalPlayer;
 import at.redi2go.photonics.game.minecraft.world.level.IBlockState;
