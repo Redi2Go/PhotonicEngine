@@ -135,13 +135,13 @@ abstract class RemapMixins : DefaultTask() {
 
     private fun removeStaleFiles(changes: InputChanges, registry: ClassRegistry) {
         when {
-            changes.isIncremental -> clearOutputDir()
+            !changes.isIncremental -> clearOutputDir()
 
             else -> for (sourceSet in outputDir.getAsPath().listDirectoryEntries()) {
                 sourceSet.walk(PathWalkOption.INCLUDE_DIRECTORIES)
                     .toList()
                     .asReversed()
-                    .filter { !registry.contains(JavaClass.fromPath(it, sourceSet)) || it.isDirectory() }
+                    .filter { it.isDirectory() || !registry.contains(JavaClass.fromPath(it, sourceSet)) }
                     .forEach { it.deleteIfEmpty() }
             }
         }
