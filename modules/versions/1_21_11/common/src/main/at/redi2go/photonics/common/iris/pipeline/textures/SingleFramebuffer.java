@@ -30,7 +30,7 @@ public class SingleFramebuffer extends GlFramebuffer implements InternalIrisFram
             var texture = (GlTexture) attachments.get(i).texture();
 
             addColorAttachment(i, texture.ph$getHandle());
-            drawBuffers[i] = GL30.GL_COLOR_ATTACHMENT0 + i;
+            drawBuffers[i] = i;
         }
 
         drawBuffers(drawBuffers);
