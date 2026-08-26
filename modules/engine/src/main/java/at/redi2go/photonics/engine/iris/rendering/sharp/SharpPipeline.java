@@ -11,7 +11,6 @@ public class SharpPipeline extends PhotonicsPipeline {
             PhotonicsProperties phProperties,
             SharpProperties sharpProperties,
             AtlasDownloader atlasDownloader,
-            HandheldItemSupplier handheldItemSupplier,
             IrisPipeline irisPipeline
     ) {
         super(phProperties, atlasDownloader, irisPipeline);

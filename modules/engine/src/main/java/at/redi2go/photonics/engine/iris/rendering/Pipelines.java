@@ -34,7 +34,6 @@ public class Pipelines {
 
     public static void handheldLighting(
             PhotonicsPipeline ext,
-            HandheldItemSupplier handheldItemSupplier,
             PhotonicsProperties properties,
             IrisPipeline irisPipeline
     ) {

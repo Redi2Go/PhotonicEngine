@@ -69,11 +69,9 @@ public class IrisManager {
     
     public static void setupPipeline(
             @NonNull Supplier<AtlasDownloader> atlasDownloaderSupplier,
-            @NonNull Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
             @NonNull IrisPipeline irisPipeline
     ) {
         Objects.requireNonNull(atlasDownloaderSupplier, "atlasDownloaderSupplier");
-        Objects.requireNonNull(handheldItemSupplierSupplier, "handheldItemSupplierSupplier");
         Objects.requireNonNull(irisPipeline, "irisPipeline");
 
         if (activeProperties == null) throw new IllegalStateException("The renderer has not been set up");
@@ -82,7 +80,6 @@ public class IrisManager {
         activePipeline = PhotonicsRenderer.createPipeline(
                 propertiesManager,
                 atlasDownloaderSupplier,
-                handheldItemSupplierSupplier,
                 irisPipeline
         );
     }

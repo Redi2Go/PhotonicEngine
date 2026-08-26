@@ -9,8 +9,8 @@ import at.redi2go.photonics.engine.rendering.UniformUpdater;
 import at.redi2go.photonics.engine.rendering.lights.HandheldItemSupplier;
 import at.redi2go.photonics.engine.rendering.world.bakery.texture.AtlasDownloader;
 
-import static at.redi2go.photonics.engine.iris.pipeline.texture.AttachmentUsage.CREATE_SAMPLER;
-import static at.redi2go.photonics.engine.iris.pipeline.texture.AttachmentUsage.FLIP;
+import static at.redi2go.photonics.engine.iris.pipeline.textures.AttachmentUsage.CREATE_SAMPLER;
+import static at.redi2go.photonics.engine.iris.pipeline.textures.AttachmentUsage.FLIP;
 
 public class RestirPipeline extends PhotonicsPipeline {
     private final int denoiserPasses;
@@ -21,7 +21,6 @@ public class RestirPipeline extends PhotonicsPipeline {
             PhotonicsProperties phProperties,
             RestirProperties restirProperties,
             AtlasDownloader atlasDownloader,
-            HandheldItemSupplier handheldItemSupplier,
             IrisPipeline irisPipeline
     ) {
         super(phProperties, atlasDownloader, irisPipeline);
@@ -34,7 +33,7 @@ public class RestirPipeline extends PhotonicsPipeline {
         this.denoiserPasses = (requestedDenoiserPasses != 0 ? Math.max(requestedDenoiserPasses, 7) : 0) - 1;
 
         Pipelines.fragData(this, phProperties, irisPipeline);
-        Pipelines.handheldLighting(this, handheldItemSupplier, phProperties, irisPipeline);
+        Pipelines.handheldLighting(this, phProperties, irisPipeline);
 
         neighborSelectionPipeline(irisPipeline);
         restirDiPipeline(irisPipeline);

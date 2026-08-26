@@ -79,6 +79,6 @@ public abstract class PhotonicsPipeline extends AbstractRenderingComponent {
 
     @FunctionalInterface
     interface Supplier<T extends PhotonicsPipeline, P> {
-        T create(PhotonicsProperties phProperties, P rendererProperties, AtlasDownloader atlasDownloader, HandheldItemSupplier handheldItemSupplier, IrisPipeline irisPipeline);
+        T create(PhotonicsProperties phProperties, P rendererProperties, AtlasDownloader atlasDownloader, IrisPipeline irisPipeline);
     }
 }

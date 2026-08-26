@@ -1,5 +1,6 @@
 package at.redi2go.photonics.game.minecraft;
 
+import at.redi2go.photonics.game.minecraft.client.player.ILocalPlayer;
 import at.redi2go.photonics.game.minecraft.world.level.ILevel;
 import org.jspecify.annotations.Nullable;
 import org.joml.Vector3d;
@@ -13,6 +14,10 @@ public interface IMinecraft {
     }
 
     static @Nullable ILevel getLevel() {
+        throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
+    }
+
+    static @Nullable ILocalPlayer getLocalPlayer() {
         throw new AssertionError(); // TO BE IMPLEMENTED BY MIXIN
     }
 

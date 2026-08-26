@@ -43,7 +43,6 @@ public enum PhotonicsRenderer {
     public static @Nullable PhotonicsPipeline createPipeline(
             PropertiesManager propertiesManager,
             Supplier<AtlasDownloader> atlasDownloaderSupplier,
-            Supplier<HandheldItemSupplier> handheldItemSupplierSupplier,
             IrisPipeline irisPipeline
     ) {
         PhotonicsProperties properties  = propertiesManager.getProperties(PhotonicsProperties.class);
@@ -56,7 +55,6 @@ public enum PhotonicsRenderer {
                 properties,
                 rendererProperties,
                 atlasDownloaderSupplier.get(),
-                handheldItemSupplierSupplier.get(),
                 irisPipeline
         );
     }

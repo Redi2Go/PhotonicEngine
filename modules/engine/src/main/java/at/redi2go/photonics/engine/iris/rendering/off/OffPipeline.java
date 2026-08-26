@@ -11,7 +11,6 @@ public class OffPipeline extends PhotonicsPipeline {
             PhotonicsProperties phProperties,
             OffProperties offProperties,
             AtlasDownloader atlasDownloader,
-            HandheldItemSupplier handheldItemSupplier,
             IrisPipeline irisPipeline
     ) {
         super(phProperties, atlasDownloader, irisPipeline);
