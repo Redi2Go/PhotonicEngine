@@ -233,9 +233,9 @@ public sealed abstract class GlTexture implements IGpuTexture, GlObject permits 
             if (size.y() < 1) throw new IllegalArgumentException("height must be at least 1 (was " + size.y() + ")");
             if (size.z() < 1) throw new IllegalArgumentException("depth must be at least 1 (was " + size.z() + ")");
 
-            if (offset.x() < 1) throw new IllegalArgumentException("x offset must be at least 1 (was " + offset.x() + ")");
-            if (offset.y() < 1) throw new IllegalArgumentException("y offset must be at least 1 (was " + offset.y() + ")");
-            if (offset.z() < 1) throw new IllegalArgumentException("z offset must be at least 1 (was " + offset.z() + ")");
+            if (offset.x() < 0) throw new IllegalArgumentException("x offset must be at least 0 (was " + offset.x() + ")");
+            if (offset.y() < 0) throw new IllegalArgumentException("y offset must be at least 0 (was " + offset.y() + ")");
+            if (offset.z() < 0) throw new IllegalArgumentException("z offset must be at least 0 (was " + offset.z() + ")");
 
             if (!contains(mipLevel, size, offset)) {
                 throw new IllegalArgumentException(String.format(

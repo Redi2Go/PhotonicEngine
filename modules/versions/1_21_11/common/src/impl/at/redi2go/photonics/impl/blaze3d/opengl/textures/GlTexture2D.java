@@ -120,8 +120,8 @@ public final class GlTexture2D extends GlTexture {
             if (copySize.x() < 1) throw new IllegalArgumentException("copy width must be at least 1 (was " + copySize.x() + ")");
             if (copySize.y() < 1) throw new IllegalArgumentException("copy height must be at least 1 (was " + copySize.y() + ")");
 
-            if (srcOffset.x() < 1) throw new IllegalArgumentException("x offset must be at least 1 (was " + srcOffset.x() + ")");
-            if (srcOffset.y() < 1) throw new IllegalArgumentException("y offset must be at least 1 (was " + srcOffset.y() + ")");
+            if (srcOffset.x() < 0) throw new IllegalArgumentException("x offset must be at least 0 (was " + srcOffset.x() + ")");
+            if (srcOffset.y() < 0) throw new IllegalArgumentException("y offset must be at least 0 (was " + srcOffset.y() + ")");
 
             if (!contains(mipLevel, new Vector3i(copySize, 1), new Vector3i(srcOffset, 0))) {
                 throw new IllegalArgumentException(String.format(
