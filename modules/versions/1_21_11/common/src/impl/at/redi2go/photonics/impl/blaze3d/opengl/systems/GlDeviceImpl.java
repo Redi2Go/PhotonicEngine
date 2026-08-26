@@ -65,8 +65,8 @@ public abstract class GlDeviceImpl implements IGpuDevice {
     }
 
     @Override
-    public IGpuTexture ph$createTexture(@Nullable Supplier<String> supplier, @TextureUsage int usage, TextureFormat textureFormat, Vector3ic size, int mipLevels) {
-        GlTexture texture = GlTexture.createTexture(supplier != null ? supplier.get() : null, usage, textureFormat, size, mipLevels);
+    public IGpuTexture ph$createTexture(@Nullable Supplier<String> label, @TextureUsage int usage, TextureFormat textureFormat, Vector3ic size, int mipLevels) {
+        GlTexture texture = GlTexture.createTexture(label != null ? label.get() : null, usage, textureFormat, size, mipLevels);
 
         try (var state = texture.createStateAccess()) {
             state.texParameter(GL12.GL_TEXTURE_MIN_LOD, 0);
@@ -84,12 +84,12 @@ public abstract class GlDeviceImpl implements IGpuDevice {
     }
 
     @Override
-    public IGpuBuffer ph$createBuffer(@Nullable Supplier<String> supplier, @BufferUsage int usage, long byteSize) {
-        return (IGpuBuffer) createBuffer(supplier, usage, byteSize);
+    public IGpuBuffer ph$createBuffer(@Nullable Supplier<String> label, @BufferUsage int usage, long byteSize) {
+        return (IGpuBuffer) createBuffer(label, usage, byteSize);
     }
 
     @Override
-    public IGpuBuffer ph$createBuffer(@Nullable Supplier<String> supplier, @BufferUsage int usage, ByteBuffer contents) {
-        return (IGpuBuffer) createBuffer(supplier, usage, contents);
+    public IGpuBuffer ph$createBuffer(@Nullable Supplier<String> label, @BufferUsage int usage, ByteBuffer contents) {
+        return (IGpuBuffer) createBuffer(label, usage, contents);
     }
 }
