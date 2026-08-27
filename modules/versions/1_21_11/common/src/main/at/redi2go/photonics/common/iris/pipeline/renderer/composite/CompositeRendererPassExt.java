@@ -2,7 +2,7 @@ package at.redi2go.photonics.common.iris.pipeline.renderer.composite;
 
 import at.redi2go.photonics.engine.iris.pipeline.textures.IrisFramebuffer;
 import com.google.common.collect.ImmutableList;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;

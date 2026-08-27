@@ -5,6 +5,8 @@ import com.vdurmont.semver4j.Semver;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.color.block.BlockTintCache;
 
 import java.net.URISyntaxException;
 import java.util.Optional;

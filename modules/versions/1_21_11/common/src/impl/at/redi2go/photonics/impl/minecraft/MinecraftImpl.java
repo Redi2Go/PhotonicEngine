@@ -5,7 +5,7 @@ import at.redi2go.photonics.game.minecraft.client.player.ILocalPlayer;
 import at.redi2go.photonics.game.minecraft.world.level.ILevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
