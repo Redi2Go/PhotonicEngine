@@ -4,8 +4,8 @@ import at.redi2go.photonics.engine.rendering.world.bakery.texture.AtlasDownloade
 import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.pipeline.IrisRenderer;
 import at.redi2go.photonics.engine.iris.properties.PhotonicsProperties;
-import at.redi2go.photonics.engine.rendering.AbstractRenderingComponent;
-import at.redi2go.photonics.engine.rendering.RenderingComponent;
+import at.redi2go.photonics.engine.AbstractRenderingComponent;
+import at.redi2go.photonics.engine.RenderingComponent;
 //import at.redi2go.photonics.core.rendering.SectionManager;
 
 import at.redi2go.photonics.game.minecraft.core.registries.Dimensions;

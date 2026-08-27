@@ -1,4 +1,4 @@
-package at.redi2go.photonics.engine.rendering;
+package at.redi2go.photonics.engine;
 
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IValueUpdateNotifier;
 

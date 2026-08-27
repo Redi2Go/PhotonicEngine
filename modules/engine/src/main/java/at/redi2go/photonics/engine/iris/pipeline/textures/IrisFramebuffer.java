@@ -2,10 +2,9 @@ package at.redi2go.photonics.engine.iris.pipeline.textures;
 
 import at.redi2go.photonics.game.Disposable;
 import at.redi2go.photonics.game.blaze3d.textures.TextureFormat;
-import at.redi2go.photonics.engine.rendering.RenderingComponent;
+import at.redi2go.photonics.engine.RenderingComponent;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Function;
 
 public interface IrisFramebuffer extends RenderingComponent, Disposable {
     void flip();

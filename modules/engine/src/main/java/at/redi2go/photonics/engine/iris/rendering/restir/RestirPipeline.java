@@ -5,7 +5,7 @@ import at.redi2go.photonics.engine.iris.pipeline.IrisPipeline;
 import at.redi2go.photonics.engine.iris.properties.PhotonicsProperties;
 import at.redi2go.photonics.engine.iris.rendering.PhotonicsPipeline;
 import at.redi2go.photonics.engine.iris.rendering.Pipelines;
-import at.redi2go.photonics.engine.rendering.UniformUpdater;
+import at.redi2go.photonics.engine.UniformUpdater;
 import at.redi2go.photonics.engine.rendering.world.bakery.texture.AtlasDownloader;
 
 import static at.redi2go.photonics.engine.iris.pipeline.textures.AttachmentUsage.CREATE_SAMPLER;

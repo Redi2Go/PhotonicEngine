@@ -6,10 +6,9 @@ import at.redi2go.photonics.engine.iris.pipeline.textures.ISamplerHolderBuilder;
 import at.redi2go.photonics.engine.iris.pipeline.textures.IrisFramebuffer;
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisDynamicUniformHolderBuilder;
 import at.redi2go.photonics.engine.iris.pipeline.uniforms.IrisUniformHolderBuilder;
-import at.redi2go.photonics.engine.rendering.RenderingComponent;
+import at.redi2go.photonics.engine.RenderingComponent;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public interface IrisPipeline extends
         RenderingComponent,
